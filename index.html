@@ -854,7 +854,7 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
           return `
           <div style="display:grid;grid-template-columns:64px 1fr;${isLast ? '' : 'border-bottom:1px solid #f0f0ec;'}min-height:44px;">
             <div style="padding:13px 16px;font-size:13px;font-weight:600;color:#1a1a1a;background:#f9f9f7;display:flex;align-items:center;border-right:1px solid #f0f0ec;flex-shrink:0;">${label}</div>
-            <div style="padding:12px 14px;font-size:13px;color:${txt ? '#1a1a1a' : '#b8b8b4'};line-height:1.6;word-break:break-all;">
+            <div style="padding:12px 14px;font-size:13px;color:${txt ? '#1a1a1a' : '#b8b8b4'};line-height:1.6;word-break:break-word;white-space:pre-wrap;min-height:44px;">
               ${txt || '—'}
             </div>
           </div>`;
