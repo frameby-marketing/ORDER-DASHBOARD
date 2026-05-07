@@ -28,7 +28,7 @@
     .panel { display: none; }
     .panel.on { display: block; }
     .sec { margin-bottom: 22px; }
-    .sec-lbl { font-size: 13px; color: #6b6b6b; font-weight: 500; margin-bottom: 10px; }
+    .sec-lbl { font-size: 15px; color: #1a1a1a; font-weight: 700; margin-bottom: 10px; }
     .kpi4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
     @media (max-width:680px) { .kpi4 { grid-template-columns: repeat(2,1fr); } }
     .card { background: #fff; border: 1px solid #e8e8e4; border-radius: 12px; padding: 18px 16px 14px; }
@@ -162,7 +162,7 @@
     }
     .deferred-body {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 0;
     }
     @media (max-width: 680px) {
@@ -589,11 +589,6 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
             <div class="deferred-cell-lbl">유예 조건 추가 발주 한도</div>
             <div class="deferred-cell-val ${noLimit ? 'neg' : ''}">${noLimit ? '0원' : f(deferralLimit)}</div>
             <div class="deferred-cell-sub">${noLimit ? '한도 미설정 (불가)' : '과장 설정 기준'}</div>
-          </div>
-          <div class="deferred-cell">
-            <div class="deferred-cell-lbl">현재 예산 초과액<br>(기존 발주비 기준)</div>
-            <div class="deferred-cell-val ${extraBudget >= 0 ? 'pos' : 'neg'}">${extraBudget >= 0 ? f(extraBudget) + ' 여유' : f(Math.abs(extraBudget)) + ' 초과'}</div>
-            <div class="deferred-cell-sub">조정발주비 대비</div>
           </div>
           <div class="deferred-cell">
             <div class="deferred-cell-lbl">조건부 추가 발주 가능액</div>
