@@ -140,6 +140,8 @@
     }
     .scenario-avail.pos { color: #16a34a; font-weight: 700; }
     .scenario-avail.neg { color: #ef4444; font-weight: 700; }
+    .scenario-table tr.target-above td { border-top: 3px solid #1a1a1a !important; }
+    .scenario-table tr.target-below td { border-bottom: 3px solid #1a1a1a !important; }
 
     /* 조건부 발주 카드 */
     .deferred-card {
@@ -363,7 +365,7 @@ async function load() {
 
     /* 제품 시트 */
     const products = csv(prodR).slice(1).filter(r=>r[0])
-      .map(r => ({ name:r[0], actual:n(r[1]), target:n(r[2]) }));
+      .map(r => ({ name:r[0], actual:n(r[1]), target:n(r[2]), soldout: r[1].trim() === '품절' }));
 
     /* 매출 시트 */
     const salesRows  = csv(salesR).slice(1).filter(r=>r[0]);
@@ -488,7 +490,7 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
     const scenarioExtra     = scenarioAdj - spentBudget;
     const extraCls  = scenarioExtra >= 0 ? 'pos' : 'neg';
     const extraTxt  = (scenarioExtra >= 0 ? '+' : '') + f(scenarioExtra);
-    const rowCls    = isCurrent ? 'current-row' : '';
+    const rowCls    = isCurrent ? 'current-row' : isTarget ? 'target-above' : '';
     const noteSpan  = `<span style="font-size:10px;color:#9b9b9b;font-weight:400;">(${note})</span>`;
     return `
       <tr class="${rowCls}">
@@ -582,7 +584,7 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
         <div class="deferred-body" style="grid-template-columns:1fr 1fr;">
           <div class="deferred-cell">
             <div class="deferred-cell-lbl">이 날짜까지 결제를 미룰 수 있다면</div>
-            <div class="deferred-cell-val ${noDeadline ? 'neg' : ddayCls}">${noDeadline ? '불가' : fmtDate(deferralDeadline)}</div>
+            <div class="deferred-cell-val ${noDeadline ? 'neg' : ddayCls}" style="${noDeadline ? 'font-size:14px;' : ''}">${noDeadline ? '조건부 추가 발주 불가' : fmtDate(deferralDeadline)}</div>
             <div class="deferred-cell-sub">${noDeadline ? '마감일 미설정' : `${ddayLabel} 남음`}</div>
           </div>
           <div class="deferred-cell">
@@ -612,6 +614,19 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
 
   /* 제품 바 */
   const prodHTML = products.map(p => {
+    if (p.soldout) {
+      return `
+        <div class="prod-row" style="background:#f7f7f5;opacity:0.55;pointer-events:none;">
+          <div class="prod-name" style="color:#b8b8b4;">${p.name}</div>
+          <div class="prod-bar-wrap">
+            <div class="prod-bar-bg" style="background:#e8e8e4;">
+              <div class="prod-bar-fill" style="width:0%;background:#d4d4d0;"></div>
+            </div>
+          </div>
+          <div class="prod-qty" style="color:#b8b8b4;">—<em>/—</em></div>
+          <span class="badge" style="background:#f0f0ec;color:#b8b8b4;width:40px;">품절</span>
+        </div>`;
+    }
     const r   = p.actual / p.target;
     const w   = Math.min(Math.round(r*100), 100);
     const col = r >= 1 ? '#2563eb' : '#f59e0b';
@@ -658,16 +673,25 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
     <!-- 일매출 달성 현황 -->
     <div class="sec">
       <div class="sec-lbl">일매출 달성 현황</div>
-      <div class="kpi4">
-        <div class="card">
-          <div class="c-lbl">자사몰+네이버<br>목표 평균일매출</div>
-          <div class="c-val">${f(targetMain)}</div>
-          <div class="c-sub">자사몰+네이버 합산</div>
-        </div>
-        <div class="card">
-          <div class="c-lbl">현재 자사몰+네이버<br>평균일매출</div>
-          <div class="c-val">${f(currentMain)}</div>
-          <div class="c-sub">${elapsedDays}일 경과 / ${totalDays}일</div>
+      <div class="kpi4" style="grid-template-columns:1fr 1fr 1fr;">
+        <!-- 목표 vs 현재 일매출 막대그래프 통합 카드 -->
+        <div class="card" style="padding:18px 16px 14px;">
+          <div class="c-lbl" style="margin-bottom:10px;">목표 vs 현재 평균일매출 <span style="color:#b8b8b4;">(자사몰+네이버)</span></div>
+          <div style="display:flex;align-items:flex-end;gap:10px;height:80px;margin-bottom:8px;">
+            <!-- 목표 막대 -->
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;">
+              <div style="font-size:12px;font-weight:700;color:#1a1a1a;">${f(targetMain)}</div>
+              <div style="width:100%;flex:1;background:#d4d4d0;border-radius:4px 4px 0 0;"></div>
+              <div style="font-size:10px;color:#9b9b9b;">목표</div>
+            </div>
+            <!-- 현재 막대 -->
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;">
+              <div style="font-size:12px;font-weight:700;color:${currentMain >= targetMain ? '#16a34a' : '#ef4444'};">${f(currentMain)}</div>
+              <div style="width:100%;height:${Math.min(Math.round(pct),100)}%;background:${currentMain >= targetMain ? '#16a34a' : '#ef4444'};border-radius:4px 4px 0 0;margin-top:auto;"></div>
+              <div style="font-size:10px;color:#9b9b9b;">현재</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#9b9b9b;">${elapsedDays}일 경과 / ${totalDays}일</div>
         </div>
         <div class="card">
           <div class="c-lbl">목표 달성률</div>
@@ -688,27 +712,62 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
     <!-- 발주 예산 여유 -->
     <div class="sec">
       <div class="sec-lbl">발주 예산 여유</div>
-      <div class="kpi4">
-        <div class="card">
-          <div class="c-lbl">현재 누적 발주 지출액</div>
-          <div class="c-val">${f(spentBudget)}</div>
-          <div class="c-sub">이번 달 누적 집행</div>
+      <div class="kpi4" style="grid-template-columns:1fr 1fr 1fr;">
+        <!-- 조정발주비 vs 누적지출 막대그래프 통합 카드 -->
+        <div class="card" style="padding:18px 16px 14px;">
+          <div class="c-lbl" style="margin-bottom:10px;">조정 발주비 vs 누적 지출액</div>
+          <div style="display:flex;align-items:flex-end;gap:10px;height:80px;margin-bottom:8px;">
+            <!-- 조정발주비 막대 (기준) -->
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;">
+              <div style="font-size:12px;font-weight:700;color:#1a1a1a;">${f(adjBudget)}</div>
+              <div style="width:100%;flex:1;background:#d4d4d0;border-radius:4px 4px 0 0;"></div>
+              <div style="font-size:10px;color:#9b9b9b;">조정발주비</div>
+            </div>
+            <!-- 누적지출 막대 -->
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;">
+              <div style="font-size:12px;font-weight:700;color:${spendRatio <= 18 ? '#16a34a' : '#ef4444'};">${f(spentBudget)}</div>
+              <div style="width:100%;height:${Math.min(Math.round(spentBudget/adjBudget*100),100)}%;background:${spendRatio <= 18 ? '#16a34a' : '#ef4444'};border-radius:4px 4px 0 0;margin-top:auto;"></div>
+              <div style="font-size:10px;color:#9b9b9b;">누적지출</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#9b9b9b;">월말 예상 매출 × 18% 기준</div>
         </div>
-        <div class="card">
-          <div class="c-lbl">예산 달성률 기반<br>조정 발주비</div>
-          <div class="c-val">${f(adjBudget)}</div>
-          <div class="c-sub">월말 예상 매출 × 18%</div>
+
+        <!-- 원형그래프: 발주비 비중 -->
+        <div class="card" style="padding:18px 16px 14px;display:flex;flex-direction:column;align-items:center;">
+          <div class="c-lbl" style="align-self:flex-start;margin-bottom:8px;">현재 기준 발주비 비중</div>
+          <div style="position:relative;width:84px;height:84px;flex-shrink:0;">
+            <svg viewBox="0 0 84 84" width="84" height="84" style="transform:rotate(-90deg);">
+              <!-- 배경 원 -->
+              <circle cx="42" cy="42" r="34" fill="none" stroke="#eeeeee" stroke-width="10"/>
+              <!-- 18% 허용 구간 (연초록) -->
+              <circle cx="42" cy="42" r="34" fill="none" stroke="#bbf7d0" stroke-width="10"
+                stroke-dasharray="${(18/100)*2*Math.PI*34} ${(1-18/100)*2*Math.PI*34}"
+                stroke-dashoffset="0"/>
+              <!-- 현재 비중 -->
+              <circle cx="42" cy="42" r="34" fill="none"
+                stroke="${spendRatio <= 18 ? '#16a34a' : '#ef4444'}" stroke-width="10"
+                stroke-dasharray="${Math.min(spendRatio,100)/100*2*Math.PI*34} ${2*Math.PI*34}"
+                stroke-dashoffset="0"
+                stroke-linecap="round"/>
+            </svg>
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+              <span style="font-size:15px;font-weight:700;color:${spendRatio <= 18 ? '#16a34a' : '#ef4444'};">${spendRatio.toFixed(1)}%</span>
+            </div>
+          </div>
+          <div style="margin-top:6px;font-size:11px;font-weight:600;color:${spendRatio <= 18 ? '#16a34a' : '#ef4444'};">${spendRatio <= 18 ? '안전 (18% 이하)' : '위험 (18% 초과)'}</div>
+          <div style="display:flex;gap:8px;margin-top:5px;font-size:10px;color:#9b9b9b;align-items:center;">
+            <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;background:#bbf7d0;border-radius:2px;display:inline-block;"></span>18% 한도</span>
+            <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;background:${spendRatio <= 18 ? '#16a34a' : '#ef4444'};border-radius:2px;display:inline-block;"></span>현재</span>
+          </div>
         </div>
-        <div class="card">
-          <div class="c-lbl">현재 기준 발주비 비중</div>
-          <div class="c-val ${spendRatio > 18 ? 'r' : ''}">${spendRatio.toFixed(1)}%</div>
-          <div class="c-tag ${spendRatio > 18 ? 'r' : 'g'}">${spendRatio > 18 ? '위험 (18% 초과)' : '안전 (18% 이하)'}</div>
-          <div class="c-sub">누적지출 ÷ 월말 예상</div>
-        </div>
+
+        <!-- 추가 가용 발주비 -->
         <div class="card">
           <div class="c-lbl">추가 가용 발주비</div>
           <div class="c-val ${extraBudget >= 0 ? '' : 'r'}">${extraBudget >= 0 ? f(extraBudget) : '-' + f(Math.abs(extraBudget))}</div>
           <div class="c-tag ${extraBudget >= 0 ? 'g' : 'r'}">${extraBudget >= 0 ? '여유 있음' : '예산 초과'}</div>
+          <div class="c-sub" style="margin-top:8px;line-height:1.6;">현재 평균 유지 시<br>${extraBudget >= 0 ? f(extraBudget) + ' 추가 집행 가능' : f(Math.abs(extraBudget)) + ' 초과 상태'}</div>
         </div>
       </div>
     </div>
