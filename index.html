@@ -551,12 +551,12 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
 
   /* ─── 조건부 발주 섹션 ─── */
   let deferredHTML = '';
-  if (deferralDeadline || deferralLimit > 0) {
+  if (true) { // 항상 표시 (공란이면 불가 상태로 표시)
     const ddayDefer = calcDday(deferralDeadline);
     const ddayLabel = ddayDefer === null ? '—'
       : ddayDefer < 0 ? `D+${Math.abs(ddayDefer)}`
       : `D-${ddayDefer}`;
-    const ddayCls = ddayDefer === null ? 'na'
+    const ddayCls = !deferralDeadline ? 'neg'
       : ddayDefer < 0 ? 'neg'
       : ddayDefer < 5 ? 'neg'
       : '';
@@ -564,6 +564,12 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
     /* 유예 한도까지 추가 가능한 발주 잔여액 */
     const deferralRemain = deferralLimit - Math.max(0, -extraBudget);
     const deferralCls    = deferralRemain > 0 ? 'pos' : 'neg';
+
+    /* 공란 여부 플래그 */
+    const noDeadline = !deferralDeadline;
+    const noLimit    = !(deferralLimit > 0);
+    /* 조건부 발주 가능액: 마감일 또는 한도 중 하나라도 불가면 0원(불가) */
+    const deferPossible = !noDeadline && !noLimit;
 
     deferredHTML = `
     <div class="sec">
@@ -576,13 +582,13 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
         <div class="deferred-body">
           <div class="deferred-cell">
             <div class="deferred-cell-lbl">유예 가능 마감일</div>
-            <div class="deferred-cell-val ${ddayCls}">${deferralDeadline ? fmtDate(deferralDeadline) : '미설정'}</div>
-            <div class="deferred-cell-sub">${deferralDeadline ? `${ddayLabel} 남음` : 'Sheets에서 입력'}</div>
+            <div class="deferred-cell-val ${noDeadline ? 'neg' : ddayCls}">${noDeadline ? '불가' : fmtDate(deferralDeadline)}</div>
+            <div class="deferred-cell-sub">${noDeadline ? '마감일 미설정' : `${ddayLabel} 남음`}</div>
           </div>
           <div class="deferred-cell">
             <div class="deferred-cell-lbl">유예 조건 추가 발주 한도</div>
-            <div class="deferred-cell-val">${deferralLimit > 0 ? f(deferralLimit) : '—'}</div>
-            <div class="deferred-cell-sub">${deferralLimit > 0 ? '과장 설정 기준' : 'Sheets에서 입력'}</div>
+            <div class="deferred-cell-val ${noLimit ? 'neg' : ''}">${noLimit ? '0원' : f(deferralLimit)}</div>
+            <div class="deferred-cell-sub">${noLimit ? '한도 미설정 (불가)' : '과장 설정 기준'}</div>
           </div>
           <div class="deferred-cell">
             <div class="deferred-cell-lbl">현재 예산 초과액<br>(기존 발주비 기준)</div>
@@ -591,8 +597,8 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
           </div>
           <div class="deferred-cell">
             <div class="deferred-cell-lbl">조건부 추가 발주 가능액</div>
-            <div class="deferred-cell-val ${deferralLimit > 0 ? deferralCls : 'na'}">${deferralLimit > 0 ? f(Math.max(0, deferralRemain)) : '—'}</div>
-            <div class="deferred-cell-sub">${deferralLimit > 0 ? (deferralRemain > 0 ? '유예 한도 내 발주 가능' : '한도 소진') : '한도 설정 필요'}</div>
+            <div class="deferred-cell-val ${deferPossible ? (deferralRemain > 0 ? 'pos' : 'neg') : 'neg'}">${deferPossible ? f(Math.max(0, deferralRemain)) : '0원'}</div>
+            <div class="deferred-cell-sub">${deferPossible ? (deferralRemain > 0 ? '유예 한도 내 발주 가능' : '한도 소진') : '조건 미설정으로 불가'}</div>
           </div>
         </div>
         <div class="deferred-note">
