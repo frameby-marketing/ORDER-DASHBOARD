@@ -579,21 +579,16 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
           <span style="font-size:15px;">💳</span>
           <span class="deferred-header-lbl">잔여 발주 예산이 부족한 경우, 다음달 결제 유예 조건으로 추가 발주 가능한 한도를 표시합니다.</span>
         </div>
-        <div class="deferred-body">
+        <div class="deferred-body" style="grid-template-columns:1fr 1fr;">
           <div class="deferred-cell">
-            <div class="deferred-cell-lbl">유예 가능 마감일</div>
+            <div class="deferred-cell-lbl">이 날짜까지 결제를 미룰 수 있다면</div>
             <div class="deferred-cell-val ${noDeadline ? 'neg' : ddayCls}">${noDeadline ? '불가' : fmtDate(deferralDeadline)}</div>
             <div class="deferred-cell-sub">${noDeadline ? '마감일 미설정' : `${ddayLabel} 남음`}</div>
           </div>
           <div class="deferred-cell">
-            <div class="deferred-cell-lbl">유예 조건 추가 발주 한도</div>
+            <div class="deferred-cell-lbl">추가 발주 가능 한도</div>
             <div class="deferred-cell-val ${noLimit ? 'neg' : ''}">${noLimit ? '0원' : f(deferralLimit)}</div>
             <div class="deferred-cell-sub">${noLimit ? '한도 미설정 (불가)' : '과장 설정 기준'}</div>
-          </div>
-          <div class="deferred-cell">
-            <div class="deferred-cell-lbl">조건부 추가 발주 가능액</div>
-            <div class="deferred-cell-val ${deferPossible ? (deferralRemain > 0 ? 'pos' : 'neg') : 'neg'}">${deferPossible ? f(Math.max(0, deferralRemain)) : '0원'}</div>
-            <div class="deferred-cell-sub">${deferPossible ? (deferralRemain > 0 ? '유예 한도 내 발주 가능' : '한도 소진') : '조건 미설정으로 불가'}</div>
           </div>
         </div>
         <div class="deferred-note">
