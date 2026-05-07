@@ -140,8 +140,8 @@
     }
     .scenario-avail.pos { color: #16a34a; font-weight: 700; }
     .scenario-avail.neg { color: #ef4444; font-weight: 700; }
-    .scenario-table tr.target-above td { border-top: 3px solid #1a1a1a !important; }
-    .scenario-table tr.target-below td { border-bottom: 3px solid #1a1a1a !important; }
+    .scenario-table tr.target-above td { border-top: 3px solid #1a1a1a !important; border-bottom: 3px solid #1a1a1a !important; }
+    .scenario-table tr.target-below td { border-top: none !important; }
 
     /* 조건부 발주 카드 */
     .deferred-card {
@@ -579,7 +579,7 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
         <div class="deferred-body" style="grid-template-columns:1fr 1fr;">
           <div class="deferred-cell">
             <div class="deferred-cell-lbl">이 날짜까지 결제를 미룰 수 있다면</div>
-            <div class="deferred-cell-val ${noDeadline ? 'neg' : ddayCls}" style="${noDeadline ? 'font-size:16px;line-height:1.25;' : ''}">${noDeadline ? '조건부 추가<br>발주 불가' : fmtDate(deferralDeadline)}</div>
+            <div class="deferred-cell-val ${noDeadline ? 'neg' : ddayCls}" style="${noDeadline ? 'font-size:15px;' : ''}">${noDeadline ? '조건부 추가 발주 불가' : fmtDate(deferralDeadline)}</div>
             <div class="deferred-cell-sub">${noDeadline ? '마감일 미설정' : `${ddayLabel} 남음`}</div>
           </div>
           <div class="deferred-cell">
