@@ -453,7 +453,8 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
   const G = grade(pct);
   const remain  = totalDays - elapsedDays;
   const targetMonthly = 20000;
-  const projected     = totalSales + allDailyAvg * remain;
+  /* 전체 플랫폼 예상 매출: 자사몰+네이버 월합산 ÷ 0.7 */
+  const projected     = Math.round((currentMain * elapsedDays + currentMain * remain) / 0.7);
   const adjBudget   = Math.round(projected * 0.18);
   const spendRatio  = projected > 0 ? (spentBudget / projected * 100) : 0;
   const extraBudget = adjBudget - spentBudget;
