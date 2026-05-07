@@ -502,13 +502,29 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
   /* 현재 행이 목표 행과 다를 때만 별도 삽입 */
   const currentIsTarget = Math.abs(currentMain - targetMain) < targetMain * 0.02;
 
+  /* 현재 행은 발주 예산 여유 섹션과 동일한 방식: totalSales + allDailyAvg × remain */
+  const buildCurrentRow = () => {
+    const scenarioProjected = projected; // totalSales + allDailyAvg * remain (상단과 동일)
+    const scenarioAdj       = Math.round(scenarioProjected * 0.18);
+    const scenarioExtra     = scenarioAdj - spentBudget;
+    const extraCls  = scenarioExtra >= 0 ? 'pos' : 'neg';
+    const extraTxt  = (scenarioExtra >= 0 ? '+' : '') + f(scenarioExtra);
+    return `
+      <tr class="current-row">
+        <td>${currentMain.toLocaleString()}만원 <span style="font-size:10px;color:#9b9b9b;font-weight:400;">(현재)</span></td>
+        <td>${f(scenarioProjected)}</td>
+        <td>${f(scenarioAdj)}</td>
+        <td class="scenario-avail ${extraCls}">${extraTxt}</td>
+      </tr>`;
+  };
+
   const scenarioHTML = scenarios.map((s) => {
     const scenarioDailyMain = Math.round(targetMain * s.multiplier);
     const rows = [];
-    /* 목표 행 직후에 현재 행 삽입 (현재 ≠ 목표인 경우) */
     rows.push(buildScenarioRow(scenarioDailyMain, s.note, false, s.isTarget));
+    /* 목표 행 직후에 현재 행 삽입 (현재 ≠ 목표인 경우), 상단 섹션과 동일 계산 */
     if (s.isTarget && !currentIsTarget) {
-      rows.push(buildScenarioRow(currentMain, '현재', true, false));
+      rows.push(buildCurrentRow());
     }
     return rows.join('');
   }).join('');
