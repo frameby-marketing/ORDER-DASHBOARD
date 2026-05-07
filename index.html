@@ -98,11 +98,97 @@
     .stock-restock strong { color: #1a1a1a; font-weight: 600; }
     .stock-restock .none { color: #b8b8b4; }
 
-    .bot2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .bot-card { background: #fff; border: 1px solid #e8e8e4; border-radius: 12px; padding: 18px 16px; }
-    .bot-lbl { font-size: 12px; color: #6b6b6b; margin-bottom: 5px; line-height: 1.5; }
-    .bot-val { font-size: 26px; font-weight: 700; letter-spacing: -0.7px; color: #1a1a1a; }
-    .bot-sub { font-size: 11px; color: #9b9b9b; margin-top: 4px; }
+    /* 시나리오 테이블 */
+    .scenario-card {
+      background: #fff;
+      border: 1px solid #e8e8e4;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .scenario-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .scenario-table thead tr {
+      background: #f9f9f7;
+      border-bottom: 1px solid #e8e8e4;
+    }
+    .scenario-table th {
+      padding: 10px 16px;
+      text-align: right;
+      font-weight: 600;
+      color: #6b6b6b;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .scenario-table th:first-child { text-align: left; }
+    .scenario-table td {
+      padding: 9px 16px;
+      text-align: right;
+      color: #1a1a1a;
+      border-top: 1px solid #f0f0ec;
+      white-space: nowrap;
+    }
+    .scenario-table td:first-child { text-align: left; font-weight: 600; }
+    .scenario-table tr.current-row { background: #fffbeb; }
+    .scenario-table tr.current-row td:first-child::after {
+      content: " ◀ 현재";
+      font-size: 10px;
+      color: #d97706;
+      font-weight: 700;
+    }
+    .scenario-avail.pos { color: #16a34a; font-weight: 700; }
+    .scenario-avail.neg { color: #ef4444; font-weight: 700; }
+
+    /* 조건부 발주 카드 */
+    .deferred-card {
+      background: #fff;
+      border: 1px solid #e8e8e4;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .deferred-header {
+      padding: 14px 20px 10px;
+      border-bottom: 1px solid #f0f0ec;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .deferred-header-lbl {
+      font-size: 12px;
+      color: #6b6b6b;
+      font-weight: 500;
+    }
+    .deferred-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 0;
+    }
+    @media (max-width: 680px) {
+      .deferred-body { grid-template-columns: 1fr 1fr; }
+    }
+    .deferred-cell {
+      padding: 14px 16px;
+      border-right: 1px solid #f0f0ec;
+    }
+    .deferred-cell:last-child { border-right: none; }
+    .deferred-cell-lbl { font-size: 11px; color: #6b6b6b; margin-bottom: 6px; line-height: 1.5; }
+    .deferred-cell-val { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: #1a1a1a; }
+    .deferred-cell-val.pos { color: #16a34a; }
+    .deferred-cell-val.neg { color: #ef4444; }
+    .deferred-cell-val.na  { color: #9b9b9b; font-size: 16px; }
+    .deferred-cell-sub { font-size: 11px; color: #9b9b9b; margin-top: 4px; }
+    .deferred-note {
+      padding: 10px 20px 14px;
+      font-size: 12px;
+      color: #6b6b6b;
+      line-height: 1.65;
+      border-top: 1px solid #f0f0ec;
+      background: #fafaf8;
+    }
+    .deferred-note strong { color: #1a1a1a; }
+
     .loading { text-align: center; padding: 60px; color: #6b6b6b; font-size: 14px; }
     .err-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 13px 15px; color: #dc2626; font-size: 13px; margin-bottom: 14px; line-height: 1.7; }
     .info-card { background: #fff; border: 1px solid #e8e8e4; border-radius: 12px; padding: 24px; font-size: 14px; color: #555; line-height: 1.85; }
@@ -144,6 +230,12 @@
       <p>• <code>경과일</code> / <code>총일수</code></p>
       <br>
       <p>총 플랫폼 일평균은 <strong>매출 시트의 전체 누적 ÷ 경과일</strong>로 자동 계산됩니다.</p>
+      <br>
+      <h3>💳 조건부 발주 설정 항목 (신규)</h3>
+      <p>• <code>결제유예가능일</code> — 다음달 결제 유예 가능 마감일 (<code>2026-06-10</code> 형식)</p>
+      <p>• <code>유예월발주한도</code> — 유예 조건으로 추가 발주 가능한 최대 금액 (만원)</p>
+      <br>
+      <p>위 항목을 설정하면 <strong>조건부 발주 가능 금액</strong> 섹션이 자동으로 표시됩니다.</p>
       <br>
       <h3>📦 재고현황 시트 (신규)</h3>
       <p>새 시트 이름: <code>재고</code> (또는 원하는 이름)</p>
@@ -187,12 +279,30 @@ document.getElementById("date-lbl").textContent =
 document.getElementById("sheet-link").href =
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}`;
 
+/* ─────────────────────────────────────────────
+   숫자 포맷
+   · 1억 이상  → X.X억  (예: 2.2억, 1.8억)
+   · 1000만 미만 → 천 단위 분리  (예: 3천3백만, 4천만)
+   ───────────────────────────────────────────── */
 function f(v) {
   const n = Math.round(v);
-  if (n >= 10000) return `${+(n/10000).toFixed(1)}억`;
-  if (n >= 1000)  return `${Math.round(n/1000)}천만`;
+  if (n >= 100000000 / 10000) { // 1억 이상 (만원 단위 기준: 10000만)
+    return `${+(n / 10000).toFixed(1)}억`;
+  }
+  if (n >= 10000) { // 1억 이상 (만원 단위: 10000만원)
+    return `${+(n / 10000).toFixed(1)}억`;
+  }
+  // 1000만 이상 ~ 1억 미만
+  if (n >= 1000) {
+    const chun = Math.floor(n / 1000);
+    const baek = Math.floor((n % 1000) / 100);
+    if (baek === 0) return `${chun}천만`;
+    return `${chun}천${baek}백만`;
+  }
+  // 1000만 미만
   return `${n.toLocaleString()}만`;
 }
+
 function tab(name, el) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   document.querySelectorAll(".panel").forEach(p => p.classList.remove("on"));
@@ -208,7 +318,7 @@ function csv(raw) {
 }
 function n(s) { return parseFloat(String(s).replace(/[^0-9.-]/g,""))||0; }
 
-/* 날짜 문자열 → D-day (오늘 기준 남은 일수) */
+/* 날짜 문자열 → D-day */
 function calcDday(dateStr) {
   if (!dateStr) return null;
   const target = new Date(dateStr);
@@ -218,7 +328,7 @@ function calcDday(dateStr) {
   target.setHours(0,0,0,0);
   return Math.ceil((target - today) / (1000*60*60*24));
 }
-/* 날짜 → "M월 D일" 표시 */
+/* 날짜 → "M월 D일" */
 function fmtDate(dateStr) {
   if (!dateStr) return null;
   const d = new Date(dateStr);
@@ -269,7 +379,7 @@ async function load() {
       rate:      n(r[2]) > 0 ? (n(r[3]) / n(r[2]) * 100) : 0,
     }));
 
-    /* 재고 시트 파싱: A=제품명, B=품절예정일, C=재입고수량, D=재입고예정일 */
+    /* 재고 시트 파싱 */
     const stockMap = {};
     if (stockR) {
       csv(stockR).slice(1).filter(r=>r[0]).forEach(r => {
@@ -297,6 +407,10 @@ async function load() {
     const currentMain = n(cfg["현재일매출_자사몰"] ?? 0) + n(cfg["현재일매출_네이버"] ?? 0);
     const allDailyAvg = elapsedDays > 0 ? Math.round(totalSales / elapsedDays) : 0;
 
+    /* 조건부 발주 설정 */
+    const deferralDeadline = cfg["결제유예가능일"] || "";
+    const deferralLimit    = n(cfg["유예월발주한도"] ?? 0);
+
     render({
       targetMain,
       currentMain,
@@ -308,6 +422,8 @@ async function load() {
       totalSales,
       products,
       stockData,
+      deferralDeadline,
+      deferralLimit,
     });
   } catch(e) {
     document.getElementById("err").innerHTML =
@@ -322,7 +438,7 @@ async function load() {
   }
 }
 
-function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays, totalDays, totalSales, products, coupangData, stockData }) {
+function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays, totalDays, totalSales, products, coupangData, stockData, deferralDeadline, deferralLimit }) {
   const pct = targetMain > 0 ? (currentMain / targetMain * 100) : 0;
   function grade(p) {
     if (p >= 130) return { cls: 'ex', label: '우수 성과',   barColor: '#ec4899' };
@@ -342,6 +458,99 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
   const needDaily = remain > 0 && currentMain < targetMain
     ? Math.round((targetMain * totalDays - currentMain * elapsedDays) / remain)
     : targetMain;
+
+  /* ─── 시나리오 구간 정의 (목표 일평균 기준 위아래) ─── */
+  const scenarios = [
+    { label: `${Math.round(targetMain * 1.20).toLocaleString()}만원`, multiplier: 1.20, note: '+20%' },
+    { label: `${Math.round(targetMain * 1.10).toLocaleString()}만원`, multiplier: 1.10, note: '+10%' },
+    { label: `${Math.round(targetMain * 1.05).toLocaleString()}만원`, multiplier: 1.05, note: '+5%' },
+    { label: `${targetMain.toLocaleString()}만원`,                    multiplier: 1.00, note: '목표',   isTarget: true },
+    { label: `${Math.round(targetMain * 0.95).toLocaleString()}만원`, multiplier: 0.95, note: '-5%' },
+    { label: `${Math.round(targetMain * 0.90).toLocaleString()}만원`, multiplier: 0.90, note: '-10%' },
+    { label: `${Math.round(targetMain * 0.85).toLocaleString()}만원`, multiplier: 0.85, note: '-15%' },
+    { label: `${Math.round(targetMain * 0.80).toLocaleString()}만원`, multiplier: 0.80, note: '-20%' },
+  ];
+
+  /* 현재 일평균과 가장 가까운 시나리오 행을 강조 */
+  let closestIdx = 0;
+  let minDiff = Infinity;
+  scenarios.forEach((s, i) => {
+    const diff = Math.abs(s.multiplier * targetMain - currentMain);
+    if (diff < minDiff) { minDiff = diff; closestIdx = i; }
+  });
+
+  const scenarioHTML = scenarios.map((s, i) => {
+    const scenarioDailyMain = Math.round(targetMain * s.multiplier);
+    /* 이 시나리오 일평균으로 월말까지 갈 경우 예상 매출 */
+    const scenarioProjected = totalSales + scenarioDailyMain * remain;
+    const scenarioAdj       = Math.round(scenarioProjected * 0.18);
+    const scenarioExtra     = scenarioAdj - spentBudget;
+    const isCurrent = i === closestIdx;
+    const extraCls  = scenarioExtra >= 0 ? 'pos' : 'neg';
+    const extraTxt  = (scenarioExtra >= 0 ? '+' : '') + f(scenarioExtra);
+    return `
+      <tr class="${isCurrent ? 'current-row' : ''}">
+        <td>${s.label} <span style="font-size:10px;color:#9b9b9b;font-weight:400;">(${s.note})</span></td>
+        <td>${f(scenarioProjected)}</td>
+        <td>${f(scenarioAdj)}</td>
+        <td class="scenario-avail ${extraCls}">${extraTxt}</td>
+      </tr>`;
+  }).join('');
+
+  /* ─── 조건부 발주 섹션 ─── */
+  let deferredHTML = '';
+  if (deferralDeadline || deferralLimit > 0) {
+    const ddayDefer = calcDday(deferralDeadline);
+    const ddayLabel = ddayDefer === null ? '—'
+      : ddayDefer < 0 ? `D+${Math.abs(ddayDefer)}`
+      : `D-${ddayDefer}`;
+    const ddayCls = ddayDefer === null ? 'na'
+      : ddayDefer < 0 ? 'neg'
+      : ddayDefer < 5 ? 'neg'
+      : '';
+
+    /* 유예 한도까지 추가 가능한 발주 잔여액 */
+    const deferralRemain = deferralLimit - Math.max(0, -extraBudget);
+    const deferralCls    = deferralRemain > 0 ? 'pos' : 'neg';
+
+    deferredHTML = `
+    <div class="sec">
+      <div class="sec-lbl">조건부 발주 가능 금액 (결제 유예 조건)</div>
+      <div class="deferred-card">
+        <div class="deferred-header">
+          <span style="font-size:15px;">💳</span>
+          <span class="deferred-header-lbl">잔여 발주 예산이 부족한 경우, 다음달 결제 유예 조건으로 추가 발주 가능한 한도를 표시합니다.</span>
+        </div>
+        <div class="deferred-body">
+          <div class="deferred-cell">
+            <div class="deferred-cell-lbl">유예 가능 마감일</div>
+            <div class="deferred-cell-val ${ddayCls}">${deferralDeadline ? fmtDate(deferralDeadline) : '미설정'}</div>
+            <div class="deferred-cell-sub">${deferralDeadline ? `${ddayLabel} 남음` : 'Sheets에서 입력'}</div>
+          </div>
+          <div class="deferred-cell">
+            <div class="deferred-cell-lbl">유예 조건 추가 발주 한도</div>
+            <div class="deferred-cell-val">${deferralLimit > 0 ? f(deferralLimit) : '—'}</div>
+            <div class="deferred-cell-sub">${deferralLimit > 0 ? '과장 설정 기준' : 'Sheets에서 입력'}</div>
+          </div>
+          <div class="deferred-cell">
+            <div class="deferred-cell-lbl">현재 예산 초과액<br>(기존 발주비 기준)</div>
+            <div class="deferred-cell-val ${extraBudget >= 0 ? 'pos' : 'neg'}">${extraBudget >= 0 ? f(extraBudget) + ' 여유' : f(Math.abs(extraBudget)) + ' 초과'}</div>
+            <div class="deferred-cell-sub">조정발주비 대비</div>
+          </div>
+          <div class="deferred-cell">
+            <div class="deferred-cell-lbl">조건부 추가 발주 가능액</div>
+            <div class="deferred-cell-val ${deferralLimit > 0 ? deferralCls : 'na'}">${deferralLimit > 0 ? f(Math.max(0, deferralRemain)) : '—'}</div>
+            <div class="deferred-cell-sub">${deferralLimit > 0 ? (deferralRemain > 0 ? '유예 한도 내 발주 가능' : '한도 소진') : '한도 설정 필요'}</div>
+          </div>
+        </div>
+        <div class="deferred-note">
+          📌 <strong>조건부 발주</strong>란, 이번 달 발주 예산을 소진한 경우 <strong>${deferralDeadline ? fmtDate(deferralDeadline) : '지정된 날짜'}까지 결제를 유예</strong>하는 조건으로 추가 발주를 진행하는 것입니다.
+          한도(<strong>${deferralLimit > 0 ? f(deferralLimit) : '미설정'}</strong>)는 과장이 설정하며, 해당 범위 내에서만 추가 발주가 가능합니다.
+          유예 마감일이 지나면 즉시 결제가 필요합니다.
+        </div>
+      </div>
+    </div>`;
+  }
 
   const txtRed = (pct < 80 && currentMain > 0)
     ? `[위험] 자사몰+네이버 달성률 ${pct.toFixed(1)}% — 목표 달성을 위한 잔여 일 매출이 평소 대비 ${Math.round(needDaily / currentMain * 100)}% 이상 필요합니다. 발주 조정 협의가 필요합니다.`
@@ -428,23 +637,6 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
       </div>
     </div>
 
-    <!-- 추가 지표 (일매출 달성 현황 바로 아래로 이동) -->
-    <div class="sec">
-      <div class="sec-lbl">추가 지표</div>
-      <div class="bot2">
-        <div class="bot-card">
-          <div class="bot-lbl">목표 달성에 필요한<br>잔여 일매출 (자사몰+네이버)</div>
-          <div class="bot-val">${f(needDaily)}</div>
-          <div class="bot-sub">잔여 ${remain}일</div>
-        </div>
-        <div class="bot-card">
-          <div class="bot-lbl">발주예산 소진율</div>
-          <div class="bot-val">100.0%</div>
-          <div class="bot-sub">누적지출 ${f(spentBudget)} / 조정발주비 ${f(adjBudget)}</div>
-        </div>
-      </div>
-    </div>
-
     <!-- 발주 예산 여유 -->
     <div class="sec">
       <div class="sec-lbl">발주 예산 여유</div>
@@ -472,6 +664,31 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
         </div>
       </div>
     </div>
+
+    <!-- 일평균 시나리오별 추가 가용 발주비 -->
+    <div class="sec">
+      <div class="sec-lbl">일평균 시나리오별 추가 가용 발주비 (목표 일평균 기준)</div>
+      <div class="scenario-card">
+        <table class="scenario-table">
+          <thead>
+            <tr>
+              <th>시나리오 일평균</th>
+              <th>월말 예상 매출</th>
+              <th>조정 발주비 (×18%)</th>
+              <th>추가 가용 발주비</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${scenarioHTML}
+          </tbody>
+        </table>
+        <div style="padding:8px 16px 10px; font-size:11px; color:#9b9b9b; background:#fafaf8; border-top:1px solid #f0f0ec;">
+          ▶ 현재 일평균(${f(currentMain)})과 가장 가까운 구간이 강조 표시됩니다. 추가 가용 발주비 = 조정 발주비 − 누적 지출액(${f(spentBudget)})
+        </div>
+      </div>
+    </div>
+
+    ${deferredHTML}
 
     ${txtRed  ? `<div class="alert r">${txtRed}</div>`  : ''}
     ${txtBlue ? `<div class="alert b">${txtBlue}</div>` : ''}
