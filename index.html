@@ -715,26 +715,40 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
     <div class="sec">
       <div class="sec-lbl">발주 예산 여유</div>
       <div class="kpi4" style="grid-template-columns:1fr 1fr 1fr;">
-        <!-- 조정발주비 vs 누적지출 가로 막대그래프 -->
+        <!-- 조정발주비 vs 누적지출 가로 막대그래프 (확대 스케일) -->
         <div class="card" style="padding:18px 16px 16px;">
           <div class="c-lbl" style="margin-bottom:12px;">조정 발주비 vs 누적 지출액</div>
           <div style="display:flex;flex-direction:column;gap:8px;">
-            <!-- 조정발주비 행 (기준 = 100%) -->
+            <!--
+              확대 스케일: 두 값 중 min의 85%를 하한으로 잡고,
+              max를 100%로 설정해서 차이가 시각적으로 크게 보이게 함
+              barMin = min(adjBudget, spentBudget) * 0.85
+              range  = max(adjBudget, spentBudget) - barMin
+              adjW   = (adjBudget   - barMin) / range * 100
+              spentW = (spentBudget - barMin) / range * 100
+            -->
+            ${(() => {
+              const barMin  = Math.min(adjBudget, spentBudget) * 0.85;
+              const range   = Math.max(adjBudget, spentBudget) - barMin;
+              const adjW    = Math.round((adjBudget   - barMin) / range * 100);
+              const spentW  = Math.round((spentBudget - barMin) / range * 100);
+              const spentCol = spendRatio <= 18 ? '#16a34a' : '#ef4444';
+              return `
             <div style="display:flex;align-items:center;gap:8px;">
               <div style="width:46px;font-size:10px;color:#9b9b9b;flex-shrink:0;text-align:right;line-height:1.3;">조정<br>발주비</div>
               <div style="flex:1;background:#eeeeee;border-radius:4px;height:14px;overflow:hidden;">
-                <div style="width:100%;height:100%;background:#d4d4d0;border-radius:4px;"></div>
+                <div style="width:${adjW}%;height:100%;background:#d4d4d0;border-radius:4px;transition:width .7s;"></div>
               </div>
               <div style="width:52px;font-size:12px;font-weight:700;color:#1a1a1a;flex-shrink:0;">${f(adjBudget)}</div>
             </div>
-            <!-- 누적지출 행 -->
             <div style="display:flex;align-items:center;gap:8px;">
               <div style="width:46px;font-size:10px;color:#9b9b9b;flex-shrink:0;text-align:right;line-height:1.3;">누적<br>지출</div>
               <div style="flex:1;background:#eeeeee;border-radius:4px;height:14px;overflow:hidden;">
-                <div style="width:${Math.min(Math.round(spentBudget/adjBudget*100),100)}%;height:100%;background:${spendRatio <= 18 ? '#16a34a' : '#ef4444'};border-radius:4px;transition:width .7s;"></div>
+                <div style="width:${spentW}%;height:100%;background:${spentCol};border-radius:4px;transition:width .7s;"></div>
               </div>
-              <div style="width:52px;font-size:12px;font-weight:700;color:${spendRatio <= 18 ? '#16a34a' : '#ef4444'};flex-shrink:0;">${f(spentBudget)}</div>
-            </div>
+              <div style="width:52px;font-size:12px;font-weight:700;color:${spentCol};flex-shrink:0;">${f(spentBudget)}</div>
+            </div>`;
+            })()}
           </div>
           <div style="font-size:11px;color:#9b9b9b;margin-top:10px;">월말 예상 매출 × 18% 기준 · 현재 ${spendRatio.toFixed(1)}% 집행</div>
         </div>
