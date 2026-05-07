@@ -273,7 +273,7 @@ const GID_PROD    = "408610443";  // 제품 시트 gid
 const GID_SALES   = "202369795";  // 매출 시트 gid
 const GID_COUPANG = "1570889941"; // 쿠팡납품 시트 gid
 const GID_STOCK   = "1079489460"; // 재고 시트 gid
-const GID_MEMO    = "1699680751";           // 발주요청사항 시트 gid (생성 후 입력)
+const GID_MEMO    = "";           // 발주요청사항 시트 gid (생성 후 입력)
 /* =================================================== */
 
 /* 8개 제품 고정 순서 */
@@ -877,8 +877,8 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
           return `
           <div style="display:grid;grid-template-columns:64px 1fr;${isLast ? '' : 'border-bottom:1px solid #f0f0ec;'}min-height:44px;">
             <div style="padding:13px 16px;font-size:13px;font-weight:600;color:#1a1a1a;background:#f9f9f7;display:flex;align-items:center;border-right:1px solid #f0f0ec;flex-shrink:0;">${label}</div>
-            <div style="padding:12px 14px;font-size:13px;color:${txt ? '#1a1a1a' : '#b8b8b4'};line-height:1.6;word-break:break-word;white-space:pre-wrap;min-height:44px;">
-              ${txt || '—'}
+            <div style="padding:12px 14px;font-size:13px;color:${txt ? '#1a1a1a' : '#b8b8b4'};line-height:1.6;word-break:break-word;white-space:pre-wrap;min-height:44px;text-align:left;">
+              ${txt ? txt.split('\n').map(l => l.trim()).join('\n') : '—'}
             </div>
           </div>`;
         }).join('')}
