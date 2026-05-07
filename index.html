@@ -674,24 +674,28 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
     <div class="sec">
       <div class="sec-lbl">일매출 달성 현황</div>
       <div class="kpi4" style="grid-template-columns:1fr 1fr 1fr;">
-        <!-- 목표 vs 현재 일매출 막대그래프 통합 카드 -->
-        <div class="card" style="padding:18px 16px 14px;">
-          <div class="c-lbl" style="margin-bottom:10px;">목표 vs 현재 평균일매출 <span style="color:#b8b8b4;">(자사몰+네이버)</span></div>
-          <div style="display:flex;align-items:flex-end;gap:10px;height:80px;margin-bottom:8px;">
-            <!-- 목표 막대 -->
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;">
-              <div style="font-size:12px;font-weight:700;color:#1a1a1a;">${f(targetMain)}</div>
-              <div style="width:100%;flex:1;background:#d4d4d0;border-radius:4px 4px 0 0;"></div>
-              <div style="font-size:10px;color:#9b9b9b;">목표</div>
+        <!-- 목표 vs 현재 일매출 가로 막대그래프 -->
+        <div class="card" style="padding:18px 16px 16px;">
+          <div class="c-lbl" style="margin-bottom:12px;">목표 vs 현재 평균일매출 <span style="color:#b8b8b4;">(자사몰+네이버)</span></div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <!-- 목표 행 -->
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:30px;font-size:10px;color:#9b9b9b;flex-shrink:0;text-align:right;">목표</div>
+              <div style="flex:1;background:#eeeeee;border-radius:4px;height:14px;overflow:hidden;">
+                <div style="width:100%;height:100%;background:#d4d4d0;border-radius:4px;"></div>
+              </div>
+              <div style="width:52px;font-size:12px;font-weight:700;color:#1a1a1a;flex-shrink:0;">${f(targetMain)}</div>
             </div>
-            <!-- 현재 막대 -->
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;">
-              <div style="font-size:12px;font-weight:700;color:${currentMain >= targetMain ? '#16a34a' : '#ef4444'};">${f(currentMain)}</div>
-              <div style="width:100%;height:${Math.min(Math.round(pct),100)}%;background:${currentMain >= targetMain ? '#16a34a' : '#ef4444'};border-radius:4px 4px 0 0;margin-top:auto;"></div>
-              <div style="font-size:10px;color:#9b9b9b;">현재</div>
+            <!-- 현재 행 -->
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:30px;font-size:10px;color:#9b9b9b;flex-shrink:0;text-align:right;">현재</div>
+              <div style="flex:1;background:#eeeeee;border-radius:4px;height:14px;overflow:hidden;">
+                <div style="width:${Math.min(Math.round(pct),100)}%;height:100%;background:${currentMain >= targetMain ? '#16a34a' : '#ef4444'};border-radius:4px;transition:width .7s;"></div>
+              </div>
+              <div style="width:52px;font-size:12px;font-weight:700;color:${currentMain >= targetMain ? '#16a34a' : '#ef4444'};flex-shrink:0;">${f(currentMain)}</div>
             </div>
           </div>
-          <div style="font-size:11px;color:#9b9b9b;">${elapsedDays}일 경과 / ${totalDays}일</div>
+          <div style="font-size:11px;color:#9b9b9b;margin-top:10px;">${elapsedDays}일 경과 / ${totalDays}일 · 달성률 ${pct.toFixed(1)}%</div>
         </div>
         <div class="card">
           <div class="c-lbl">목표 달성률</div>
@@ -713,24 +717,28 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
     <div class="sec">
       <div class="sec-lbl">발주 예산 여유</div>
       <div class="kpi4" style="grid-template-columns:1fr 1fr 1fr;">
-        <!-- 조정발주비 vs 누적지출 막대그래프 통합 카드 -->
-        <div class="card" style="padding:18px 16px 14px;">
-          <div class="c-lbl" style="margin-bottom:10px;">조정 발주비 vs 누적 지출액</div>
-          <div style="display:flex;align-items:flex-end;gap:10px;height:80px;margin-bottom:8px;">
-            <!-- 조정발주비 막대 (기준) -->
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;">
-              <div style="font-size:12px;font-weight:700;color:#1a1a1a;">${f(adjBudget)}</div>
-              <div style="width:100%;flex:1;background:#d4d4d0;border-radius:4px 4px 0 0;"></div>
-              <div style="font-size:10px;color:#9b9b9b;">조정발주비</div>
+        <!-- 조정발주비 vs 누적지출 가로 막대그래프 -->
+        <div class="card" style="padding:18px 16px 16px;">
+          <div class="c-lbl" style="margin-bottom:12px;">조정 발주비 vs 누적 지출액</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <!-- 조정발주비 행 (기준 = 100%) -->
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:46px;font-size:10px;color:#9b9b9b;flex-shrink:0;text-align:right;line-height:1.3;">조정<br>발주비</div>
+              <div style="flex:1;background:#eeeeee;border-radius:4px;height:14px;overflow:hidden;">
+                <div style="width:100%;height:100%;background:#d4d4d0;border-radius:4px;"></div>
+              </div>
+              <div style="width:52px;font-size:12px;font-weight:700;color:#1a1a1a;flex-shrink:0;">${f(adjBudget)}</div>
             </div>
-            <!-- 누적지출 막대 -->
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;">
-              <div style="font-size:12px;font-weight:700;color:${spendRatio <= 18 ? '#16a34a' : '#ef4444'};">${f(spentBudget)}</div>
-              <div style="width:100%;height:${Math.min(Math.round(spentBudget/adjBudget*100),100)}%;background:${spendRatio <= 18 ? '#16a34a' : '#ef4444'};border-radius:4px 4px 0 0;margin-top:auto;"></div>
-              <div style="font-size:10px;color:#9b9b9b;">누적지출</div>
+            <!-- 누적지출 행 -->
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:46px;font-size:10px;color:#9b9b9b;flex-shrink:0;text-align:right;line-height:1.3;">누적<br>지출</div>
+              <div style="flex:1;background:#eeeeee;border-radius:4px;height:14px;overflow:hidden;">
+                <div style="width:${Math.min(Math.round(spentBudget/adjBudget*100),100)}%;height:100%;background:${spendRatio <= 18 ? '#16a34a' : '#ef4444'};border-radius:4px;transition:width .7s;"></div>
+              </div>
+              <div style="width:52px;font-size:12px;font-weight:700;color:${spendRatio <= 18 ? '#16a34a' : '#ef4444'};flex-shrink:0;">${f(spentBudget)}</div>
             </div>
           </div>
-          <div style="font-size:11px;color:#9b9b9b;">월말 예상 매출 × 18% 기준</div>
+          <div style="font-size:11px;color:#9b9b9b;margin-top:10px;">월말 예상 매출 × 18% 기준 · 현재 ${spendRatio.toFixed(1)}% 집행</div>
         </div>
 
         <!-- 원형그래프: 발주비 비중 -->
