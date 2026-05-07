@@ -339,14 +339,14 @@ function csv(raw) {
       field += c; i++; continue;
     }
     if (c === '"') { inQ = true; i++; continue; }
-    if (c === ',') { row.push(field.trim()); field = ''; i++; continue; }
+    if (c === ',') { row.push(field.split('\n').map(l=>l.trim()).join('\n').trim()); field = ''; i++; continue; }
     if (c === '\n') {
-      row.push(field.trim()); rows.push(row);
+      row.push(field.split('\n').map(l=>l.trim()).join('\n').trim()); rows.push(row);
       row = []; field = ''; i++; continue;
     }
     field += c; i++;
   }
-  row.push(field.trim());
+  row.push(field.split('\n').map(l=>l.trim()).join('\n').trim());
   if (row.some(v => v !== '')) rows.push(row);
   return rows;
 }
