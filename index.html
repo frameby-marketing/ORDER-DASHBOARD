@@ -140,8 +140,9 @@
     }
     .scenario-avail.pos { color: #16a34a; font-weight: 700; }
     .scenario-avail.neg { color: #ef4444; font-weight: 700; }
-    .scenario-table tr.target-above td { border-top: 3px solid #1a1a1a !important; border-bottom: 3px solid #1a1a1a !important; }
-    .scenario-table tr.target-below td { border-top: none !important; }
+    .scenario-table tr.target-above { background: #f0fdf4; }
+    .scenario-table tr.target-above td { border-top: 1px solid #f0f0ec; border-bottom: 1px solid #f0f0ec; }
+    .scenario-table tr.target-below td { border-top: 1px solid #f0f0ec; }
 
     /* 조건부 발주 카드 */
     .deferred-card {
@@ -655,13 +656,14 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
     const restockTxt = (s.restockQty || s.restockDate)
       ? `<strong>${s.restockQty ? s.restockQty.toLocaleString()+'개' : '미정'}</strong> 재입고${s.restockDate ? ` · ${fmtDate(s.restockDate)}` : ''}`
       : `<span class="none">재입고 정보 없음</span>`;
+    const isExpired = s.dday !== null && s.dday < 0;
     return `
-      <div class="stock-card" style="--accent:${info.accent};">
-        <div class="stock-name">${s.name}</div>
-        <div class="stock-dday ${info.cls}">${ddayLabel}</div>
-        <div><span class="stock-tag ${info.cls}">${info.label}</span></div>
+      <div class="stock-card" style="--accent:${isExpired ? '#d4d4d0' : info.accent};${isExpired ? 'opacity:0.5;background:#f7f7f5;' : ''}">
+        <div class="stock-name" style="${isExpired ? 'color:#b8b8b4;' : ''}">${s.name}</div>
+        <div class="stock-dday ${isExpired ? 'gray' : info.cls}">${ddayLabel}</div>
+        <div><span class="stock-tag ${isExpired ? 'gray' : info.cls}">${isExpired ? '품절' : info.label}</span></div>
         <div class="stock-divider"></div>
-        <div class="stock-restock">${restockTxt}</div>
+        <div class="stock-restock" style="${isExpired ? 'color:#b8b8b4;' : ''}">${restockTxt}</div>
       </div>`;
   }).join('');
 
