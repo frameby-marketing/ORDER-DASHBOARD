@@ -838,12 +838,12 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
               style="width:100%;padding:12px 14px;font-size:13px;font-family:inherit;border:none;outline:none;resize:none;height:44px;line-height:1.5;color:#1a1a1a;background:#fafaf8;overflow:hidden;cursor:default;"
               onkeydown="if(event.key==='Enter'){event.preventDefault();}"
             ></textarea>
-            <div style="display:flex;flex-direction:column;gap:0;border-left:1px solid #f0f0ec;">
+            <div style="display:flex;flex-direction:row;align-items:center;gap:0;border-left:1px solid #f0f0ec;flex-shrink:0;">
               <button id="btn-edit-${role}" onclick="memoEdit('${role}')"
-                style="flex:1;padding:0 14px;font-size:11px;font-weight:600;font-family:inherit;border:none;border-bottom:1px solid #f0f0ec;background:#fff;color:#555;cursor:pointer;white-space:nowrap;transition:background .15s;"
+                style="height:100%;padding:0 14px;font-size:11px;font-weight:600;font-family:inherit;border:none;border-right:1px solid #f0f0ec;background:#fff;color:#555;cursor:pointer;white-space:nowrap;transition:background .15s;"
                 onmouseover="this.style.background='#f0f0ec'" onmouseout="this.style.background='#fff'">수정</button>
               <button id="btn-save-${role}" onclick="memoSave('${role}')"
-                style="flex:1;padding:0 14px;font-size:11px;font-weight:700;font-family:inherit;border:none;background:#1a1a1a;color:#fff;cursor:pointer;white-space:nowrap;transition:background .15s;"
+                style="height:100%;padding:0 14px;font-size:11px;font-weight:700;font-family:inherit;border:none;background:#1a1a1a;color:#fff;cursor:pointer;white-space:nowrap;transition:background .15s;"
                 onmouseover="this.style.background='#333'" onmouseout="this.style.background='#1a1a1a'">저장</button>
             </div>
           </div>`;
@@ -955,7 +955,6 @@ function memoEdit(role) {
   ta.style.background = '#fff';
   ta.style.cursor = 'text';
   ta.focus();
-  // 수정 버튼 강조
   const btn = document.getElementById('btn-edit-' + role);
   if (btn) { btn.style.background = '#fffbeb'; btn.style.color = '#d97706'; }
 }
@@ -966,32 +965,31 @@ function memoSave(role) {
   ta.style.background = '#fafaf8';
   ta.style.cursor = 'default';
   try { localStorage.setItem('memo_' + role, ta.value); } catch(e) {}
-  // 저장 완료 피드백
   const btn = document.getElementById('btn-save-' + role);
   if (btn) {
     btn.textContent = '저장 ✓';
     btn.style.background = '#16a34a';
     setTimeout(() => { btn.textContent = '저장'; btn.style.background = '#1a1a1a'; }, 1200);
   }
-  // 수정 버튼 원복
   const editBtn = document.getElementById('btn-edit-' + role);
   if (editBtn) { editBtn.style.background = '#fff'; editBtn.style.color = '#555'; }
 }
+/* render() 호출 직후 innerHTML이 확정된 시점에 메모 복원 */
 function loadMemos() {
   ['team','manager','staff'].forEach(role => {
     const ta = document.getElementById('memo-' + role);
     if (!ta) return;
     try {
       const saved = localStorage.getItem('memo_' + role);
-      if (saved) ta.value = saved;
+      if (saved !== null && saved !== undefined) ta.value = saved;
     } catch(e) {}
   });
 }
-/* render 후 메모 복원 */
-const _origLoad = load;
-load = async function() {
-  await _origLoad.apply(this, arguments);
-  setTimeout(loadMemos, 100);
+/* render 함수 래핑 — innerHTML 교체 직후 동기 복원 */
+const _origRender = render;
+render = function(...args) {
+  _origRender.apply(this, args);
+  loadMemos();
 };
 </script>
 </body>
