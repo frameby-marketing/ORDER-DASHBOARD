@@ -499,12 +499,9 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
       </tr>`;
   };
 
-  /* 현재 행이 목표 행과 다를 때만 별도 삽입 */
-  const currentIsTarget = Math.abs(currentMain - targetMain) < targetMain * 0.02;
-
-  /* 현재 행은 발주 예산 여유 섹션과 동일한 방식: totalSales + allDailyAvg × remain */
+  /* 현재 행: 발주 예산 여유 섹션과 동일한 방식 (totalSales + allDailyAvg × remain) */
   const buildCurrentRow = () => {
-    const scenarioProjected = projected; // totalSales + allDailyAvg * remain (상단과 동일)
+    const scenarioProjected = projected;
     const scenarioAdj       = Math.round(scenarioProjected * 0.18);
     const scenarioExtra     = scenarioAdj - spentBudget;
     const extraCls  = scenarioExtra >= 0 ? 'pos' : 'neg';
@@ -518,16 +515,39 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
       </tr>`;
   };
 
-  const scenarioHTML = scenarios.map((s) => {
-    const scenarioDailyMain = Math.round(targetMain * s.multiplier);
-    const rows = [];
-    rows.push(buildScenarioRow(scenarioDailyMain, s.note, false, s.isTarget));
-    /* 목표 행 직후에 현재 행 삽입 (현재 ≠ 목표인 경우), 상단 섹션과 동일 계산 */
-    if (s.isTarget && !currentIsTarget) {
-      rows.push(buildCurrentRow());
+  /* 현재 행을 일평균 크기 순서에 맞는 위치에 삽입
+     - 시나리오는 위에서 아래로 내림차순 (목표 → -10% → -20% → -30% → -40%)
+     - currentMain이 목표보다 높으면 맨 위, 두 시나리오 사이면 그 사이, 맨 아래 시나리오보다 낮으면 맨 아래
+  */
+  const currentIsTarget = Math.abs(currentMain - targetMain) < targetMain * 0.02;
+
+  (() => {
+    // 시나리오 일평균 값 배열 (내림차순)
+    const vals = scenarios.map(s => Math.round(targetMain * s.multiplier));
+    // 현재가 어느 위치에 들어가는지 인덱스 결정 (삽입 위치: 이 인덱스 앞에)
+    // currentMain > vals[0] 이면 insertBefore = 0 (맨 위)
+    // currentMain 이 vals[i] ~ vals[i+1] 사이면 insertBefore = i+1
+    // currentMain < vals[last] 이면 insertBefore = vals.length (맨 아래)
+    let insertBefore = vals.length; // 기본: 맨 아래
+    for (let i = 0; i < vals.length; i++) {
+      if (currentMain > vals[i] + vals[i] * 0.02) { insertBefore = i; break; }
+      if (Math.abs(currentMain - vals[i]) <= vals[i] * 0.02) { insertBefore = -1; break; } // 목표와 동일
     }
+    window._scenarioInsertBefore = insertBefore;
+  })();
+
+  const scenarioHTML = (() => {
+    const insertBefore = window._scenarioInsertBefore;
+    const rows = [];
+    if (!currentIsTarget && insertBefore === 0) rows.push(buildCurrentRow());
+    scenarios.forEach((s, i) => {
+      const scenarioDailyMain = Math.round(targetMain * s.multiplier);
+      rows.push(buildScenarioRow(scenarioDailyMain, s.note, false, s.isTarget));
+      if (!currentIsTarget && insertBefore === i + 1) rows.push(buildCurrentRow());
+    });
+    if (!currentIsTarget && insertBefore === scenarios.length) rows.push(buildCurrentRow());
     return rows.join('');
-  }).join('');
+  })();
 
   /* ─── 조건부 발주 섹션 ─── */
   let deferredHTML = '';
