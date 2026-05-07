@@ -324,8 +324,31 @@ function fetchCSV(gid) {
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
   return fetch(url).then(r => { if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); });
 }
+/* RFC 4180 CSV 파서 — 셀 내 줄바꿈·쉼표·따옴표 모두 처리 */
 function csv(raw) {
-  return raw.trim().split("\n").map(r => r.split(",").map(c => c.trim().replace(/^"|"$/g,"")));
+  const rows = [];
+  let row = [], field = '', inQ = false, i = 0;
+  const s = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  while (i < s.length) {
+    const c = s[i];
+    if (inQ) {
+      if (c === '"') {
+        if (s[i+1] === '"') { field += '"'; i += 2; continue; } // escaped quote
+        inQ = false; i++; continue;
+      }
+      field += c; i++; continue;
+    }
+    if (c === '"') { inQ = true; i++; continue; }
+    if (c === ',') { row.push(field.trim()); field = ''; i++; continue; }
+    if (c === '\n') {
+      row.push(field.trim()); rows.push(row);
+      row = []; field = ''; i++; continue;
+    }
+    field += c; i++;
+  }
+  row.push(field.trim());
+  if (row.some(v => v !== '')) rows.push(row);
+  return rows;
 }
 function n(s) { return parseFloat(String(s).replace(/[^0-9.-]/g,""))||0; }
 
