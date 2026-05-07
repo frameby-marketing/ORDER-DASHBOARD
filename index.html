@@ -240,6 +240,13 @@
       <br>
       <p>위 항목을 설정하면 <strong>조건부 발주 가능 금액</strong> 섹션이 자동으로 표시됩니다.</p>
       <br>
+      <h3>📝 발주요청사항 시트 (신규)</h3>
+      <p>새 시트 이름: <code>발주요청사항</code></p>
+      <p>1행 헤더: <code>역할 | 내용</code></p>
+      <p>• A열: <code>팀장</code> / <code>과장</code> / <code>주임</code> (정확히 입력)</p>
+      <p>• B열: 발주 요청 내용 (자유 입력)</p>
+      <p>• 시트 생성 후 gid를 복사해서 코드 상단 <code>GID_MEMO</code> 값에 입력하세요.</p>
+      <br>
       <h3>📦 재고현황 시트 (신규)</h3>
       <p>새 시트 이름: <code>재고</code> (또는 원하는 이름)</p>
       <p>1행 헤더: <code>제품명 | 품절예정일 | 재입고수량 | 재입고예정일</code></p>
@@ -266,6 +273,7 @@ const GID_PROD    = "408610443";  // 제품 시트 gid
 const GID_SALES   = "202369795";  // 매출 시트 gid
 const GID_COUPANG = "1570889941"; // 쿠팡납품 시트 gid
 const GID_STOCK   = "1079489460"; // 재고 시트 gid
+const GID_MEMO    = "1699680751";           // 발주요청사항 시트 gid (생성 후 입력)
 /* =================================================== */
 
 /* 8개 제품 고정 순서 */
@@ -355,9 +363,12 @@ async function load() {
     const stockPromise = GID_STOCK
       ? fetchCSV(GID_STOCK).catch(() => "")
       : Promise.resolve("");
+    const memoPromise = GID_MEMO
+      ? fetchCSV(GID_MEMO).catch(() => "")
+      : Promise.resolve("");
 
-    const [cfgR, prodR, salesR, coupangR, stockR] = await Promise.all([
-      fetchCSV(GID_CONFIG), fetchCSV(GID_PROD), fetchCSV(GID_SALES), fetchCSV(GID_COUPANG), stockPromise
+    const [cfgR, prodR, salesR, coupangR, stockR, memoR] = await Promise.all([
+      fetchCSV(GID_CONFIG), fetchCSV(GID_PROD), fetchCSV(GID_SALES), fetchCSV(GID_COUPANG), stockPromise, memoPromise
     ]);
 
     /* 설정 시트 */
@@ -403,6 +414,16 @@ async function load() {
       };
     });
 
+    /* 발주요청사항 시트 파싱: A=역할, B=내용 */
+    const memoMap = { team: '', manager: '', staff: '' };
+    const roleKey = { '팀장': 'team', '과장': 'manager', '주임': 'staff' };
+    if (memoR) {
+      csv(memoR).slice(1).filter(r=>r[0]).forEach(r => {
+        const k = roleKey[r[0].trim()];
+        if (k) memoMap[k] = r[1] || '';
+      });
+    }
+
     const elapsedDays = n(cfg["경과일"] ?? 24);
     const totalDays   = n(cfg["총일수"] ?? 30);
 
@@ -427,6 +448,7 @@ async function load() {
       stockData,
       deferralDeadline,
       deferralLimit,
+      memoData: memoMap,
     });
   } catch(e) {
     document.getElementById("err").innerHTML =
@@ -441,7 +463,7 @@ async function load() {
   }
 }
 
-function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays, totalDays, totalSales, products, coupangData, stockData, deferralDeadline, deferralLimit }) {
+function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays, totalDays, totalSales, products, coupangData, stockData, deferralDeadline, deferralLimit, memoData = {} }) {
   const pct = targetMain > 0 ? (currentMain / targetMain * 100) : 0;
   function grade(p) {
     if (p >= 130) return { cls: 'ex', label: '우수 성과',   barColor: '#ec4899' };
@@ -826,28 +848,20 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
     <div class="sec">
       <div class="sec-lbl">발주 요청 사항</div>
       <div class="card" style="padding:0;overflow:hidden;">
-        ${['team','manager','staff'].map((role, idx) => {
-          const label = role === 'team' ? '팀장' : role === 'manager' ? '과장' : '주임';
+        ${[['team','팀장'],['manager','과장'],['staff','주임']].map(([role, label], idx) => {
           const isLast = idx === 2;
+          const txt = memoData[role] || '';
           return `
-          <div style="display:grid;grid-template-columns:64px 1fr auto;${isLast ? '' : 'border-bottom:1px solid #f0f0ec;'}align-items:stretch;">
-            <div style="padding:13px 16px;font-size:13px;font-weight:600;color:#1a1a1a;background:#f9f9f7;display:flex;align-items:center;border-right:1px solid #f0f0ec;">${label}</div>
-            <textarea id="memo-${role}"
-              placeholder="발주 요청 사항을 입력하세요"
-              readonly
-              style="width:100%;padding:12px 14px;font-size:13px;font-family:inherit;border:none;outline:none;resize:none;height:44px;line-height:1.5;color:#1a1a1a;background:#fafaf8;overflow:hidden;cursor:default;"
-              onkeydown="if(event.key==='Enter'){event.preventDefault();}"
-            ></textarea>
-            <div style="display:flex;flex-direction:row;align-items:center;gap:0;border-left:1px solid #f0f0ec;flex-shrink:0;">
-              <button id="btn-edit-${role}" onclick="memoEdit('${role}')"
-                style="height:100%;padding:0 14px;font-size:11px;font-weight:600;font-family:inherit;border:none;border-right:1px solid #f0f0ec;background:#fff;color:#555;cursor:pointer;white-space:nowrap;transition:background .15s;"
-                onmouseover="this.style.background='#f0f0ec'" onmouseout="this.style.background='#fff'">수정</button>
-              <button id="btn-save-${role}" onclick="memoSave('${role}')"
-                style="height:100%;padding:0 14px;font-size:11px;font-weight:700;font-family:inherit;border:none;background:#1a1a1a;color:#fff;cursor:pointer;white-space:nowrap;transition:background .15s;"
-                onmouseover="this.style.background='#333'" onmouseout="this.style.background='#1a1a1a'">저장</button>
+          <div style="display:grid;grid-template-columns:64px 1fr;${isLast ? '' : 'border-bottom:1px solid #f0f0ec;'}min-height:44px;">
+            <div style="padding:13px 16px;font-size:13px;font-weight:600;color:#1a1a1a;background:#f9f9f7;display:flex;align-items:center;border-right:1px solid #f0f0ec;flex-shrink:0;">${label}</div>
+            <div style="padding:12px 14px;font-size:13px;color:${txt ? '#1a1a1a' : '#b8b8b4'};line-height:1.6;word-break:break-all;">
+              ${txt || '—'}
             </div>
           </div>`;
         }).join('')}
+        <div style="padding:8px 16px;font-size:11px;color:#b8b8b4;background:#fafaf8;border-top:1px solid #f0f0ec;">
+          📄 Google Sheets &gt; 발주요청사항 시트에서 수정 · 새로고침 시 반영
+        </div>
       </div>
     </div>
 
@@ -947,50 +961,7 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
 }
 load();
 
-/* ── 메모: 수정/저장 버튼 방식 ── */
-function memoEdit(role) {
-  const ta = document.getElementById('memo-' + role);
-  if (!ta) return;
-  ta.readOnly = false;
-  ta.style.background = '#fff';
-  ta.style.cursor = 'text';
-  ta.focus();
-  const btn = document.getElementById('btn-edit-' + role);
-  if (btn) { btn.style.background = '#fffbeb'; btn.style.color = '#d97706'; }
-}
-function memoSave(role) {
-  const ta = document.getElementById('memo-' + role);
-  if (!ta) return;
-  ta.readOnly = true;
-  ta.style.background = '#fafaf8';
-  ta.style.cursor = 'default';
-  try { localStorage.setItem('memo_' + role, ta.value); } catch(e) {}
-  const btn = document.getElementById('btn-save-' + role);
-  if (btn) {
-    btn.textContent = '저장 ✓';
-    btn.style.background = '#16a34a';
-    setTimeout(() => { btn.textContent = '저장'; btn.style.background = '#1a1a1a'; }, 1200);
-  }
-  const editBtn = document.getElementById('btn-edit-' + role);
-  if (editBtn) { editBtn.style.background = '#fff'; editBtn.style.color = '#555'; }
-}
-/* render() 호출 직후 innerHTML이 확정된 시점에 메모 복원 */
-function loadMemos() {
-  ['team','manager','staff'].forEach(role => {
-    const ta = document.getElementById('memo-' + role);
-    if (!ta) return;
-    try {
-      const saved = localStorage.getItem('memo_' + role);
-      if (saved !== null && saved !== undefined) ta.value = saved;
-    } catch(e) {}
-  });
-}
-/* render 함수 래핑 — innerHTML 교체 직후 동기 복원 */
-const _origRender = render;
-render = function(...args) {
-  _origRender.apply(this, args);
-  loadMemos();
-};
+/* 발주 요청 사항: Google Sheets 발주요청사항 시트에서 읽어옴 */
 </script>
 </body>
 </html>
