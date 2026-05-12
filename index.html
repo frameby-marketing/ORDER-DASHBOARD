@@ -4,987 +4,112 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>발주 관리 대시보드</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Noto Sans KR', sans-serif;
-      background: #f4f4f0;
-      color: #1a1a1a;
-      min-height: 100vh;
-      padding: 32px 24px;
-    }
-    .wrap { max-width: 960px; margin: 0 auto; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; color: #1a1a1a; }
-    .header-r { display: flex; align-items: center; gap: 10px; }
-    .date-txt { font-size: 13px; color: #6b6b6b; }
-    .btn-refresh { background: #fff; border: 1px solid #ddd; border-radius: 50px; padding: 5px 13px; font-size: 12px; font-family: inherit; cursor: pointer; color: #555; transition: all 0.15s; }
-    .btn-refresh:hover { border-color: #999; color: #111; }
-    .tabs { display: flex; gap: 8px; margin-bottom: 26px; }
-    .tab { padding: 7px 18px; border: 1.5px solid #e0e0da; border-radius: 50px; font-size: 13px; font-weight: 500; cursor: pointer; background: #fff; color: #6b6b6b; font-family: inherit; transition: all 0.15s; }
-    .tab:hover { border-color: #aaa; color: #1a1a1a; }
-    .tab.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; font-weight: 700; }
-    .panel { display: none; }
-    .panel.on { display: block; }
-    .sec { margin-bottom: 22px; }
-    .sec-lbl { font-size: 15px; color: #1a1a1a; font-weight: 700; margin-bottom: 10px; }
-    .kpi4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
-    @media (max-width:680px) { .kpi4 { grid-template-columns: repeat(2,1fr); } }
-    .card { background: #fff; border: 1px solid #e8e8e4; border-radius: 12px; padding: 18px 16px 14px; }
-    .c-lbl { font-size: 11px; color: #6b6b6b; font-weight: 500; margin-bottom: 6px; line-height: 1.5; }
-    .c-val { font-size: 26px; font-weight: 700; letter-spacing: -0.7px; line-height: 1.1; color: #1a1a1a; }
-    .c-val.r { color: #ef4444; }
-    .c-sub { font-size: 11px; color: #9b9b9b; margin-top: 4px; }
-    .c-tag { font-size: 12px; font-weight: 600; margin-top: 3px; }
-    .c-tag.r  { color: #ef4444; }
-    .c-tag.w  { color: #f59e0b; }
-    .c-tag.d  { color: #3b82f6; }
-    .c-tag.g  { color: #16a34a; }
-    .c-tag.s  { color: #8b5cf6; }
-    .c-tag.ex { color: #ec4899; }
-    .prog { margin-top: 9px; height: 7px; background: #e8e8e4; border-radius: 4px; overflow: hidden; }
-    .prog-bar { height: 100%; border-radius: 4px; transition: width .7s cubic-bezier(.4,0,.2,1); }
-    .alert { border-radius: 8px; padding: 12px 15px; font-size: 13px; font-weight: 500; margin-bottom: 10px; line-height: 1.55; border-left: 3px solid; }
-    .alert.r { background: #fef2f2; border-color: #ef4444; color: #dc2626; }
-    .alert.b { background: #eff6ff; border-color: #2563eb; color: #2563eb; }
-    .prod-card { background: #fff; border: 1px solid #e8e8e4; border-radius: 12px; overflow: hidden; }
-    .prod-row { display: flex; align-items: center; padding: 13px 20px; border-bottom: 1px solid #f0f0ec; gap: 14px; }
-    .prod-row:last-child { border-bottom: none; }
-    .prod-name { width: 148px; flex-shrink: 0; font-size: 14px; font-weight: 500; color: #1a1a1a; }
-    .prod-bar-wrap { flex: 1; min-width: 0; }
-    .prod-bar-bg { height: 8px; background: #eeeeee; border-radius: 4px; overflow: hidden; }
-    .prod-bar-fill { height: 100%; border-radius: 4px; transition: width .7s cubic-bezier(.4,0,.2,1); }
-    .prod-qty { width: 66px; flex-shrink: 0; font-size: 13px; font-weight: 600; text-align: right; color: #1a1a1a; }
-    .prod-qty em { font-style: normal; font-weight: 400; color: #9b9b9b; }
-    .badge { flex-shrink: 0; width: 40px; text-align: center; font-size: 11px; font-weight: 700; padding: 3px 0; border-radius: 50px; }
-    .badge.r  { background: #fef2f2; color: #ef4444; }
-    .badge.g  { background: #f0fdf4; color: #16a34a; }
-    .badge.am { background: #fffbeb; color: #d97706; }
-
-    /* 재고현황 카드 */
-    .stock-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
-    @media (max-width:680px) { .stock-grid { grid-template-columns: repeat(2,1fr); } }
-    .stock-card {
-      background: #fff;
-      border: 1px solid #e8e8e4;
-      border-radius: 12px;
-      padding: 16px 14px 14px;
-      position: relative;
-      overflow: hidden;
-    }
-    .stock-card::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: var(--accent, #e8e8e4);
-    }
-    .stock-name { font-size: 13px; font-weight: 600; color: #1a1a1a; margin-bottom: 8px; line-height: 1.3; }
-    .stock-dday { font-size: 28px; font-weight: 700; letter-spacing: -0.7px; line-height: 1; color: #1a1a1a; }
-    .stock-dday.r { color: #ef4444; }
-    .stock-dday.w { color: #f59e0b; }
-    .stock-dday.d { color: #3b82f6; }
-    .stock-dday.g { color: #16a34a; }
-    .stock-dday.gray { color: #9b9b9b; font-size: 18px; }
-    .stock-tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 50px; margin-top: 6px; }
-    .stock-tag.r  { background: #fef2f2; color: #ef4444; }
-    .stock-tag.w  { background: #fffbeb; color: #d97706; }
-    .stock-tag.d  { background: #eff6ff; color: #2563eb; }
-    .stock-tag.g  { background: #f0fdf4; color: #16a34a; }
-    .stock-tag.gray { background: #f0f0ec; color: #9b9b9b; }
-    .stock-divider { border-top: 1px dashed #e8e8e4; margin: 10px 0 8px; }
-    .stock-restock { font-size: 11px; color: #6b6b6b; line-height: 1.5; }
-    .stock-restock strong { color: #1a1a1a; font-weight: 600; }
-    .stock-restock .none { color: #b8b8b4; }
-
-    /* 시나리오 테이블 */
-    .scenario-card {
-      background: #fff;
-      border: 1px solid #e8e8e4;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .scenario-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    .scenario-table thead tr {
-      background: #f9f9f7;
-      border-bottom: 1px solid #e8e8e4;
-    }
-    .scenario-table th {
-      padding: 10px 16px;
-      text-align: right;
-      font-weight: 600;
-      color: #6b6b6b;
-      font-size: 11px;
-      white-space: nowrap;
-    }
-    .scenario-table th:first-child { text-align: left; }
-    .scenario-table td {
-      padding: 9px 16px;
-      text-align: right;
-      color: #1a1a1a;
-      border-top: 1px solid #f0f0ec;
-      white-space: nowrap;
-    }
-    .scenario-table td:first-child { text-align: left; font-weight: 600; }
-    .scenario-table tr.current-row { background: #fffbeb; }
-    .scenario-table tr.current-row td:first-child::after {
-      content: " ◀ 현재";
-      font-size: 10px;
-      color: #d97706;
-      font-weight: 700;
-    }
-    .scenario-avail.pos { color: #16a34a; font-weight: 700; }
-    .scenario-avail.neg { color: #ef4444; font-weight: 700; }
-    .scenario-table tr.target-above { background: #f0fdf4; }
-    .scenario-table tr.target-above td { border-top: 1px solid #f0f0ec; border-bottom: 1px solid #f0f0ec; }
-    .scenario-table tr.target-below td { border-top: 1px solid #f0f0ec; }
-
-    /* 조건부 발주 카드 */
-    .deferred-card {
-      background: #fff;
-      border: 1px solid #e8e8e4;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .deferred-header {
-      padding: 14px 20px 10px;
-      border-bottom: 1px solid #f0f0ec;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .deferred-header-lbl {
-      font-size: 12px;
-      color: #6b6b6b;
-      font-weight: 500;
-    }
-    .deferred-body {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 0;
-    }
-    @media (max-width: 680px) {
-      .deferred-body { grid-template-columns: 1fr 1fr; }
-    }
-    .deferred-cell {
-      padding: 14px 16px;
-      border-right: 1px solid #f0f0ec;
-    }
-    .deferred-cell:last-child { border-right: none; }
-    .deferred-cell-lbl { font-size: 11px; color: #6b6b6b; margin-bottom: 6px; line-height: 1.5; }
-    .deferred-cell-val { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: #1a1a1a; }
-    .deferred-cell-val.pos { color: #16a34a; }
-    .deferred-cell-val.neg { color: #ef4444; }
-    .deferred-cell-val.na  { color: #9b9b9b; font-size: 16px; }
-    .deferred-cell-sub { font-size: 11px; color: #9b9b9b; margin-top: 4px; }
-    .deferred-note {
-      padding: 10px 20px 14px;
-      font-size: 12px;
-      color: #6b6b6b;
-      line-height: 1.65;
-      border-top: 1px solid #f0f0ec;
-      background: #fafaf8;
-    }
-    .deferred-note strong { color: #1a1a1a; }
-
-    .loading { text-align: center; padding: 60px; color: #6b6b6b; font-size: 14px; }
-    .err-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 13px 15px; color: #dc2626; font-size: 13px; margin-bottom: 14px; line-height: 1.7; }
-    .info-card { background: #fff; border: 1px solid #e8e8e4; border-radius: 12px; padding: 24px; font-size: 14px; color: #555; line-height: 1.85; }
-    .info-card h3 { font-size: 15px; color: #1a1a1a; margin-bottom: 12px; }
-    .info-card strong { color: #333; }
-    .info-card code { background: #f0f0ec; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #2563eb; }
-    .btn-sheet { display: inline-block; margin-top: 18px; padding: 10px 22px; background: #1a1a1a; color: #fff; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 700; transition: background 0.15s; }
-    .btn-sheet:hover { background: #333; }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="wrap">
-  <div class="header">
-    <h1>발주 관리 대시보드</h1>
-    <div class="header-r">
-      <span class="date-txt" id="date-lbl"></span>
-      <button class="btn-refresh" onclick="load()">↻ 새로고침</button>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-mark">▸</span>
+      <span class="logo-text">Order<br>Monitor</span>
     </div>
-  </div>
-  <div class="tabs">
-    <div class="tab active" onclick="tab('current',this)">현황</div>
-    <div class="tab" onclick="tab('input',this)">데이터 입력</div>
-    <div class="tab" onclick="tab('trend',this)">추이</div>
-  </div>
-  <div id="err"></div>
-  <div id="p-current" class="panel on">
-    <div id="content"><div class="loading">불러오는 중...</div></div>
-  </div>
-  <div id="p-input" class="panel">
-    <div class="info-card">
-      <h3>📋 Google Sheets 설정 시트 항목</h3>
-      <p>설정 시트 <strong>A열에 키 이름</strong>, <strong>B열에 숫자값(만원)</strong>을 입력하세요.</p>
-      <br>
-      <p>• <code>자사몰목표</code> — 자사몰 목표 일매출</p>
-      <p>• <code>네이버목표</code> — 네이버 목표 일매출</p>
-      <p>• <code>현재일매출_자사몰</code> — 자사몰 현재 평균일매출</p>
-      <p>• <code>현재일매출_네이버</code> — 네이버 현재 평균일매출</p>
-      <p>• <code>누적발주지출</code> — 현재 누적 발주 지출액 (만원, 매일 업데이트)</p>
-      <p>• <code>경과일</code> / <code>총일수</code></p>
-      <br>
-      <p>총 플랫폼 일평균은 <strong>매출 시트의 전체 누적 ÷ 경과일</strong>로 자동 계산됩니다.</p>
-      <br>
-      <h3>💳 조건부 발주 설정 항목 (신규)</h3>
-      <p>• <code>결제유예가능일</code> — 다음달 결제 유예 가능 마감일 (<code>2026-06-10</code> 형식)</p>
-      <p>• <code>유예월발주한도</code> — 유예 조건으로 추가 발주 가능한 최대 금액 (만원)</p>
-      <br>
-      <p>위 항목을 설정하면 <strong>조건부 발주 가능 금액</strong> 섹션이 자동으로 표시됩니다.</p>
-      <br>
-      <h3>📝 발주요청사항 시트 (신규)</h3>
-      <p>새 시트 이름: <code>발주요청사항</code></p>
-      <p>1행 헤더: <code>역할 | 내용</code></p>
-      <p>• A열: <code>팀장</code> / <code>과장</code> / <code>주임</code> (정확히 입력)</p>
-      <p>• B열: 발주 요청 내용 (자유 입력)</p>
-      <p>• 시트 생성 후 gid를 복사해서 코드 상단 <code>GID_MEMO</code> 값에 입력하세요.</p>
-      <br>
-      <h3>📦 재고현황 시트 (신규)</h3>
-      <p>새 시트 이름: <code>재고</code> (또는 원하는 이름)</p>
-      <p>1행 헤더: <code>제품명 | 품절예정일 | 재입고수량 | 재입고예정일</code></p>
-      <p>• A열: 제품명 (킥프레임, PH 실버 등 — 8개)</p>
-      <p>• B열: 품절예정일 (<code>2026-05-15</code> 형식)</p>
-      <p>• C열: 재입고수량 (숫자, 비어있어도 됨)</p>
-      <p>• D열: 재입고예정일 (<code>2026-05-20</code> 형식, 비어있어도 됨)</p>
-      <a class="btn-sheet" id="sheet-link" href="#" target="_blank">📊 Google Sheets 열기</a>
+    <nav class="nav">
+      <button class="nav-item active" onclick="tab('current', this)">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        현황
+      </button>
+      <button class="nav-item" onclick="tab('input', this)">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        데이터 입력
+      </button>
+      <button class="nav-item" onclick="tab('trend', this)">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        추이
+      </button>
+    </nav>
+
+    <div class="sync-status">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncText">연결 대기</span>
     </div>
-  </div>
-  <div id="p-trend" class="panel">
-    <div class="info-card" style="text-align:center; padding: 48px;">
-      📈 추이 기능은 준비 중입니다.
+    <button class="refresh-btn" onclick="load()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+      새로고침
+    </button>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- 현황 탭 -->
+    <div id="p-current" class="panel on">
+      <header class="page-header">
+        <div>
+          <h1 class="page-title">발주 관리 대시보드</h1>
+          <p class="page-sub" id="date-lbl"></p>
+        </div>
+        <div><span class="period-badge">발주 현황 · 실시간</span></div>
+      </header>
+      <div id="err"></div>
+      <div id="content"><div class="loading"><div class="loading-spinner"></div><span>불러오는 중...</span></div></div>
     </div>
-  </div>
+
+    <!-- 데이터 입력 탭 -->
+    <div id="p-input" class="panel">
+      <header class="page-header">
+        <div>
+          <h1 class="page-title">데이터 입력 가이드</h1>
+          <p class="page-sub">Google Sheets 설정 항목</p>
+        </div>
+      </header>
+      <div class="info-card">
+        <h3>📋 설정 시트 항목</h3>
+        <p>설정 시트 <strong>A열에 키 이름</strong>, <strong>B열에 숫자값(만원)</strong>을 입력하세요.</p>
+        <p>• <code>자사몰목표</code> — 자사몰 목표 일매출</p>
+        <p>• <code>네이버목표</code> — 네이버 목표 일매출</p>
+        <p>• <code>현재일매출_자사몰</code> — 자사몰 현재 평균 일매출</p>
+        <p>• <code>현재일매출_네이버</code> — 네이버 현재 평균 일매출</p>
+        <p>• <code>누적발주지출</code> — 현재 누적 발주 지출액 (만원)</p>
+        <p>• <code>경과일</code> / <code>총일수</code></p>
+
+        <h3>💳 조건부 발주 설정</h3>
+        <p>• <code>결제유예가능일</code> — 유예 마감일 (<code>2026-06-10</code> 형식)</p>
+        <p>• <code>유예월발주한도</code> — 추가 발주 가능 최대 금액 (만원)</p>
+
+        <h3>📝 발주요청사항 시트</h3>
+        <p>시트 이름: <code>발주요청사항</code> · 1행 헤더: <code>역할 | 내용</code></p>
+        <p>• A열: <code>팀장</code> / <code>과장</code> / <code>주임</code></p>
+        <p>• B열: 발주 요청 내용 (자유 입력)</p>
+
+        <h3>📦 재고현황 시트</h3>
+        <p>시트 이름: <code>재고</code> · 1행 헤더: <code>제품명 | 품절예정일 | 재입고수량 | 재입고예정일</code></p>
+        <p>• B열, D열: <code>2026-05-20</code> 형식</p>
+
+        <a class="btn-sheet" id="sheet-link" href="#" target="_blank">📊 Google Sheets 열기</a>
+      </div>
+    </div>
+
+    <!-- 추이 탭 -->
+    <div id="p-trend" class="panel">
+      <header class="page-header">
+        <div>
+          <h1 class="page-title">추이</h1>
+          <p class="page-sub">준비 중</p>
+        </div>
+      </header>
+      <div class="info-card" style="text-align:center;padding:60px;color:var(--muted)">
+        📈 추이 기능은 준비 중입니다.
+      </div>
+    </div>
+
+  </main>
 </div>
-<script>
-/* ===================================================
-   ⚙️ 설정
-   =================================================== */
-const SHEET_ID    = "1p-ko7c4--yUwYOYE2fL8X6Z1U3O1lWoJ36AZuBanGmQ";
-const GID_CONFIG  = "0";          // 설정 시트 gid
-const GID_PROD    = "408610443";  // 제품 시트 gid
-const GID_SALES   = "202369795";  // 매출 시트 gid
-const GID_COUPANG = "1570889941"; // 쿠팡납품 시트 gid
-const GID_STOCK   = "1079489460"; // 재고 시트 gid
-const GID_MEMO    = "1699680751";           // 발주요청사항 시트 gid (생성 후 입력)
-/* =================================================== */
 
-/* 8개 제품 고정 순서 */
-const STOCK_PRODUCTS = [
-  "킥프레임",
-  "PH 실버", "PH 블랙",
-  "DW프로 실버", "DW프로 블랙",
-  "DW플러스 실버", "DW플러스 블랙", "DW플러스 그린"
-];
-
-const _d = new Date();
-document.getElementById("date-lbl").textContent =
-  `${_d.getFullYear()}년 ${_d.getMonth()+1}월 ${_d.getDate()}일 기준`;
-document.getElementById("sheet-link").href =
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}`;
-
-/* ─────────────────────────────────────────────
-   숫자 포맷
-   · 1억 이상  → X.X억  (예: 2.2억, 1.8억)
-   · 1000만 미만 → 천 단위 분리  (예: 3천3백만, 4천만)
-   ───────────────────────────────────────────── */
-function f(v) {
-  const n = Math.round(v);
-  if (n >= 100000000 / 10000) { // 1억 이상 (만원 단위 기준: 10000만)
-    return `${+(n / 10000).toFixed(1)}억`;
-  }
-  if (n >= 10000) { // 1억 이상 (만원 단위: 10000만원)
-    return `${+(n / 10000).toFixed(1)}억`;
-  }
-  // 1000만 이상 ~ 1억 미만
-  if (n >= 1000) {
-    const chun = Math.floor(n / 1000);
-    const baek = Math.floor((n % 1000) / 100);
-    if (baek === 0) return `${chun}천만`;
-    return `${chun}천${baek}백만`;
-  }
-  // 1000만 미만
-  return `${n.toLocaleString()}만`;
-}
-
-function tab(name, el) {
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  document.querySelectorAll(".panel").forEach(p => p.classList.remove("on"));
-  el.classList.add("active");
-  document.getElementById(`p-${name}`).classList.add("on");
-}
-function fetchCSV(gid) {
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
-  return fetch(url).then(r => { if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); });
-}
-/* RFC 4180 CSV 파서 — 셀 내 줄바꿈·쉼표·따옴표 모두 처리 */
-function csv(raw) {
-  const rows = [];
-  let row = [], field = '', inQ = false, i = 0;
-  const s = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-  while (i < s.length) {
-    const c = s[i];
-    if (inQ) {
-      if (c === '"') {
-        if (s[i+1] === '"') { field += '"'; i += 2; continue; } // escaped quote
-        inQ = false; i++; continue;
-      }
-      field += c; i++; continue;
-    }
-    if (c === '"') { inQ = true; i++; continue; }
-    if (c === ',') { row.push(field.split('\n').map(l=>l.trim()).join('\n').trim()); field = ''; i++; continue; }
-    if (c === '\n') {
-      row.push(field.split('\n').map(l=>l.trim()).join('\n').trim()); rows.push(row);
-      row = []; field = ''; i++; continue;
-    }
-    field += c; i++;
-  }
-  row.push(field.split('\n').map(l=>l.trim()).join('\n').trim());
-  if (row.some(v => v !== '')) rows.push(row);
-  return rows;
-}
-function n(s) { return parseFloat(String(s).replace(/[^0-9.-]/g,""))||0; }
-
-/* 날짜 문자열 → D-day */
-function calcDday(dateStr) {
-  if (!dateStr) return null;
-  const target = new Date(dateStr);
-  if (isNaN(target.getTime())) return null;
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  target.setHours(0,0,0,0);
-  return Math.ceil((target - today) / (1000*60*60*24));
-}
-/* 날짜 → "M월 D일" */
-function fmtDate(dateStr) {
-  if (!dateStr) return null;
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return null;
-  return `${d.getMonth()+1}월 ${d.getDate()}일`;
-}
-/* D-day 등급 */
-function ddayInfo(d) {
-  if (d === null) return { cls: 'gray', label: '미입력', accent: '#e8e8e4' };
-  if (d < 10)     return { cls: 'r',    label: '초임박', accent: '#ef4444' };
-  if (d < 20)     return { cls: 'w',    label: '임박',   accent: '#f59e0b' };
-  if (d < 30)     return { cls: 'd',    label: '주의',   accent: '#3b82f6' };
-  if (d < 40)     return { cls: 'g',    label: '관심',   accent: '#16a34a' };
-  return                 { cls: 'gray', label: '안전',   accent: '#d4d4d0' };
-}
-
-async function load() {
-  document.getElementById("content").innerHTML = `<div class="loading">데이터를 불러오는 중...</div>`;
-  document.getElementById("err").innerHTML = "";
-  try {
-    const stockPromise = GID_STOCK
-      ? fetchCSV(GID_STOCK).catch(() => "")
-      : Promise.resolve("");
-    const memoPromise = GID_MEMO
-      ? fetchCSV(GID_MEMO).catch(() => "")
-      : Promise.resolve("");
-
-    const [cfgR, prodR, salesR, coupangR, stockR, memoR] = await Promise.all([
-      fetchCSV(GID_CONFIG), fetchCSV(GID_PROD), fetchCSV(GID_SALES), fetchCSV(GID_COUPANG), stockPromise, memoPromise
-    ]);
-
-    /* 설정 시트 */
-    const cfg = {};
-    csv(cfgR).slice(1).forEach(r => { if(r[0]) cfg[r[0]] = r[1]; });
-
-    /* 제품 시트 */
-    const products = csv(prodR).slice(1).filter(r=>r[0])
-      .map(r => ({ name:r[0], actual:n(r[1]), target:n(r[2]), soldout: r[1].trim() === '품절' }));
-
-    /* 매출 시트 */
-    const salesRows  = csv(salesR).slice(1).filter(r=>r[0]);
-    const totalSales = n(salesRows.at(-1)?.[1] ?? 0);
-
-    /* 쿠팡 납품 */
-    const coupangRows = csv(coupangR).slice(1).filter(r=>r[0]);
-    const coupangData = coupangRows.map(r => ({
-      week:      r[0],
-      period:    r[1],
-      ordered:   n(r[2]),
-      delivered: n(r[3]),
-      rate:      n(r[2]) > 0 ? (n(r[3]) / n(r[2]) * 100) : 0,
-    }));
-
-    /* 재고 시트 파싱 */
-    const stockMap = {};
-    if (stockR) {
-      csv(stockR).slice(1).filter(r=>r[0]).forEach(r => {
-        stockMap[r[0].trim()] = {
-          stockoutDate: r[1] || "",
-          restockQty:   r[2] ? n(r[2]) : null,
-          restockDate:  r[3] || "",
-        };
-      });
-    }
-    const stockData = STOCK_PRODUCTS.map(name => {
-      const s = stockMap[name] || {};
-      return {
-        name,
-        dday:         calcDday(s.stockoutDate),
-        restockQty:   s.restockQty ?? null,
-        restockDate:  s.restockDate || "",
-      };
-    });
-
-    /* 발주요청사항 시트 파싱: A=역할, B=내용 */
-    const memoMap = { team: '', manager: '', staff: '' };
-    const roleKey = { '팀장': 'team', '과장': 'manager', '주임': 'staff' };
-    if (memoR) {
-      csv(memoR).slice(1).filter(r=>r[0]).forEach(r => {
-        const k = roleKey[r[0].trim()];
-        if (k) memoMap[k] = r[1] || '';
-      });
-    }
-
-    const elapsedDays = n(cfg["경과일"] ?? 24);
-    const totalDays   = n(cfg["총일수"] ?? 30);
-
-    const targetMain  = n(cfg["자사몰목표"] ?? 0) + n(cfg["네이버목표"] ?? 0);
-    const currentMain = n(cfg["현재일매출_자사몰"] ?? 0) + n(cfg["현재일매출_네이버"] ?? 0);
-    const allDailyAvg = elapsedDays > 0 ? Math.round(totalSales / elapsedDays) : 0;
-
-    /* 조건부 발주 설정 */
-    const deferralDeadline = cfg["결제유예가능일"] || "";
-    const deferralLimit    = n(cfg["유예월발주한도"] ?? 0);
-
-    render({
-      targetMain,
-      currentMain,
-      allDailyAvg,
-      spentBudget: n(cfg["누적발주지출"] ?? 0),
-      coupangData,
-      elapsedDays,
-      totalDays,
-      totalSales,
-      products,
-      stockData,
-      deferralDeadline,
-      deferralLimit,
-      memoData: memoMap,
-    });
-  } catch(e) {
-    document.getElementById("err").innerHTML =
-      `<div class="err-box">
-        ⚠️ 데이터 로드 실패: <strong>${e.message}</strong><br><br>
-        확인 사항:<br>
-        1. Sheets 공유 → <strong>"링크가 있는 모든 사용자" 뷰어</strong> 설정<br>
-        2. 설정 시트 A열 키 이름이 정확한지 확인<br>
-        3. gid 번호 확인 (시트 탭 클릭 → URL 끝 #gid= 숫자)
-      </div>`;
-    document.getElementById("content").innerHTML = "";
-  }
-}
-
-function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays, totalDays, totalSales, products, coupangData, stockData, deferralDeadline, deferralLimit, memoData = {} }) {
-  const pct = targetMain > 0 ? (currentMain / targetMain * 100) : 0;
-  function grade(p) {
-    if (p >= 130) return { cls: 'ex', label: '우수 성과',   barColor: '#ec4899' };
-    if (p >= 110) return { cls: 's',  label: '초과 성과',   barColor: '#8b5cf6' };
-    if (p >= 100) return { cls: 'g',  label: '목표 달성',   barColor: '#16a34a' };
-    if (p >= 90)  return { cls: 'd',  label: '방어 성공',   barColor: '#3b82f6' };
-    if (p >= 80)  return { cls: 'w',  label: '경고',        barColor: '#f59e0b' };
-    return        { cls: 'r',  label: '위험',        barColor: '#ef4444' };
-  }
-  const G = grade(pct);
-  const remain  = totalDays - elapsedDays;
-  const targetMonthly = 20000;
-  /* 전체 플랫폼 예상 매출: 자사몰+네이버 월합산 ÷ 0.7 */
-  const projected     = Math.round((currentMain * elapsedDays + currentMain * remain) / 0.7);
-  const adjBudget   = Math.round(projected * 0.18);
-  const spendRatio  = projected > 0 ? (spentBudget / projected * 100) : 0;
-  const extraBudget = adjBudget - spentBudget;
-  const needDaily = remain > 0 && currentMain < targetMain
-    ? Math.round((targetMain * totalDays - currentMain * elapsedDays) / remain)
-    : targetMain;
-
-  /* ─── 시나리오 구간 정의
-       · 자사몰+네이버 일평균 기준
-       · 자사몰+네이버 = 전체 매출의 70% → 전체 월매출 = 자사몰+네이버 월합산 ÷ 0.7
-  ─── */
-  const scenarios = [
-    { multiplier: 1.00, note: '목표', isTarget: true },
-    { multiplier: 0.90, note: '-10%' },
-    { multiplier: 0.80, note: '-20%' },
-    { multiplier: 0.70, note: '-30%' },
-    { multiplier: 0.60, note: '-40%' },
-  ];
-
-  /* 현재 일평균과 가장 가까운 시나리오 행을 강조 (현재 행 별도 삽입) */
-  /* "현재" 행은 항상 목표 행 바로 아래에 고정 삽입 */
-
-  const buildScenarioRow = (scenarioDailyMain, note, isCurrent, isTarget, isAfterTarget) => {
-    const mainMonthly    = currentMain * elapsedDays + scenarioDailyMain * remain;
-    const scenarioProjected = Math.round(mainMonthly / 0.7);
-    const scenarioAdj       = Math.round(scenarioProjected * 0.18);
-    const scenarioExtra     = scenarioAdj - spentBudget;
-    const extraCls  = scenarioExtra >= 0 ? 'pos' : 'neg';
-    const extraTxt  = (scenarioExtra >= 0 ? '+' : '') + f(scenarioExtra);
-    const rowCls    = isCurrent ? 'current-row' : isTarget ? 'target-above' : isAfterTarget ? 'target-below' : '';
-    const noteSpan  = `<span style="font-size:10px;color:#9b9b9b;font-weight:400;">(${note})</span>`;
-    return `
-      <tr class="${rowCls}">
-        <td>${scenarioDailyMain.toLocaleString()}만원 ${noteSpan}</td>
-        <td>${f(scenarioProjected)}</td>
-        <td>${f(scenarioAdj)}</td>
-        <td class="scenario-avail ${extraCls}">${extraTxt}</td>
-      </tr>`;
-  };
-
-  /* 현재 행: 발주 예산 여유 섹션과 동일한 방식 (totalSales + allDailyAvg × remain) */
-  const buildCurrentRow = () => {
-    const scenarioProjected = projected;
-    const scenarioAdj       = Math.round(scenarioProjected * 0.18);
-    const scenarioExtra     = scenarioAdj - spentBudget;
-    const extraCls  = scenarioExtra >= 0 ? 'pos' : 'neg';
-    const extraTxt  = (scenarioExtra >= 0 ? '+' : '') + f(scenarioExtra);
-    return `
-      <tr class="current-row">
-        <td>${currentMain.toLocaleString()}만원 <span style="font-size:10px;color:#9b9b9b;font-weight:400;">(현재)</span></td>
-        <td>${f(scenarioProjected)}</td>
-        <td>${f(scenarioAdj)}</td>
-        <td class="scenario-avail ${extraCls}">${extraTxt}</td>
-      </tr>`;
-  };
-
-  /* 현재 행을 일평균 크기 순서에 맞는 위치에 삽입
-     - 시나리오는 위에서 아래로 내림차순 (목표 → -10% → -20% → -30% → -40%)
-     - currentMain이 목표보다 높으면 맨 위, 두 시나리오 사이면 그 사이, 맨 아래 시나리오보다 낮으면 맨 아래
-  */
-  const currentIsTarget = Math.abs(currentMain - targetMain) < targetMain * 0.02;
-
-  (() => {
-    // 시나리오 일평균 값 배열 (내림차순)
-    const vals = scenarios.map(s => Math.round(targetMain * s.multiplier));
-    // 현재가 어느 위치에 들어가는지 인덱스 결정 (삽입 위치: 이 인덱스 앞에)
-    // currentMain > vals[0] 이면 insertBefore = 0 (맨 위)
-    // currentMain 이 vals[i] ~ vals[i+1] 사이면 insertBefore = i+1
-    // currentMain < vals[last] 이면 insertBefore = vals.length (맨 아래)
-    let insertBefore = vals.length; // 기본: 맨 아래
-    for (let i = 0; i < vals.length; i++) {
-      if (currentMain > vals[i] + vals[i] * 0.02) { insertBefore = i; break; }
-      if (Math.abs(currentMain - vals[i]) <= vals[i] * 0.02) { insertBefore = -1; break; } // 목표와 동일
-    }
-    window._scenarioInsertBefore = insertBefore;
-  })();
-
-  const scenarioHTML = (() => {
-    const insertBefore = window._scenarioInsertBefore;
-    const rows = [];
-    if (!currentIsTarget && insertBefore === 0) rows.push(buildCurrentRow());
-    scenarios.forEach((s, i) => {
-      const scenarioDailyMain = Math.round(targetMain * s.multiplier);
-      /* 목표(i=0) 바로 다음 행 → isAfterTarget=true (아래 굵은 선) */
-      const isAfterTarget = (i === 1);
-      rows.push(buildScenarioRow(scenarioDailyMain, s.note, false, s.isTarget, isAfterTarget));
-      if (!currentIsTarget && insertBefore === i + 1) rows.push(buildCurrentRow());
-    });
-    if (!currentIsTarget && insertBefore === scenarios.length) rows.push(buildCurrentRow());
-    return rows.join('');
-  })();
-
-  /* ─── 조건부 발주 섹션 ─── */
-  let deferredHTML = '';
-  if (true) { // 항상 표시 (공란이면 불가 상태로 표시)
-    const ddayDefer = calcDday(deferralDeadline);
-    const ddayLabel = ddayDefer === null ? '—'
-      : ddayDefer < 0 ? `D+${Math.abs(ddayDefer)}`
-      : `D-${ddayDefer}`;
-    const ddayCls = !deferralDeadline ? 'neg'
-      : ddayDefer < 0 ? 'neg'
-      : ddayDefer < 5 ? 'neg'
-      : '';
-
-    /* 유예 한도까지 추가 가능한 발주 잔여액 */
-    const deferralRemain = deferralLimit - Math.max(0, -extraBudget);
-    const deferralCls    = deferralRemain > 0 ? 'pos' : 'neg';
-
-    /* 공란 여부 플래그 */
-    const noDeadline = !deferralDeadline;
-    const noLimit    = !(deferralLimit > 0);
-    /* 조건부 발주 가능액: 마감일 또는 한도 중 하나라도 불가면 0원(불가) */
-    const deferPossible = !noDeadline && !noLimit;
-
-    deferredHTML = `
-    <div class="sec">
-      <div class="sec-lbl">조건부 발주 가능 금액 (결제 유예 조건)</div>
-      <div class="deferred-card">
-        <div class="deferred-header">
-          <span style="font-size:15px;">💳</span>
-          <span class="deferred-header-lbl">잔여 발주 예산이 부족한 경우, 다음달 결제 유예 조건으로 추가 발주 가능한 한도를 표시합니다.</span>
-        </div>
-        <div class="deferred-body" style="grid-template-columns:1fr 1fr;">
-          <div class="deferred-cell">
-            <div class="deferred-cell-lbl">이 날짜까지 결제를 미룰 수 있다면</div>
-            <div class="deferred-cell-val ${noDeadline ? 'neg' : ddayCls}" style="${noDeadline ? 'font-size:15px;' : ''}">${noDeadline ? '조건부 추가 발주 불가' : fmtDate(deferralDeadline)}</div>
-            <div class="deferred-cell-sub">${noDeadline ? '마감일 미설정' : `${ddayLabel} 남음`}</div>
-          </div>
-          <div class="deferred-cell">
-            <div class="deferred-cell-lbl">추가 발주 가능 한도</div>
-            <div class="deferred-cell-val ${noLimit ? 'neg' : ''}">${noLimit ? '0원' : f(deferralLimit)}</div>
-            <div class="deferred-cell-sub">${noLimit ? '한도 미설정 (불가)' : '과장 설정 기준'}</div>
-          </div>
-        </div>
-        <div class="deferred-note">
-          📌 <strong>조건부 발주</strong>란, 이번 달 발주 예산을 소진한 경우 <strong>${deferralDeadline ? fmtDate(deferralDeadline) : '지정된 날짜'}까지 결제를 유예</strong>하는 조건으로 추가 발주를 진행하는 것입니다.
-          한도(<strong>${deferralLimit > 0 ? f(deferralLimit) : '미설정'}</strong>)는 과장이 설정하며, 해당 범위 내에서만 추가 발주가 가능합니다.
-          유예 마감일이 지나면 즉시 결제가 필요합니다.
-        </div>
-      </div>
-    </div>`;
-  }
-
-  const txtRed = (pct < 80 && currentMain > 0)
-    ? `[위험] 자사몰+네이버 달성률 ${pct.toFixed(1)}% — 목표 달성을 위한 잔여 일 매출이 평소 대비 ${Math.round(needDaily / currentMain * 100)}% 이상 필요합니다. 발주 조정 협의가 필요합니다.`
-    : (pct < 90 && currentMain > 0)
-    ? `[경고] 자사몰+네이버 달성률 ${pct.toFixed(1)}% — 목표 대비 부족합니다. 추이를 주시하세요.`
-    : null;
-
-
-  /* 제품 바 */
-  const prodHTML = products.map(p => {
-    if (p.soldout) {
-      return `
-        <div class="prod-row" style="background:#f7f7f5;opacity:0.55;pointer-events:none;">
-          <div class="prod-name" style="color:#b8b8b4;">${p.name}</div>
-          <div class="prod-bar-wrap">
-            <div class="prod-bar-bg" style="background:#e8e8e4;">
-              <div class="prod-bar-fill" style="width:0%;background:#d4d4d0;"></div>
-            </div>
-          </div>
-          <div class="prod-qty" style="color:#b8b8b4;">—<em>/—</em></div>
-          <span class="badge" style="background:#f0f0ec;color:#b8b8b4;width:40px;">품절</span>
-        </div>`;
-    }
-    const r   = p.actual / p.target;
-    const w   = Math.min(Math.round(r*100), 100);
-    const col = r >= 1 ? '#2563eb' : '#f59e0b';
-    const badge = r < 0.55
-      ? `<span class="badge r">급감</span>`
-      : r >= 1
-      ? `<span class="badge g">정상</span>`
-      : `<span class="badge am">부진</span>`;
-    return `
-      <div class="prod-row">
-        <div class="prod-name">${p.name}</div>
-        <div class="prod-bar-wrap">
-          <div class="prod-bar-bg">
-            <div class="prod-bar-fill" style="width:${w}%;background:${col};"></div>
-          </div>
-        </div>
-        <div class="prod-qty">${p.actual}<em>/${p.target}</em></div>
-        ${badge}
-      </div>`;
-  }).join('');
-
-  /* 재고현황 카드 */
-  const stockHTML = stockData.map(s => {
-    const info = ddayInfo(s.dday);
-    const ddayLabel = s.dday === null
-      ? '—'
-      : s.dday < 0
-        ? `D+${Math.abs(s.dday)}`
-        : `D-${s.dday}`;
-    const restockTxt = (s.restockQty || s.restockDate)
-      ? `<strong>${s.restockQty ? s.restockQty.toLocaleString()+'개' : '미정'}</strong> 재입고${s.restockDate ? ` · ${fmtDate(s.restockDate)}` : ''}`
-      : `<span class="none">재입고 정보 없음</span>`;
-    const isExpired = s.dday !== null && s.dday < 0;
-    return `
-      <div class="stock-card" style="--accent:${isExpired ? '#d4d4d0' : info.accent};${isExpired ? 'opacity:0.5;background:#f7f7f5;' : ''}">
-        <div class="stock-name" style="${isExpired ? 'color:#b8b8b4;' : ''}">${s.name}</div>
-        <div class="stock-dday ${isExpired ? 'gray' : info.cls}">${ddayLabel}</div>
-        <div><span class="stock-tag ${isExpired ? 'gray' : info.cls}">${isExpired ? '품절' : info.label}</span></div>
-        <div class="stock-divider"></div>
-        <div class="stock-restock" style="${isExpired ? 'color:#b8b8b4;' : ''}">${restockTxt}</div>
-      </div>`;
-  }).join('');
-
-  document.getElementById("content").innerHTML = `
-    <!-- 일매출 달성 현황 -->
-    <div class="sec">
-      <div class="sec-lbl">일매출 달성 현황</div>
-      <div class="kpi4" style="grid-template-columns:1fr 1fr 1fr;">
-        <!-- 목표 vs 현재 일매출 가로 막대그래프 -->
-        <div class="card" style="padding:18px 16px 16px;">
-          <div class="c-lbl" style="margin-bottom:12px;">목표 vs 현재 평균일매출 <span style="color:#b8b8b4;">(자사몰+네이버)</span></div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <!-- 목표 행 -->
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div style="width:30px;font-size:10px;color:#9b9b9b;flex-shrink:0;text-align:right;">목표</div>
-              <div style="flex:1;background:#eeeeee;border-radius:4px;height:14px;overflow:hidden;">
-                <div style="width:100%;height:100%;background:#d4d4d0;border-radius:4px;"></div>
-              </div>
-              <div style="width:52px;font-size:12px;font-weight:700;color:#1a1a1a;flex-shrink:0;">${f(targetMain)}</div>
-            </div>
-            <!-- 현재 행 -->
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div style="width:30px;font-size:10px;color:#9b9b9b;flex-shrink:0;text-align:right;">현재</div>
-              <div style="flex:1;background:#eeeeee;border-radius:4px;height:14px;overflow:hidden;">
-                <div style="width:${Math.min(Math.round(pct),100)}%;height:100%;background:${currentMain >= targetMain ? '#16a34a' : '#ef4444'};border-radius:4px;transition:width .7s;"></div>
-              </div>
-              <div style="width:52px;font-size:12px;font-weight:700;color:${currentMain >= targetMain ? '#16a34a' : '#ef4444'};flex-shrink:0;">${f(currentMain)}</div>
-            </div>
-          </div>
-          <div style="font-size:11px;color:#9b9b9b;margin-top:10px;">${elapsedDays}일 경과 / ${totalDays}일 · 달성률 ${pct.toFixed(1)}%</div>
-        </div>
-        <div class="card">
-          <div class="c-lbl">목표 달성률</div>
-          <div class="c-val ${G.cls === 'r' ? 'r' : ''}">${pct.toFixed(1)}%</div>
-          <div class="c-tag ${G.cls}">${G.label}</div>
-          <div class="prog">
-            <div class="prog-bar" style="width:${Math.min(pct,130)/1.3}%;background:${G.barColor};"></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="c-lbl">전체 플랫폼<br>누적 예상 매출</div>
-          <div class="c-val">${f(projected)}</div>
-          <div class="c-sub">목표 대비 ${projected >= targetMonthly ? '+' : '-'}${f(Math.abs(projected - targetMonthly))}</div>
-        </div>
-      </div>
-    </div>
-
-    ${txtRed ? `<div class="alert r">${txtRed}</div>` : ''}
-
-    <!-- 발주 예산 여유 -->
-    <div class="sec">
-      <div class="sec-lbl">발주 예산 여유</div>
-      <div class="kpi4" style="grid-template-columns:1fr 1fr 1fr;">
-        <!-- 조정발주비 vs 누적지출 가로 막대그래프 (확대 스케일) -->
-        <div class="card" style="padding:18px 16px 16px;">
-          <div class="c-lbl" style="margin-bottom:12px;">조정 발주비 vs 누적 지출액</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <!--
-              확대 스케일: 두 값 중 min의 85%를 하한으로 잡고,
-              max를 100%로 설정해서 차이가 시각적으로 크게 보이게 함
-              barMin = min(adjBudget, spentBudget) * 0.85
-              range  = max(adjBudget, spentBudget) - barMin
-              adjW   = (adjBudget   - barMin) / range * 100
-              spentW = (spentBudget - barMin) / range * 100
-            -->
-            ${(() => {
-              const barMin  = Math.min(adjBudget, spentBudget) * 0.85;
-              const range   = Math.max(adjBudget, spentBudget) - barMin;
-              const adjW    = Math.round((adjBudget   - barMin) / range * 100);
-              const spentW  = Math.round((spentBudget - barMin) / range * 100);
-              const spentCol = spendRatio <= 18 ? '#16a34a' : '#ef4444';
-              return `
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div style="width:46px;font-size:10px;color:#9b9b9b;flex-shrink:0;text-align:right;line-height:1.3;">조정<br>발주비</div>
-              <div style="flex:1;background:#eeeeee;border-radius:4px;height:14px;overflow:hidden;">
-                <div style="width:${adjW}%;height:100%;background:#d4d4d0;border-radius:4px;transition:width .7s;"></div>
-              </div>
-              <div style="width:52px;font-size:12px;font-weight:700;color:#1a1a1a;flex-shrink:0;">${f(adjBudget)}</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div style="width:46px;font-size:10px;color:#9b9b9b;flex-shrink:0;text-align:right;line-height:1.3;">누적<br>지출</div>
-              <div style="flex:1;background:#eeeeee;border-radius:4px;height:14px;overflow:hidden;">
-                <div style="width:${spentW}%;height:100%;background:${spentCol};border-radius:4px;transition:width .7s;"></div>
-              </div>
-              <div style="width:52px;font-size:12px;font-weight:700;color:${spentCol};flex-shrink:0;">${f(spentBudget)}</div>
-            </div>`;
-            })()}
-          </div>
-          <div style="font-size:11px;color:#9b9b9b;margin-top:10px;">월말 예상 매출 × 18% 기준 · 현재 ${spendRatio.toFixed(1)}% 집행</div>
-        </div>
-
-        <!-- 원형그래프: 발주비 비중 -->
-        <div class="card" style="padding:18px 16px 14px;display:flex;flex-direction:column;align-items:center;">
-          <div class="c-lbl" style="align-self:flex-start;margin-bottom:8px;">현재 기준 발주비 비중</div>
-          <div style="position:relative;width:84px;height:84px;flex-shrink:0;">
-            <svg viewBox="0 0 84 84" width="84" height="84" style="transform:rotate(-90deg);">
-              <!-- 배경 원 -->
-              <circle cx="42" cy="42" r="34" fill="none" stroke="#eeeeee" stroke-width="10"/>
-              <!-- 18% 허용 구간 (연초록) -->
-              <circle cx="42" cy="42" r="34" fill="none" stroke="#bbf7d0" stroke-width="10"
-                stroke-dasharray="${(18/100)*2*Math.PI*34} ${(1-18/100)*2*Math.PI*34}"
-                stroke-dashoffset="0"/>
-              <!-- 현재 비중 -->
-              <circle cx="42" cy="42" r="34" fill="none"
-                stroke="${spendRatio <= 18 ? '#16a34a' : '#ef4444'}" stroke-width="10"
-                stroke-dasharray="${Math.min(spendRatio,100)/100*2*Math.PI*34} ${2*Math.PI*34}"
-                stroke-dashoffset="0"
-                stroke-linecap="round"/>
-            </svg>
-            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-              <span style="font-size:15px;font-weight:700;color:${spendRatio <= 18 ? '#16a34a' : '#ef4444'};">${spendRatio.toFixed(1)}%</span>
-            </div>
-          </div>
-          <div style="margin-top:6px;font-size:11px;font-weight:600;color:${spendRatio <= 18 ? '#16a34a' : '#ef4444'};">${spendRatio <= 18 ? '안전 (18% 이하)' : '위험 (18% 초과)'}</div>
-          <div style="display:flex;gap:8px;margin-top:5px;font-size:10px;color:#9b9b9b;align-items:center;">
-            <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;background:#bbf7d0;border-radius:2px;display:inline-block;"></span>18% 한도</span>
-            <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;background:${spendRatio <= 18 ? '#16a34a' : '#ef4444'};border-radius:2px;display:inline-block;"></span>현재</span>
-          </div>
-        </div>
-
-        <!-- 추가 가용 발주비 -->
-        <div class="card">
-          <div class="c-lbl">추가 가용 발주비</div>
-          <div class="c-val ${extraBudget >= 0 ? '' : 'r'}">${extraBudget >= 0 ? f(extraBudget) : '-' + f(Math.abs(extraBudget))}</div>
-          <div class="c-tag ${extraBudget >= 0 ? 'g' : 'r'}">${extraBudget >= 0 ? '여유 있음' : '예산 초과'}</div>
-          <div class="c-sub" style="margin-top:8px;line-height:1.6;">현재 평균 유지 시<br>${extraBudget >= 0 ? f(extraBudget) + ' 추가 집행 가능' : f(Math.abs(extraBudget)) + ' 초과 상태'}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 일평균 시나리오별 추가 가용 발주비 -->
-    <div class="sec">
-      <div class="sec-lbl">일평균 시나리오별 추가 가용 발주비 (목표 일평균 기준)</div>
-      <div class="scenario-card">
-        <table class="scenario-table">
-          <thead>
-            <tr>
-              <th>시나리오 일평균</th>
-              <th>월말 예상 매출</th>
-              <th>조정 발주비 (×18%)</th>
-              <th>추가 가용 발주비</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${scenarioHTML}
-          </tbody>
-        </table>
-        <div style="padding:8px 16px 10px; font-size:11px; color:#9b9b9b; background:#fafaf8; border-top:1px solid #f0f0ec;">
-          ▶ 시나리오 일평균은 자사몰+네이버 합산 기준 / 월말 예상 매출은 자사몰+네이버가 전체의 70%임을 반영한 전체 플랫폼 기준 / 추가 가용 발주비 = 조정 발주비(×18%) − 누적 지출액(${f(spentBudget)})
-        </div>
-      </div>
-    </div>
-
-    ${deferredHTML}
-
-    <!-- 제품 리스트 -->
-    <div class="sec">
-      <div class="sec-lbl">주력 제품 일평균 판매수량</div>
-      <div class="prod-card">${prodHTML}</div>
-    </div>
-
-    <!-- 발주 요청 사항 -->
-    <div class="sec">
-      <div class="sec-lbl">발주 요청 사항</div>
-      <div class="card" style="padding:0;overflow:hidden;">
-        ${[['team','팀장'],['manager','과장'],['staff','주임']].map(([role, label], idx) => {
-          const isLast = idx === 2;
-          const txt = memoData[role] || '';
-          return `
-          <div style="display:grid;grid-template-columns:64px 1fr;${isLast ? '' : 'border-bottom:1px solid #f0f0ec;'}min-height:44px;">
-            <div style="padding:13px 16px;font-size:13px;font-weight:600;color:#1a1a1a;background:#f9f9f7;display:flex;align-items:center;border-right:1px solid #f0f0ec;flex-shrink:0;">${label}</div>
-            <div style="padding:12px 14px;font-size:13px;color:${txt ? '#1a1a1a' : '#b8b8b4'};line-height:1.6;word-break:break-word;min-height:44px;text-align:left;">
-              ${txt ? txt.split('\n').map(l => l.trim()).filter(l => l !== '').join('<br>') : '—'}
-            </div>
-          </div>`;
-        }).join('')}
-        <div style="padding:8px 16px;font-size:11px;color:#b8b8b4;background:#fafaf8;border-top:1px solid #f0f0ec;">
-          📄 Google Sheets &gt; 발주요청사항 시트에서 수정 · 새로고침 시 반영
-        </div>
-      </div>
-    </div>
-
-    <!-- 주력 제품 재고현황 -->
-    <div class="sec">
-      <div class="sec-lbl">주력 제품 재고현황 (품절 D-day)</div>
-      <div class="stock-grid">${stockHTML}</div>
-    </div>
-
-    <!-- 쿠팡 주차별 납품율 -->
-    <div class="sec">
-      <div class="sec-lbl">쿠팡 주차별 발주대비 납품율 (노트북거치대)</div>
-      <div class="card" style="padding:0; overflow:hidden;">
-        <div style="padding:20px 20px 0;">
-          <div style="display:flex; align-items:flex-end; gap:6px; height:120px; border-bottom:1px solid #e8e8e4;">
-            ${coupangData.map((d,i) => {
-              const pct = d.rate;
-              const h   = Math.max(4, Math.round(pct * 1.1));
-              const col = pct >= 70 ? '#16a34a'
-                        : pct >= 50 ? '#2563eb'
-                        : pct >= 30 ? '#f59e0b'
-                        :             '#ef4444';
-              const isLast = i === coupangData.length - 1;
-              return `<div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;">
-                <div style="font-size:9px; color:#9b9b9b; font-weight:600;">${pct.toFixed(0)}%</div>
-                <div style="width:100%; height:${h}px; background:${col}; border-radius:3px 3px 0 0; ${isLast?'outline:2px solid #1a1a1a;outline-offset:-2px;':''}"></div>
-              </div>`;
-            }).join('')}
-          </div>
-          <div style="display:flex; gap:6px; margin-top:4px;">
-            ${coupangData.map(d => `<div style="flex:1; font-size:8px; color:#9b9b9b; text-align:center; line-height:1.3;">${d.week}</div>`).join('')}
-          </div>
-        </div>
-        <div style="display:flex; gap:16px; padding:10px 20px 14px; flex-wrap:wrap;">
-          ${[['#16a34a','70%+'],['#2563eb','50~69%'],['#f59e0b','30~49%'],['#ef4444','~29%']].map(([c,l])=>
-            `<div style="display:flex;align-items:center;gap:4px;">
-              <div style="width:10px;height:10px;background:${c};border-radius:2px;"></div>
-              <span style="font-size:11px;color:#6b6b6b;">${l}</span>
-            </div>`
-          ).join('')}
-          <span style="font-size:11px;color:#9b9b9b;margin-left:auto;">□ 최근 주차</span>
-        </div>
-        <div style="overflow-x:auto;">
-          <table style="width:100%;border-collapse:collapse;font-size:12px;">
-            <thead>
-              <tr style="background:#f9f9f7;border-top:1px solid #e8e8e4;">
-                <th style="padding:9px 14px;text-align:left;font-weight:600;color:#6b6b6b;white-space:nowrap;">주차</th>
-                <th style="padding:9px 14px;text-align:left;font-weight:600;color:#6b6b6b;white-space:nowrap;">기간</th>
-                <th style="padding:9px 14px;text-align:right;font-weight:600;color:#6b6b6b;white-space:nowrap;">발주 요청</th>
-                <th style="padding:9px 14px;text-align:right;font-weight:600;color:#6b6b6b;white-space:nowrap;">입고</th>
-                <th style="padding:9px 14px;text-align:right;font-weight:600;color:#6b6b6b;white-space:nowrap;">납품율</th>
-                <th style="padding:9px 14px;text-align:left;font-weight:600;color:#6b6b6b;">달성</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${coupangData.map((d,i) => {
-                const col = d.rate >= 70 ? '#16a34a'
-                          : d.rate >= 50 ? '#2563eb'
-                          : d.rate >= 30 ? '#f59e0b'
-                          :               '#ef4444';
-                const bg  = i === coupangData.length-1 ? '#fffbeb' : (i%2===0?'#fff':'#fafaf8');
-                const barW = Math.min(Math.round(d.rate), 100);
-                return `<tr style="background:${bg};border-top:1px solid #f0f0ec;">
-                  <td style="padding:8px 14px;font-weight:600;color:#1a1a1a;white-space:nowrap;">${d.week}</td>
-                  <td style="padding:8px 14px;color:#6b6b6b;white-space:nowrap;">${d.period}</td>
-                  <td style="padding:8px 14px;text-align:right;color:#1a1a1a;">${d.ordered.toLocaleString()}</td>
-                  <td style="padding:8px 14px;text-align:right;color:#1a1a1a;">${d.delivered.toLocaleString()}</td>
-                  <td style="padding:8px 14px;text-align:right;font-weight:700;color:${col};">
-                    ${d.rate.toFixed(2)}%
-                  </td>
-                  <td style="padding:8px 14px;">
-                    <div style="display:flex;align-items:center;gap:6px;">
-                      <div style="width:60px;height:6px;background:#eee;border-radius:3px;overflow:hidden;">
-                        <div style="width:${barW}%;height:100%;background:${col};border-radius:3px;"></div>
-                      </div>
-                    </div>
-                  </td>
-                </tr>`;
-              }).join('')}
-            </tbody>
-            <tfoot>
-              <tr style="background:#f0f0ec;border-top:2px solid #e0e0da;">
-                <td colspan="2" style="padding:9px 14px;font-weight:700;color:#1a1a1a;">전체 합계</td>
-                <td style="padding:9px 14px;text-align:right;font-weight:700;color:#1a1a1a;">${coupangData.reduce((s,d)=>s+d.ordered,0).toLocaleString()}</td>
-                <td style="padding:9px 14px;text-align:right;font-weight:700;color:#1a1a1a;">${coupangData.reduce((s,d)=>s+d.delivered,0).toLocaleString()}</td>
-                <td style="padding:9px 14px;text-align:right;font-weight:700;color:#1a1a1a;">
-                  ${(coupangData.reduce((s,d)=>s+d.delivered,0)/coupangData.reduce((s,d)=>s+d.ordered,0)*100).toFixed(2)}%
-                </td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-    </div>
-  `;
-}
-load();
-
-/* 발주 요청 사항: Google Sheets 발주요청사항 시트에서 읽어옴 */
-</script>
+<script src="config.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
