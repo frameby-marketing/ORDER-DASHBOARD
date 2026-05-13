@@ -459,6 +459,13 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
         <h3>📦 재고현황 시트</h3>
         <p>시트 이름: <code>재고</code> · 1행 헤더: <code>제품명 | 품절예정일 | 재입고수량 | 재입고예정일</code></p>
         <p>• B열, D열: <code>2026-05-20</code> 형식</p>
+        <h3>📊 발주 시뮬레이션 설정</h3>
+        <p>• <code>sim_monthly_target</code> — 월 목표 매출 (만원, 기본 20000)</p>
+        <p>• <code>sim_order_limit_pct</code> — 발주비 한도 비율 (%, 기본 18)</p>
+        <p>• <code>sim_daily_mk</code> ~ <code>sim_daily_dw_plus_b</code> — 제품별 일평균 판매수량</p>
+        <p>• <code>stock_mk</code> ~ <code>stock_dw_plus_b</code> — 현재 재고수량</p>
+        <p>• <code>china_dw_pro_s</code> 등 — 중국 보유 재고 (선금완료)</p>
+        <p>• <code>prepaid_ph_s_1_qty</code> / <code>prepaid_ph_s_1_date</code> 등 — 제작중 항목</p>
         <a class="btn-sheet" id="sheet-link" href="#" target="_blank">📊 Google Sheets 열기</a>
       </div>
     </div>
@@ -1128,9 +1135,9 @@ const SIM_PRODUCTS = [
   { id:'dw_plus_b', name:'DW플러스 블랙', maker:'타이루', dailySales:2,  moq:1000, leadDays:50, prepayPct:0.10, unitCost:21396, targetHoldDays:65 },
 ];
 
-const SIM_MONTHLY_SALES_TARGET = 20000; // 만원 (2억)
-const SIM_ORDER_LIMIT_PCT      = 0.30;
-const SIM_ORDER_LIMIT_WON      = SIM_MONTHLY_SALES_TARGET * SIM_ORDER_LIMIT_PCT * 10000; // 6000만원 = 600,000,000원
+let SIM_MONTHLY_SALES_TARGET = 20000; // 만원 (2억) — 구글 시트 sim_monthly_target 으로 변경 가능
+let SIM_ORDER_LIMIT_PCT      = 0.18;  // 18% — 구글 시트 sim_order_limit_pct 으로 변경 가능
+let SIM_ORDER_LIMIT_WON      = SIM_MONTHLY_SALES_TARGET * SIM_ORDER_LIMIT_PCT * 10000; // 3600만원
 
 // ── 날짜 유틸 ─────────────────────────────────────────────
 function simAdd(d, n) { const r=new Date(d); r.setDate(r.getDate()+n); return r; }
@@ -1249,51 +1256,88 @@ function runSimV3(products, initStocks, prePaid, months, weeks) {
     let stock   = initStocks[p.id] ?? (p.dailySales * p.targetHoldDays);
     const pending = []; // { date, qty, balanceAmt, label }
 
-    // ── 선금완료 중국재고 (5일 입고, 잔금 분할) ──────────
+    // ── 선금완료 중국재고 ─────────────────────────────────
+    // 분할수령: 월 소비량 단위로 요청 가능, 잔금도 수령분만큼 분납
+    // pending에는 실제 요청할 때마다 한 batch씩만 → 나머지는 별도 대기열로 관리
+    const chinaQueue = []; // 아직 요청 안 한 잔여 중국재고 { id, qty, unitCost, prepayPct }
     prePaid.china.filter(c=>c.id===p.id).forEach(c=>{
-      const receiveDate = simAdd(today, 5);
-      // 잔금: 잔금비율 × 수량 × 단가 (선금이 이미 납부됨)
-      const balAmt = Math.round(c.qty * p.unitCost * (1 - p.prepayPct));
-      pending.push({ date:receiveDate, qty:c.qty, balanceAmt:balAmt, label:'중국재고(선금완료)' });
-      addToBucket(months, weeks, receiveDate, 'balance', balAmt, `${p.name} 중국재고 잔금`);
-      allOrders.push({ product:p, orderDate:today, receiveDate, qty:c.qty,
-        prepayAmt:0, balanceAmt:balAmt, totalCost:c.qty*p.unitCost,
-        type:'china', label:'중국재고(선금완료)', batches:[{date:receiveDate, qty:c.qty, balanceAmt:balAmt}] });
+      if(c.qty <= 0) return;
+      chinaQueue.push({ totalQty:c.qty, remaining:c.qty, unitCost:p.unitCost, prepayPct:p.prepayPct });
+      // 1차분은 즉시 요청 (5일 뒤 입고)
+      const firstBatch = Math.min(monthlyNeed, c.qty);
+      const firstDate  = simAdd(today, 5);
+      const firstBal   = Math.round(firstBatch * p.unitCost * (1 - p.prepayPct));
+      pending.push({ date:firstDate, qty:firstBatch, balanceAmt:firstBal,
+        label:'중국재고 1차', isChinaBatch:true, chinaRef:chinaQueue[chinaQueue.length-1] });
+      chinaQueue[chinaQueue.length-1].remaining -= firstBatch;
+      addToBucket(months, weeks, firstDate, 'balance', firstBal, `${p.name} 중국재고 잔금 1차`);
+      // allOrders 기록 (1차만, 이후분은 시뮬 루프에서 추가)
+      allOrders.push({ product:p, orderDate:today, receiveDate:firstDate, qty:c.qty,
+        prepayAmt:0, balanceAmt:Math.round(c.qty*p.unitCost*(1-p.prepayPct)),
+        totalCost:c.qty*p.unitCost, type:'china', label:'중국재고(선금완료,분할수령)',
+        batches:[{date:firstDate, qty:firstBatch, balanceAmt:firstBal}], _chinaRef:chinaQueue[chinaQueue.length-1] });
     });
 
-    // ── 선금완료 제작중 항목 (분할수령 적용) ─────────────
+    // ── 선금완료 제작중 항목 ──────────────────────────────
+    // 동일하게: 수령가능 시점부터 월 소비량씩 pending에 올림
+    const inProdQueue = [];
     prePaid.inProd.filter(c=>c.id===p.id).forEach(c=>{
+      if(c.qty <= 0) return;
       let firstDate;
       if(c.date) { firstDate = new Date(c.date); firstDate.setHours(0,0,0,0); }
       else        { firstDate = simAdd(today, c.leadDays||60); }
 
       const totalBal = Math.round(c.qty * p.unitCost * (1 - p.prepayPct));
+      const ref = { totalQty:c.qty, remaining:c.qty, firstDate, unitCost:p.unitCost, prepayPct:p.prepayPct };
+      inProdQueue.push(ref);
 
-      // 분할수령: 월 소비량 단위로
-      let remaining = c.qty, bNum = 0;
-      const batches = [];
-      while(remaining > 0) {
-        const bQty  = Math.min(monthlyNeed, remaining);
-        const bDate = simAdd(firstDate, bNum * 30);
-        const bBal  = Math.round(totalBal * bQty / c.qty);
-        batches.push({ date:bDate, qty:bQty, balanceAmt:bBal });
-        pending.push({ date:bDate, qty:bQty, balanceAmt:bBal, label:'선금완료(분할수령)' });
-        addToBucket(months, weeks, bDate, 'balance', bBal, `${p.name} 잔금 ${bNum+1}차`);
-        remaining -= bQty; bNum++;
-      }
+      // 1차 batch → 수령 가능 시점에 pending
+      const firstBatch = Math.min(monthlyNeed, c.qty);
+      const firstBal   = Math.round(totalBal * firstBatch / c.qty);
+      pending.push({ date:firstDate, qty:firstBatch, balanceAmt:firstBal,
+        label:'선금완료 1차', isInProdBatch:true, inProdRef:ref });
+      ref.remaining -= firstBatch;
+      addToBucket(months, weeks, firstDate, 'balance', firstBal, `${p.name} 선금완료 잔금 1차`);
 
       const label = c.date ? `선금완료(수령예정 ${simMD(firstDate)})` : '선금완료(제작중)';
       allOrders.push({ product:p, orderDate:today, receiveDate:firstDate, qty:c.qty,
         prepayAmt:0, balanceAmt:totalBal, totalCost:c.qty*p.unitCost,
-        type:'prepaid', label, batches });
+        type:'prepaid', label, batches:[{date:firstDate, qty:firstBatch, balanceAmt:firstBal}], _inProdRef:ref });
     });
 
     // ── 날짜별 시뮬레이션 ────────────────────────────────
     let d = new Date(today);
     while(d <= endDate) {
-      // 입고 처리
+      // 입고 처리 + 다음 batch 자동 요청
       for(let i=pending.length-1; i>=0; i--) {
-        if(pending[i].date <= d) { stock += pending[i].qty; pending.splice(i,1); }
+        const item = pending[i];
+        if(item.date <= d) {
+          stock += item.qty;
+          // 중국재고 다음 batch 자동 요청
+          if(item.isChinaBatch && item.chinaRef && item.chinaRef.remaining > 0) {
+            const ref = item.chinaRef;
+            const nextQty  = Math.min(monthlyNeed, ref.remaining);
+            const nextDate = simAdd(d, 5); // 중국은 영업일 5일
+            const nextBal  = Math.round(nextQty * ref.unitCost * (1 - ref.prepayPct));
+            pending.push({ date:nextDate, qty:nextQty, balanceAmt:nextBal,
+              label:'중국재고 추가분', isChinaBatch:true, chinaRef:ref });
+            ref.remaining -= nextQty;
+            addToBucket(months, weeks, nextDate, 'balance', nextBal, `${p.name} 중국재고 잔금 추가`);
+          }
+          // 제작중 항목 다음 batch 자동 요청
+          if(item.isInProdBatch && item.inProdRef && item.inProdRef.remaining > 0) {
+            const ref = item.inProdRef;
+            const nextQty  = Math.min(monthlyNeed, ref.remaining);
+            const nextDate = simAdd(d, 30); // 다음 달 수령
+            const totalBal = Math.round(ref.totalQty * ref.unitCost * (1 - ref.prepayPct));
+            const nextBal  = Math.round(totalBal * nextQty / ref.totalQty);
+            pending.push({ date:nextDate, qty:nextQty, balanceAmt:nextBal,
+              label:'선금완료 추가분', isInProdBatch:true, inProdRef:ref });
+            ref.remaining -= nextQty;
+            addToBucket(months, weeks, nextDate, 'balance', nextBal, `${p.name} 선금완료 잔금 추가`);
+          }
+          pending.splice(i,1);
+        }
       }
 
       const inbound = pending.reduce((s,r)=>s+r.qty, 0);
@@ -1377,6 +1421,13 @@ function runSimV3(products, initStocks, prePaid, months, weeks) {
 
 // ── 렌더 ──────────────────────────────────────────────────
 function renderSimulation(cfg) {
+  // 구글 시트에서 한도 설정 읽기
+  const cfgTarget = parseFloat(cfg['sim_monthly_target']);
+  const cfgPct    = parseFloat(cfg['sim_order_limit_pct']);
+  if(!isNaN(cfgTarget) && cfgTarget > 0) SIM_MONTHLY_SALES_TARGET = cfgTarget;
+  if(!isNaN(cfgPct)    && cfgPct > 0)   SIM_ORDER_LIMIT_PCT = cfgPct / 100; // 시트에는 18 입력
+  SIM_ORDER_LIMIT_WON = SIM_MONTHLY_SALES_TARGET * SIM_ORDER_LIMIT_PCT * 10000;
+
   applySheetDailySales(cfg);
   const prePaid = buildPrePaid(cfg);
 
@@ -1518,15 +1569,23 @@ function renderSimulation(cfg) {
     // rowspan 계산: 해당 월의 주차 수
     const monthWeeks = weekKeys.filter(k=>k.startsWith(mk));
     const rs = monthWeeks.length;
+    // 이벤트 상세: 선금/잔금별로 제품명 + 금액 나열
+    const eventDetail = w.events.length === 0 ? '—' : w.events.map(ev => {
+      const typeTag = ev.type === 'prepay'
+        ? `<span class="sim-tag-prepay">선금</span>`
+        : `<span class="sim-tag-balance">잔금</span>`;
+      return `<div style="display:flex;align-items:center;gap:5px;margin-bottom:2px">${typeTag}<span style="font-size:11px;color:var(--text)">${ev.note}</span><span style="font-size:11px;font-family:var(--mono);color:${ev.type==='prepay'?'#f59e0b':'#38bdf8'};margin-left:auto">${simWonM(ev.amount)}</span></div>`;
+    }).join('');
+
     return `
       <tr class="${isCur?'row-current':''} ${isOver?'row-over':''}">
         ${isNew?`<td class="fw week-month-cell" rowspan="${rs}">${simML(mk)}<br><span style="font-size:10px;color:var(--muted);font-weight:400">${simWon(months[mk].total)}</span></td>`:''}
-        <td style="font-size:12px">${simWL(wk)}</td>
+        <td style="font-size:12px;white-space:nowrap">${simWL(wk)}</td>
         <td class="num" style="color:#f59e0b">${w.prepay>0?simWonM(w.prepay):'—'}</td>
         <td class="num" style="color:#38bdf8">${w.balance>0?simWonM(w.balance):'—'}</td>
         <td class="num fw ${isOver?'neg':w.total>0?'':'muted'}">${w.total>0?simWonM(w.total):'—'}</td>
-        <td style="font-size:11px;color:var(--muted)">${w.events.length>0?w.events.length+'건':'—'}</td>
-        <td style="font-size:11px">${isOver?'<span style="color:var(--red)">⚠ 초과</span>':isCur?'<span style="color:var(--accent)">현재</span>':''}</td>
+        <td style="min-width:220px">${eventDetail}</td>
+        <td style="font-size:11px;white-space:nowrap">${isOver?'<span style="color:var(--red)">⚠ 초과</span>':isCur?'<span style="color:var(--accent)">현재</span>':''}</td>
       </tr>`;
   }).join('');
 
@@ -1622,7 +1681,7 @@ function renderSimulation(cfg) {
       <div class="table-card">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>월</th><th>주차</th><th class="num">선금</th><th class="num">잔금</th><th class="num">합계</th><th>건수</th><th>상태</th></tr></thead>
+            <thead><tr><th>월</th><th>주차</th><th class="num">선금</th><th class="num">잔금</th><th class="num">합계</th><th>상세 내역</th><th>상태</th></tr></thead>
             <tbody>${weekRowsHTML}</tbody>
             <tfoot>${monthTotalsHTML}</tfoot>
           </table>
