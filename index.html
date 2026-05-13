@@ -1203,17 +1203,17 @@ function initBuckets(today) {
 }
 
 // ── 버킷에 금액 기록 ─────────────────────────────────────
-function addToBucket(months, weeks, date, type, amount, note) {
+function addToBucket(months, weeks, date, type, amount, note, qty) {
   const mk = simMK(date), wk = simWK(date);
   if(months[mk]) {
     months[mk][type] += amount;
     months[mk].total  = months[mk].prepay + months[mk].balance;
-    months[mk].events.push({ date, type, amount, note });
+    months[mk].events.push({ date, type, amount, note, qty: qty||0 });
   }
   if(weeks[wk]) {
     weeks[wk][type] += amount;
     weeks[wk].total  = weeks[wk].prepay + weeks[wk].balance;
-    weeks[wk].events.push({ date, type, amount, note });
+    weeks[wk].events.push({ date, type, amount, note, qty: qty||0 });
   }
 }
 
@@ -1270,7 +1270,7 @@ function runSimV3(products, initStocks, prePaid, months, weeks) {
       pending.push({ date:firstDate, qty:firstBatch, balanceAmt:firstBal,
         label:'중국재고 1차', isChinaBatch:true, chinaRef:chinaQueue[chinaQueue.length-1] });
       chinaQueue[chinaQueue.length-1].remaining -= firstBatch;
-      addToBucket(months, weeks, firstDate, 'balance', firstBal, `${p.name} 중국재고 잔금 1차`);
+      addToBucket(months, weeks, firstDate, 'balance', firstBal, `${p.name} 중국재고 잔금 1차`, firstBatch);
       // allOrders 기록 (1차만, 이후분은 시뮬 루프에서 추가)
       allOrders.push({ product:p, orderDate:today, receiveDate:firstDate, qty:c.qty,
         prepayAmt:0, balanceAmt:Math.round(c.qty*p.unitCost*(1-p.prepayPct)),
@@ -1297,7 +1297,7 @@ function runSimV3(products, initStocks, prePaid, months, weeks) {
       pending.push({ date:firstDate, qty:firstBatch, balanceAmt:firstBal,
         label:'선금완료 1차', isInProdBatch:true, inProdRef:ref });
       ref.remaining -= firstBatch;
-      addToBucket(months, weeks, firstDate, 'balance', firstBal, `${p.name} 선금완료 잔금 1차`);
+      addToBucket(months, weeks, firstDate, 'balance', firstBal, `${p.name} 선금완료 잔금 1차`, firstBatch);
 
       const label = c.date ? `선금완료(수령예정 ${simMD(firstDate)})` : '선금완료(제작중)';
       allOrders.push({ product:p, orderDate:today, receiveDate:firstDate, qty:c.qty,
@@ -1322,7 +1322,7 @@ function runSimV3(products, initStocks, prePaid, months, weeks) {
             pending.push({ date:nextDate, qty:nextQty, balanceAmt:nextBal,
               label:'중국재고 추가분', isChinaBatch:true, chinaRef:ref });
             ref.remaining -= nextQty;
-            addToBucket(months, weeks, nextDate, 'balance', nextBal, `${p.name} 중국재고 잔금 추가`);
+            addToBucket(months, weeks, nextDate, 'balance', nextBal, `${p.name} 중국재고 잔금 추가`, nextQty);
           }
           // 제작중 항목 다음 batch 자동 요청
           if(item.isInProdBatch && item.inProdRef && item.inProdRef.remaining > 0) {
@@ -1334,7 +1334,7 @@ function runSimV3(products, initStocks, prePaid, months, weeks) {
             pending.push({ date:nextDate, qty:nextQty, balanceAmt:nextBal,
               label:'선금완료 추가분', isInProdBatch:true, inProdRef:ref });
             ref.remaining -= nextQty;
-            addToBucket(months, weeks, nextDate, 'balance', nextBal, `${p.name} 선금완료 잔금 추가`);
+            addToBucket(months, weeks, nextDate, 'balance', nextBal, `${p.name} 선금완료 잔금 추가`, nextQty);
           }
           pending.splice(i,1);
         }
@@ -1392,12 +1392,12 @@ function runSimV3(products, initStocks, prePaid, months, weeks) {
         const orderEvent = createOrderWithSplit(p, actualOrderDate, targetQty, months, allOrders);
 
         // 선금 기록 (발주일)
-        addToBucket(months, weeks, actualOrderDate, 'prepay', orderEvent.prepayAmt, `${p.name} 선금`);
+        addToBucket(months, weeks, actualOrderDate, 'prepay', orderEvent.prepayAmt, `${p.name} 선금`, targetQty);
 
         // 잔금 분할 기록 (각 수령일)
         orderEvent.batches.forEach((b,bi) => {
           pending.push({ date:b.date, qty:b.qty, balanceAmt:b.balanceAmt, label:`${bi+1}차 수령` });
-          addToBucket(months, weeks, b.date, 'balance', b.balanceAmt, `${p.name} 잔금 ${bi+1}차`);
+          addToBucket(months, weeks, b.date, 'balance', b.balanceAmt, `${p.name} 잔금 ${bi+1}차`, b.qty);
         });
 
         allOrders.push({
@@ -1574,7 +1574,8 @@ function renderSimulation(cfg) {
       const typeTag = ev.type === 'prepay'
         ? `<span class="sim-tag-prepay">선금</span>`
         : `<span class="sim-tag-balance">잔금</span>`;
-      return `<div style="display:flex;align-items:center;gap:5px;margin-bottom:2px">${typeTag}<span style="font-size:11px;color:var(--text)">${ev.note}</span><span style="font-size:11px;font-family:var(--mono);color:${ev.type==='prepay'?'#f59e0b':'#38bdf8'};margin-left:auto">${simWonM(ev.amount)}</span></div>`;
+      const qtyTxt = ev.qty > 0 ? `<span style="font-size:10px;color:var(--muted);font-family:var(--mono)">${ev.qty.toLocaleString()}개</span>` : '';
+      return `<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;flex-wrap:wrap">${typeTag}<span style="font-size:11px;color:var(--text)">${ev.note}</span>${qtyTxt}<span style="font-size:11px;font-family:var(--mono);color:${ev.type==='prepay'?'#f59e0b':'#38bdf8'};margin-left:auto;padding-left:8px">${simWonM(ev.amount)}</span></div>`;
     }).join('');
 
     return `
