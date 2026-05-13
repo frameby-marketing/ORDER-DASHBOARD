@@ -22,6 +22,14 @@
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         현황
       </button>
+      <button class="nav-item" onclick="tab('memo', this)">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        발주 요청 사항
+      </button>
+      <button class="nav-item" onclick="tab('coupang', this)">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 8l3 4 3-3 3 3 3-4"/></svg>
+        쿠팡 납품 현황
+      </button>
       <button class="nav-item" onclick="tab('input', this)">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         데이터 입력
@@ -56,6 +64,30 @@
       </header>
       <div id="err"></div>
       <div id="content"><div class="loading"><div class="loading-spinner"></div><span>불러오는 중...</span></div></div>
+    </div>
+
+    <!-- 발주 요청 사항 탭 -->
+    <div id="p-memo" class="panel">
+      <header class="page-header">
+        <div>
+          <h1 class="page-title">발주 요청 사항</h1>
+          <p class="page-sub" id="memo-date-lbl">Google Sheets 연동</p>
+        </div>
+        <div><span class="period-badge">팀장 · 과장 · 주임</span></div>
+      </header>
+      <div id="memo-content"><div class="loading"><div class="loading-spinner"></div><span>불러오는 중...</span></div></div>
+    </div>
+
+    <!-- 쿠팡 납품 현황 탭 -->
+    <div id="p-coupang" class="panel">
+      <header class="page-header">
+        <div>
+          <h1 class="page-title">쿠팡 납품 현황</h1>
+          <p class="page-sub">주차별 발주대비 납품율 · 노트북거치대</p>
+        </div>
+        <div><span class="period-badge">쿠팡 납품</span></div>
+      </header>
+      <div id="coupang-content"><div class="loading"><div class="loading-spinner"></div><span>불러오는 중...</span></div></div>
     </div>
 
     <!-- 데이터 입력 탭 -->

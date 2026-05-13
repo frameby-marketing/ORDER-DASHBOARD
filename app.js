@@ -549,10 +549,29 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
       <div class="sec-header"><span class="sec-lbl">주력 제품 재고현황</span><span class="sec-sub">품절 D-day</span></div>
       <div class="stock-grid">${stockHTML}</div>
     </section>
+  `;
 
-    <!-- ⑧ 쿠팡 납품율 -->
+  // ── 발주 요청 사항 패널 ─────────────────────────────────
+  document.getElementById('memo-content').innerHTML = `
     <section class="sec">
-      <div class="sec-header"><span class="sec-lbl">쿠팡 주차별 발주대비 납품율</span><span class="sec-sub">노트북거치대</span></div>
+      <div class="table-card memo-card">
+        ${[['team','팀장'],['manager','과장'],['staff','주임']].map(([role, label], idx) => {
+          const txt = memoData[role] || '';
+          return `<div class="memo-row ${idx < 2 ? 'memo-border' : ''}">
+            <div class="memo-role">${label}</div>
+            <div class="memo-body ${txt ? '' : 'muted'}">${txt
+              ? txt.split('\n').map(l => l.trim()).filter(l => l !== '').join('<br>')
+              : '—'}</div>
+          </div>`;
+        }).join('')}
+        <div class="table-footer">📄 Google Sheets &gt; 발주요청사항 시트에서 수정 · 새로고침 시 반영</div>
+      </div>
+    </section>
+  `;
+
+  // ── 쿠팡 납품 현황 패널 ────────────────────────────────
+  document.getElementById('coupang-content').innerHTML = `
+    <section class="sec">
       <div class="table-card">
         <div class="coup-chart">
           <div class="coup-bars">${coupangBars}</div>
