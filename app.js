@@ -27,7 +27,7 @@ function fSign(v) {
 
 // ── 탭 전환 ───────────────────────────────────────────────
 function tab(name, el) {
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(t => t.classList.remove("active"));
   document.querySelectorAll(".panel").forEach(p => p.classList.remove("on"));
   el.classList.add("active");
   document.getElementById(`p-${name}`).classList.add("on");
@@ -525,23 +525,6 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
     <section class="sec">
       <div class="sec-header"><span class="sec-lbl">주력 제품 일평균 판매수량</span></div>
       <div class="table-card prod-card">${prodHTML}</div>
-    </section>
-
-    <!-- ⑥ 발주 요청 사항 -->
-    <section class="sec">
-      <div class="sec-header"><span class="sec-lbl">발주 요청 사항</span></div>
-      <div class="table-card memo-card">
-        ${[['team','팀장'],['manager','과장'],['staff','주임']].map(([role, label], idx) => {
-          const txt = memoData[role] || '';
-          return `<div class="memo-row ${idx < 2 ? 'memo-border' : ''}">
-            <div class="memo-role">${label}</div>
-            <div class="memo-body ${txt ? '' : 'muted'}">${txt
-              ? txt.split('\n').map(l => l.trim()).filter(l => l !== '').join('<br>')
-              : '—'}</div>
-          </div>`;
-        }).join('')}
-        <div class="table-footer">📄 Google Sheets &gt; 발주요청사항 시트에서 수정 · 새로고침 시 반영</div>
-      </div>
     </section>
 
     <!-- ⑦ 재고현황 -->
