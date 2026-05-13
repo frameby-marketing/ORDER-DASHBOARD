@@ -304,7 +304,7 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
 .sim-month-current { border-color: var(--accent) !important; }
 .sim-month-label { font-size: 11px; font-weight: 600; color: var(--muted); }
 .sim-month-current .sim-month-label { color: var(--accent); }
-.sim-month-bar-wrap { display: flex; gap: 2px; align-items: flex-end; height: 130px; }
+.sim-month-bar-wrap { display: flex; gap: 2px; align-items: flex-end; height: 130px; position: relative; overflow: visible; }
 .sim-month-bar-prepay  { width: 14px; background: #f59e0b; border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.6s cubic-bezier(.4,0,.2,1); }
 .sim-month-bar-balance { width: 14px; background: #38bdf8; border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.6s cubic-bezier(.4,0,.2,1); }
 .sim-month-total { font-size: 11px; font-weight: 700; font-family: var(--mono); color: var(--text); text-align: center; }
@@ -1492,9 +1492,9 @@ function renderSimulation(cfg) {
     return `
       <div class="sim-month-card ${isCur?'sim-month-current':''} ${isOver?'sim-month-over':''}">
         <div class="sim-month-label">${simML(mk)}</div>
-        <div class="sim-month-bar-wrap">
-          <div style="position:absolute;bottom:${limitH}px;left:-6px;right:-6px;
-            border-top:1.5px dashed rgba(239,68,68,0.55);pointer-events:none;z-index:2"></div>
+        <div class="sim-month-bar-wrap" style="position:relative">
+          <div style="position:absolute;bottom:${limitH}px;left:0;right:0;
+            border-top:2px dashed rgba(239,68,68,0.6);pointer-events:none;z-index:3"></div>
           <div class="sim-month-bar-prepay"  style="height:${pH}px"></div>
           <div class="sim-month-bar-balance" style="height:${bH}px"></div>
         </div>
