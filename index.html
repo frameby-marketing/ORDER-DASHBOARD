@@ -1414,169 +1414,195 @@ function runSimV4(products, initStocks, prePaid, months, weeks) {
 // ── 간트 차트 ─────────────────────────────────────────────
 function renderStockGantt(stockTimeline, allOrders) {
   const today   = new Date(); today.setHours(0,0,0,0);
-  const endDate = new Date(today.getFullYear(), 11, 31);
-  const totalMs = endDate - today || 1;
-  function pctOf(d) { return Math.max(0, Math.min(100, (d - today) / totalMs * 100)); }
+  const start   = new Date(today.getFullYear(), 4, 1); // 5/1 시작
+  const endDate = new Date(today.getFullYear(), 11, 31); // 12/31
 
-  // ── 제품 그룹 ──────────────────────────────────────────
-  const GROUPS = [
-    { label:'MK 킥프레임', color:'#22c55e', products:['mk'] },
-    { label:'PH스탠드',    color:'#22c55e', products:['ph_s','ph_b'],       sub:{ph_s:'실버', ph_b:'블랙'} },
-    { label:'DW프로',      color:'#22c55e', products:['dw_pro_s','dw_pro_b'],    sub:{dw_pro_s:'실버', dw_pro_b:'블랙'} },
-    { label:'DW플러스',    color:'#22c55e', products:['dw_plus_s','dw_plus_b'],  sub:{dw_plus_s:'실버', dw_plus_b:'블랙'} },
+  // ── 제품 행 순서 정의 ─────────────────────────────────
+  const PRODUCTS = [
+    { id:'mk',       name:'MK 킥프레임' },
+    { id:'ph_s',     name:'PH 실버' },
+    { id:'ph_b',     name:'PH 블랙' },
+    { id:'dw_pro_s', name:'DW프로 실버' },
+    { id:'dw_pro_b', name:'DW프로 블랙' },
+    { id:'dw_plus_s',name:'DW플러스 실버' },
+    { id:'dw_plus_b',name:'DW플러스 블랙' },
   ];
-  const LABEL_W = 152;
 
-  // ── 오늘 날짜 문자열 ───────────────────────────────────
-  const todayStr = `${today.getMonth()+1}/${today.getDate()}`;
+  // ── 날짜 배열 생성 (5/1~12/31) ────────────────────────
+  const dates = [];
+  let d = new Date(start);
+  while(d <= endDate) { dates.push(new Date(d)); d.setDate(d.getDate()+1); }
 
-  // ── 월 헤더 ────────────────────────────────────────────
-  const monthHdr = (() => {
-    const marks = [];
-    let cur = new Date(today.getFullYear(), today.getMonth(), 1);
-    while(cur <= endDate) {
-      const p = pctOf(cur);
-      marks.push({ p, label:`${cur.getMonth()+1}월` });
-      cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+  // ── 제품별 날짜→상태 맵 ──────────────────────────────
+  // stockTimeline 스냅샷은 주1회 샘플링이므로 보간 필요
+  function getStatusMap(pid) {
+    const tl = stockTimeline[pid];
+    if(!tl || tl.snapshots.length === 0) return {};
+    const map = {};
+    const snaps = tl.snapshots;
+    // 스냅샷 사이 날짜 보간
+    for(let si=0; si<snaps.length-1; si++) {
+      const s0 = snaps[si], s1 = snaps[si+1];
+      let dd = new Date(s0.date);
+      while(dd < s1.date) {
+        const key = dd.toISOString().slice(0,10);
+        map[key] = s0.stock <= 0 ? 'out' : 'ok';
+        dd.setDate(dd.getDate()+1);
+      }
     }
-    return marks.map(m =>
-      `<div style="position:absolute;left:${m.p}%;font-size:10px;color:var(--muted);white-space:nowrap;transform:translateX(-2px)">${m.label}</div>`
-    ).join('');
-  })();
+    // 마지막 스냅샷
+    const last = snaps[snaps.length-1];
+    const key = last.date.toISOString().slice(0,10);
+    map[key] = last.stock <= 0 ? 'out' : 'ok';
+    return map;
+  }
 
-  // ── 그룹별 행 ──────────────────────────────────────────
-  const groupRows = GROUPS.map(g => {
-    const prodRows = g.products.map(pid => {
-      const tl = stockTimeline[pid];
-      if(!tl) return '';
-      const p = tl.product;
-      const snaps = tl.snapshots;
-
-      // 세그먼트: ok / out 두 가지만
-      const segs = [];
-      let seg = null;
-      snaps.forEach(s => {
-        const sp = pctOf(s.date);
-        const status = s.stock <= 0 ? 'out' : 'ok';
-        if(!seg || seg.status !== status) {
-          if(seg){ seg.endPct = sp; segs.push(seg); }
-          seg = { status, startPct: sp, endPct: sp };
-        } else { seg.endPct = sp; }
+  // ── 제품별 날짜→이벤트 맵 ────────────────────────────
+  // 발주일, 입고일을 날짜키로 인덱싱
+  function getEventMap(pid) {
+    const map = {};
+    allOrders.filter(o => o.product.id === pid).forEach(o => {
+      const isPrepaid = o.type==='prepaid'||o.type==='china';
+      const orderKey = o.orderDate.toISOString().slice(0,10);
+      if(!map[orderKey]) map[orderKey] = [];
+      map[orderKey].push({
+        kind: 'order',
+        isPrepaid,
+        label: isPrepaid ? `요청\n${o.qty.toLocaleString()}개` : `발주\n${o.qty.toLocaleString()}개`,
+        color: isPrepaid ? '#fbbf24' : '#faff00',
       });
-      if(seg){ seg.endPct = 100; segs.push(seg); }
+      (o.batches||[]).forEach((b,i) => {
+        const bKey = b.date.toISOString().slice(0,10);
+        if(!map[bKey]) map[bKey] = [];
+        map[bKey].push({
+          kind: 'receive',
+          isPrepaid,
+          label: `입고\n${b.qty.toLocaleString()}개`,
+          color: isPrepaid ? '#fbbf24' : '#faff00',
+        });
+      });
+    });
+    return map;
+  }
 
-      // 세그 바
-      const segBars = segs.map(s => {
-        const w  = Math.max(0.3, s.endPct - s.startPct);
-        const r0 = s.startPct < 0.5 ? '3px' : '0';
-        const r1 = s.endPct > 99.5  ? '3px' : '0';
-        const bg = s.status === 'out'
-          ? 'repeating-linear-gradient(45deg,#7f1d1d,#7f1d1d 3px,#dc2626 3px,#dc2626 6px)'
-          : g.color;
-        const op = s.status === 'out' ? '1' : '0.72';
-        return `<div style="position:absolute;top:0;bottom:0;left:${s.startPct}%;width:${w}%;background:${bg};opacity:${op};border-radius:${r0} ${r1} ${r1} ${r0}" title="${s.status==='out'?'품절':'재고있음'}"></div>`;
-      }).join('');
+  // 모든 제품 상태맵·이벤트맵 사전 계산
+  const statusMaps = {};
+  const eventMaps  = {};
+  PRODUCTS.forEach(p => {
+    statusMaps[p.id] = getStatusMap(p.id);
+    eventMaps[p.id]  = getEventMap(p.id);
+  });
 
-      // 품절 기간 텍스트
-      const outLabels = segs.filter(s => s.status==='out').map(s => {
-        const mid  = (s.startPct + s.endPct) / 2;
-        const days = Math.round((s.endPct - s.startPct) / 100 * totalMs / 86400000);
-        if(days < 3) return '';
-        return `<div style="position:absolute;top:50%;left:${mid}%;transform:translate(-50%,-50%);font-size:9px;color:#fca5a5;font-weight:700;z-index:5;white-space:nowrap;pointer-events:none">${days}일 품절</div>`;
-      }).join('');
+  // ── 월 구분 계산 ──────────────────────────────────────
+  // 각 월의 첫 날 인덱스
+  const monthStarts = [];
+  let prevMonth = -1;
+  dates.forEach((dd, idx) => {
+    if(dd.getMonth() !== prevMonth) {
+      monthStarts.push({ idx, month: dd.getMonth()+1 });
+      prevMonth = dd.getMonth();
+    }
+  });
 
-      // 발주 마커 (삼각형) — 신규발주(노란) + 선금완료(보라) 모두 표시
-      const allOrdsForMarker = allOrders.filter(o => o.product.id===pid && o.orderDate>=today);
-      const orderMks = allOrdsForMarker.map(o => {
-        const op = pctOf(o.orderDate);
-        if(op < 0 || op > 100) return '';
-        const isPrepaid = o.type==='prepaid' || o.type==='china';
-        const triColor  = isPrepaid ? '#fbbf24' : '#faff00';
-        const tipLabel  = isPrepaid
-          ? `선금완료 발주요청 ${simMD(o.orderDate)} · ${o.qty.toLocaleString()}개`
-          : `발주 ${simMD(o.orderDate)} · ${o.qty.toLocaleString()}개 · 선금 ${simWon(o.prepayAmt)}`;
-        return `<div style="position:absolute;top:-7px;left:calc(${op}% - 4px);z-index:4;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px" title="${tipLabel}">
-          <div style="font-size:8px;font-weight:700;color:${triColor};font-family:var(--mono);white-space:nowrap;line-height:1;transform:translateX(-50%);margin-left:4px">${simMD(o.orderDate)}</div>
-          <div style="width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:8px solid ${triColor}"></div>
+  // ── 셀 너비 ────────────────────────────────────────────
+  const CELL_W = 14; // px
+  const LABEL_W = 80; // px
+
+  // ── 월 헤더 HTML ──────────────────────────────────────
+  const monthHeaderHTML = monthStarts.map((ms, i) => {
+    const nextIdx = monthStarts[i+1]?.idx ?? dates.length;
+    const spanDays = nextIdx - ms.idx;
+    return `<div style="display:inline-block;width:${spanDays*CELL_W}px;text-align:center;font-size:10px;font-weight:600;color:var(--muted);border-right:1px solid var(--border);box-sizing:border-box;padding:2px 0">${ms.month}월</div>`;
+  }).join('');
+
+  // ── 날짜 헤더 HTML (1,5,10,15,20,25,말일만 표시) ──────
+  const dateHeaderHTML = dates.map(dd => {
+    const dom = dd.getDate();
+    const isToday = dd.getTime() === today.getTime();
+    const showLabel = dom===1||dom===5||dom===10||dom===15||dom===20||dom===25||
+      (new Date(dd.getFullYear(),dd.getMonth()+1,0).getDate()===dom);
+    return `<div style="display:inline-block;width:${CELL_W}px;text-align:center;font-size:8px;color:${isToday?'var(--accent)':'var(--muted)'};font-family:var(--mono);overflow:hidden;box-sizing:border-box;${isToday?'font-weight:700;':''}">${showLabel?dom:''}</div>`;
+  }).join('');
+
+  // ── 제품 행 HTML ──────────────────────────────────────
+  const prodRowsHTML = PRODUCTS.map(p => {
+    const smap = statusMaps[p.id] || {};
+    const emap = eventMaps[p.id]  || {};
+
+    const cells = dates.map(dd => {
+      const key     = dd.toISOString().slice(0,10);
+      const status  = smap[key] || 'ok';
+      const events  = emap[key] || [];
+      const isToday = dd.getTime() === today.getTime();
+      const dom     = dd.getDate();
+      const isMonthStart = dom === 1;
+
+      // 배경색
+      let bg = status === 'out'
+        ? 'repeating-linear-gradient(45deg,#7f1d1d,#7f1d1d 2px,#dc2626 2px,#dc2626 4px)'
+        : 'rgba(34,197,94,0.25)';
+
+      // 이벤트 문구 (발주/입고)
+      let inner = '';
+      if(events.length > 0) {
+        const ev = events[0];
+        const lines = ev.label.split('\n');
+        inner = `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;pointer-events:none">
+          <div style="font-size:6px;font-weight:800;color:${ev.color};line-height:1;white-space:nowrap;text-shadow:0 0 3px #000">${lines[0]}</div>
+          <div style="font-size:5px;color:${ev.color};line-height:1;white-space:nowrap">${lines[1]||''}</div>
         </div>`;
-      }).join('');
+        bg = status === 'out'
+          ? 'repeating-linear-gradient(45deg,#7f1d1d,#7f1d1d 2px,#dc2626 2px,#dc2626 4px)'
+          : 'rgba(34,197,94,0.45)';
+      }
 
-      // 입고 마커: 신규발주 + 선금완료 모두 포함 (파란 세로선)
-      const allProdOrders = allOrders.filter(o => o.product.id===pid);
-      const receiveMks = allProdOrders.flatMap(o => (o.batches||[]).map((b,i) => {
-        const bp = pctOf(b.date);
-        if(bp < 0 || bp > 100) return '';
-        const isPrepaid = o.type==='prepaid' || o.type==='china';
-        const color = isPrepaid ? '#fbbf24' : '#faff00'; // 선금완료=노란, 신규=형광노란
-        const label = isPrepaid
-          ? `선금완료 입고 ${simMD(b.date)} · ${b.qty.toLocaleString()}개 (${i+1}차)`
-          : `입고 ${simMD(b.date)} · ${b.qty.toLocaleString()}개 (${i+1}차) · 잔금 ${simWon(b.balanceAmt)}`;
-        return `<div style="position:absolute;top:-5px;bottom:-5px;left:${bp}%;width:2px;background:${color};z-index:4;border-radius:1px;opacity:0.9;cursor:pointer" title="${label}">
-          <div style="position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-size:8px;font-weight:700;color:${color};font-family:var(--mono);white-space:nowrap;line-height:1;margin-bottom:2px;background:var(--bg2);padding:0 2px;border-radius:2px">${simMD(b.date)}</div>
-        </div>`;
-      })).join('');
+      // 오늘 강조
+      const todayBorder = isToday ? 'border-left:2px solid var(--accent);' : (isMonthStart ? 'border-left:1px solid var(--border2);' : '');
 
-      const hasOut = segs.some(s => s.status==='out');
-      const outBadge = hasOut
-        ? `<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(239,68,68,0.2);color:#fca5a5;margin-left:4px">품절</span>`
-        : '';
-      const subLabel = g.sub?.[pid] ?? '';
+      // 툴팁
+      const title = events.map(e=>e.label.replace('\n',' ')).join(' / ') || (status==='out'?'품절':'재고있음');
 
-      return `
-        <div class="gantt-row" style="margin-bottom:5px">
-          <div class="gantt-label" style="width:${LABEL_W}px;flex-shrink:0">
-            <div class="gantt-prod-name">
-              ${subLabel
-                ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${g.color};margin-right:4px;vertical-align:middle;opacity:${subLabel==='실버'?1:0.5}"></span><span style="font-size:11px;color:var(--muted)">${subLabel}</span>`
-                : `<span style="font-size:11px;color:var(--muted)">${p.name}</span>`}
-              ${outBadge}
-            </div>
-            <div class="gantt-prod-sub" style="font-size:9px;color:var(--muted);opacity:0.6;margin-top:1px">일 ${p.dailySales}개</div>
-          </div>
-          <div class="gantt-bar-wrap" style="height:22px;flex:1;background:var(--bg3);border-radius:3px;position:relative;overflow:visible;border:1px solid var(--border)">
-            ${segBars}${orderMks}${receiveMks}${outLabels}
-            <!-- 오늘 세로선 + 날짜 라벨 -->
-            <div style="position:absolute;top:-5px;bottom:-5px;left:0;width:2.5px;background:var(--accent);z-index:6;border-radius:1px"></div>
-            <div style="position:absolute;top:-18px;left:0;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--accent);white-space:nowrap;font-family:var(--mono);background:var(--bg2);padding:0 3px;border-radius:2px">${todayStr}</div>
-          </div>
-        </div>`;
+      return `<div style="display:inline-block;width:${CELL_W}px;height:28px;position:relative;background:${bg};${todayBorder}border-bottom:1px solid var(--border);box-sizing:border-box;vertical-align:top" title="${dd.getMonth()+1}/${dom} ${title}">${inner}</div>`;
     }).join('');
 
-    return `
-      <div style="margin-bottom:14px">
-        <div style="display:flex;align-items:center;gap:7px;padding:7px 0 6px;border-bottom:1px solid var(--border);margin-bottom:7px">
-          <span style="width:9px;height:9px;border-radius:50%;background:${g.color};flex-shrink:0;display:inline-block"></span>
-          <span style="font-size:12px;font-weight:600;color:var(--text)">${g.label}</span>
-        </div>
-        ${prodRows}
-      </div>`;
+    return `<div style="display:flex;align-items:stretch;border-bottom:1px solid var(--border)">
+      <div style="width:${LABEL_W}px;flex-shrink:0;padding:0 8px;font-size:11px;font-weight:500;color:var(--muted);display:flex;align-items:center;border-right:1px solid var(--border2);background:var(--bg3)">${p.name}</div>
+      <div style="overflow-x:hidden;white-space:nowrap">${cells}</div>
+    </div>`;
   }).join('');
+
+  const todayStr = `${today.getMonth()+1}/${today.getDate()}`;
 
   return `
     <section class="sec">
       <div class="sec-header">
         <span class="sec-lbl">제품별 재고 타임라인</span>
-        <span class="sec-sub">오늘(${todayStr})~12월 · 그룹별 색상 · ▲발주일 │입고일 · 빨간사선=품절</span>
+        <span class="sec-sub">5/1~12/31 · 오늘(${todayStr}) · 초록=재고있음 · 빨간사선=품절</span>
       </div>
-      <div class="table-card" style="padding:1.25rem">
-        <div class="gantt-legend" style="margin-bottom:16px">
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:#22c55e;border-radius:2px;display:inline-block;opacity:0.72"></span>재고있음</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:repeating-linear-gradient(45deg,#7f1d1d,#7f1d1d 3px,#dc2626 3px,#dc2626 6px);border-radius:2px;display:inline-block"></span>품절</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:8px solid #faff00;display:inline-block"></span>신규발주일</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:8px solid #fbbf24;display:inline-block"></span>선금완료 요청일</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:#faff00;border-radius:1px;display:inline-block"></span>신규발주 입고일</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:#fbbf24;border-radius:1px;display:inline-block"></span>선금완료 입고일</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:2.5px;height:12px;background:var(--accent);border-radius:1px;display:inline-block"></span>오늘(${todayStr})</span>
+      <div class="table-card" style="padding:0;overflow:hidden">
+        <div class="gantt-legend" style="padding:10px 14px 8px;border-bottom:1px solid var(--border);display:flex;gap:14px;flex-wrap:wrap">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:rgba(34,197,94,0.25);border-radius:2px;display:inline-block"></span>재고있음</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:repeating-linear-gradient(45deg,#7f1d1d,#7f1d1d 2px,#dc2626 2px,#dc2626 4px);border-radius:2px;display:inline-block"></span>품절</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:#faff00;border-radius:1px;display:inline-block"></span>신규발주/입고</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:#fbbf24;border-radius:1px;display:inline-block"></span>선금완료 요청/입고</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:var(--accent);display:inline-block"></span>오늘(${todayStr})</span>
         </div>
-        <!-- 월 헤더 -->
-        <div style="position:relative;height:18px;margin-left:${LABEL_W+12}px;margin-bottom:20px">
-          ${monthHdr}
+        <div style="overflow-x:auto">
+          <!-- 헤더 -->
+          <div style="display:flex;position:sticky;top:0;z-index:10;background:var(--bg2)">
+            <div style="width:${LABEL_W}px;flex-shrink:0;border-right:1px solid var(--border2);background:var(--bg3)"></div>
+            <div style="white-space:nowrap">
+              <div style="border-bottom:1px solid var(--border)">${monthHeaderHTML}</div>
+              <div style="border-bottom:1px solid var(--border)">${dateHeaderHTML}</div>
+            </div>
+          </div>
+          <!-- 제품 행 -->
+          ${prodRowsHTML}
         </div>
-        <!-- 그룹별 행 -->
-        <div>${groupRows}</div>
       </div>
     </section>`;
 }
+
 
 
 // ── 메인 렌더 ─────────────────────────────────────────────
