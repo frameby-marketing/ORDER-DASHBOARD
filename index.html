@@ -1262,11 +1262,21 @@ function runSimV4(products, initStocks, prePaid, months, weeks) {
       });
     });
 
-    // ── 선금완료 제작중 등록 (분할수령) ───────────────────
+    // ── 선금완료 제작중 등록 ─────────────────────────────
+    // leadDays가 짧은 항목(≤7일): 품절 임박 시 자동 트리거용 → 별도 대기열
+    // leadDays가 긴 항목(>7일): 즉시 요청, 분할수령으로 inboundEvents 등록
+    const urgentReserve = []; // 품절 방어용 소량 항목
     prePaid.inProd.filter(c=>c.id===p.id).forEach(c=>{
+      const ld = c.leadDays || 60;
+      if(!c.date && ld <= 7) {
+        // 소량 긴급용: 품절 임박 시 트리거 (시뮬루프에서 처리)
+        urgentReserve.push({ qty:c.qty, leadDays:ld, unitCost:p.unitCost, prepayPct:p.prepayPct, used:false });
+        return;
+      }
+      // 대량 분할수령: 즉시 요청, leadDays 후 첫 수령
       let firstDate;
       if(c.date){ firstDate=new Date(c.date); firstDate.setHours(0,0,0,0); }
-      else       { firstDate=simAdd(today, c.leadDays||60); }
+      else       { firstDate=simAdd(today, ld); }
       const totalBal = Math.round(c.qty * p.unitCost * (1 - p.prepayPct));
       let rem=c.qty, bNum=0;
       const batches=[];
@@ -1274,12 +1284,12 @@ function runSimV4(products, initStocks, prePaid, months, weeks) {
         const bQty=Math.min(monthlyNeed,rem);
         const bDate=simAdd(firstDate, bNum*30);
         const bBal=Math.round(totalBal*bQty/c.qty);
-        inboundEvents.push({ date:bDate, qty:bQty, balanceAmt:bBal, label:'선금완료' });
+        inboundEvents.push({ date:bDate, qty:bQty, balanceAmt:bBal, label:'선금완료(분할)' });
         addToBucket(months, weeks, bDate, 'balance', bBal, `${p.name} 선금완료 잔금`, bQty);
         batches.push({ date:bDate, qty:bQty, balanceAmt:bBal });
         rem-=bQty; bNum++;
       }
-      const label=c.date?`선금완료(수령예정 ${simMD(firstDate)})`:'선금완료(제작중)';
+      const label = c.date ? `선금완료(수령예정 ${simMD(firstDate)})` : `선금완료(요청→${ld}일후 분할수령)`;
       allOrders.push({ product:p, orderDate:today, receiveDate:firstDate, qty:c.qty,
         prepayAmt:0, balanceAmt:totalBal, totalCost:c.qty*p.unitCost, type:'prepaid', label, batches });
     });
@@ -1300,7 +1310,25 @@ function runSimV4(products, initStocks, prePaid, months, weeks) {
 
       const projected = curStock + futureInbound;
 
-      // 발주 트리거: 리드타임 내 입고 포함 재고가 0 이하 예상될 때
+      // ── 긴급 소량 트리거: leadDays×일판매 이하로 떨어지면 즉시 요청
+      urgentReserve.forEach(ur => {
+        if(!ur.used) {
+          const urgentSafe = Math.ceil(p.dailySales * (ur.leadDays + 7));
+          if(curStock <= urgentSafe) {
+            ur.used = true;
+            const receiveDate = simAdd(d, ur.leadDays);
+            const balAmt = Math.round(ur.qty * ur.unitCost * (1 - ur.prepayPct));
+            inboundEvents.push({ date:receiveDate, qty:ur.qty, balanceAmt:balAmt, label:'긴급입고' });
+            addToBucket(months, weeks, receiveDate, 'balance', balAmt, `${p.name} 긴급입고 잔금`, ur.qty);
+            const batches = [{ date:receiveDate, qty:ur.qty, balanceAmt:balAmt }];
+            allOrders.push({ product:p, orderDate:new Date(d), receiveDate, qty:ur.qty,
+              prepayAmt:0, balanceAmt:balAmt, totalCost:ur.qty*ur.unitCost,
+              type:'prepaid', label:`긴급입고(품절방어 D-${ur.leadDays})`, batches });
+          }
+        }
+      });
+
+      // 발주 트리거: 리드타임 내 입고 포함 재고가 safeStock 이하일 때
       if(projected <= safeStock && lastOrderDate.getTime() < d.getTime()) {
         // 발주일 결정 (월 한도 체크)
         let actualOrderDate = new Date(d);
