@@ -346,6 +346,72 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
   border:1px solid var(--border);
 }
 .gantt-month-header { overflow:hidden; }
+.stock-timeline-card { overflow:hidden; }
+.stock-timeline-head { display:flex; position:sticky; top:0; z-index:10; background:var(--bg2); }
+.stock-timeline-label-head { width:164px; flex-shrink:0; border-right:1px solid var(--border2); background:var(--bg3); }
+.stock-timeline-scroll { overflow-x:auto; }
+.stock-timeline-row { display:flex; align-items:stretch; min-height:48px; border-bottom:1px solid var(--border); }
+.stock-timeline-label {
+  width:164px; flex-shrink:0; padding:8px 10px;
+  border-right:1px solid var(--border2); background:var(--bg3);
+  display:flex; flex-direction:column; justify-content:center; gap:5px;
+}
+.stock-timeline-name { font-size:12px; font-weight:700; color:var(--text); line-height:1.25; }
+.stock-timeline-meta { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+.sku-chip { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:16px; padding:0 5px; border-radius:3px; background:rgba(255,255,255,0.06); color:var(--muted); font-size:9px; font-weight:700; font-family:var(--mono); }
+.runway-chip { display:inline-flex; align-items:center; height:16px; padding:0 6px; border-radius:3px; font-size:9px; font-weight:800; font-family:var(--mono); }
+.runway-ok { background:rgba(34,197,94,0.12); color:var(--green); }
+.runway-warn { background:rgba(245,158,11,0.13); color:var(--amber); }
+.runway-danger { background:rgba(239,68,68,0.13); color:var(--red); }
+.stock-timeline-days { white-space:nowrap; }
+.stock-day-cell {
+  display:inline-block; width:16px; height:62px; position:relative;
+  border-bottom:1px solid var(--border); box-sizing:border-box; vertical-align:top;
+  cursor:default;
+}
+.stock-day-ok     { background:rgba(34,197,94,0.22); }
+.stock-day-danger { background:rgba(245,158,11,0.30); }
+.stock-day-out    { background:repeating-linear-gradient(45deg,#450a0a,#450a0a 3px,#991b1b 3px,#991b1b 6px); }
+.stock-day-today  { border-left:2.5px solid var(--accent) !important; background-color:rgba(56,189,248,0.08); }
+.stock-day-month  { border-left:1px solid var(--border2); }
+/* 발주 이벤트: 셀 상단 노란 띠 */
+.stock-day-has-order::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:4px;
+  background:#facc15; z-index:4;
+}
+.stock-day-has-order-prepaid::before { background:#f59e0b; }
+/* 입고 이벤트: 셀 하단 파란 띠 */
+.stock-day-has-receive::after {
+  content:'';
+  position:absolute; bottom:0; left:0; right:0; height:4px;
+  background:#38bdf8; z-index:4;
+}
+.stock-day-has-receive-prepaid::after { background:#7dd3fc; }
+/* 품절 일수 텍스트 오버레이 (품절 구간 중간 셀에 표시) */
+.stock-out-label {
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  font-size:7px; font-weight:800; color:#fca5a5;
+  white-space:nowrap; z-index:5; pointer-events:none;
+  text-shadow:0 0 4px #000;
+}
+.stock-timeline-note { padding:9px 14px; font-size:11px; color:var(--muted); background:var(--bg3); border-top:1px solid var(--border); line-height:1.6; }
+/* 타임라인 행 높이도 맞추기 */
+.stock-timeline-row { display:flex; align-items:stretch; min-height:62px; border-bottom:1px solid var(--border); }
+.sim-kpi-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:1.5rem; }
+.sim-kpi-card { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:1rem 1.1rem; }
+.sim-kpi-card.good { border-color:rgba(34,197,94,0.28); }
+.sim-kpi-card.warn { border-color:rgba(245,158,11,0.3); }
+.sim-kpi-card.bad { border-color:rgba(239,68,68,0.3); }
+.sim-kpi-label { font-size:11px; color:var(--muted); margin-bottom:6px; }
+.sim-kpi-value { font-size:22px; font-weight:800; font-family:var(--mono); color:var(--text); letter-spacing:0; line-height:1.2; }
+.sim-kpi-sub { font-size:11px; color:var(--muted); margin-top:5px; line-height:1.45; }
+@media (max-width: 900px) {
+  .sim-kpi-row { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .sim-prod-row { grid-template-columns:1fr; gap:10px; }
+  .stock-timeline-label, .stock-timeline-label-head { width:132px; }
+  .stock-day-cell { width:14px; }
+}
 
   </style>
 </head>
@@ -1153,6 +1219,13 @@ const SIM_PRODUCTS = [
   { id:'dw_plus_b', name:'DW플러스 블랙', maker:'타이루', dailySales:2,  moq:1000, leadDays:50, prepayPct:0.10, unitCost:21396, targetHoldDays:65 },
 ];
 
+const SIM_PRODUCT_GROUPS = [
+  { id:'mk',      name:'MK',        subtitle:'단독 제품',         productIds:['mk'],                    chips:['MK'] },
+  { id:'ph',      name:'PH',        subtitle:'실버 + 블랙 묶음',  productIds:['ph_s','ph_b'],           chips:['S','B'] },
+  { id:'dw_pro',  name:'DW 프로',   subtitle:'실버 + 블랙 묶음',  productIds:['dw_pro_s','dw_pro_b'],   chips:['S','B'] },
+  { id:'dw_plus', name:'DW 플러스', subtitle:'실버 + 블랙 묶음',  productIds:['dw_plus_s','dw_plus_b'], chips:['S','B'] },
+];
+
 // ── 날짜 유틸 ─────────────────────────────────────────────
 function simAdd(d, n) { const r=new Date(d); r.setDate(r.getDate()+n); return r; }
 function simMD(d)      { return `${d.getMonth()+1}/${d.getDate()}`; }
@@ -1417,48 +1490,30 @@ function renderStockGantt(stockTimeline, allOrders) {
   const start   = new Date(today.getFullYear(), 4, 1); // 5/1 시작
   const endDate = new Date(today.getFullYear(), 11, 31); // 12/31
 
-  // ── 제품 행 순서 정의 ─────────────────────────────────
-  const PRODUCTS = [
-    { id:'mk',       name:'MK 킥프레임' },
-    { id:'ph_s',     name:'PH 실버' },
-    { id:'ph_b',     name:'PH 블랙' },
-    { id:'dw_pro_s', name:'DW프로 실버' },
-    { id:'dw_pro_b', name:'DW프로 블랙' },
-    { id:'dw_plus_s',name:'DW플러스 실버' },
-    { id:'dw_plus_b',name:'DW플러스 블랙' },
-  ];
-
-  // ── 날짜 배열 생성 (5/1~12/31) ────────────────────────
   const dates = [];
   let d = new Date(start);
   while(d <= endDate) { dates.push(new Date(d)); d.setDate(d.getDate()+1); }
 
-  // ── 제품별 날짜→상태 맵 ──────────────────────────────
-  // stockTimeline 스냅샷은 주1회 샘플링이므로 보간 필요
   function getStatusMap(pid) {
     const tl = stockTimeline[pid];
     if(!tl || tl.snapshots.length === 0) return {};
     const map = {};
     const snaps = tl.snapshots;
-    // 스냅샷 사이 날짜 보간
     for(let si=0; si<snaps.length-1; si++) {
       const s0 = snaps[si], s1 = snaps[si+1];
       let dd = new Date(s0.date);
       while(dd < s1.date) {
         const key = dd.toISOString().slice(0,10);
-        map[key] = s0.stock <= 0 ? 'out' : 'ok';
+        map[key] = s0.stock <= 0 ? 'out' : s0.status === 'danger' ? 'danger' : 'ok';
         dd.setDate(dd.getDate()+1);
       }
     }
-    // 마지막 스냅샷
     const last = snaps[snaps.length-1];
     const key = last.date.toISOString().slice(0,10);
-    map[key] = last.stock <= 0 ? 'out' : 'ok';
+    map[key] = last.stock <= 0 ? 'out' : last.status === 'danger' ? 'danger' : 'ok';
     return map;
   }
 
-  // ── 제품별 날짜→이벤트 맵 ────────────────────────────
-  // 발주일, 입고일을 날짜키로 인덱싱
   function getEventMap(pid) {
     const map = {};
     allOrders.filter(o => o.product.id === pid).forEach(o => {
@@ -1468,8 +1523,7 @@ function renderStockGantt(stockTimeline, allOrders) {
       map[orderKey].push({
         kind: 'order',
         isPrepaid,
-        label: isPrepaid ? `요청\n${o.qty.toLocaleString()}개` : `발주\n${o.qty.toLocaleString()}개`,
-        color: isPrepaid ? '#fbbf24' : '#faff00',
+        label: isPrepaid ? `${o.product.name} 요청 ${o.qty.toLocaleString()}개` : `${o.product.name} 발주 ${o.qty.toLocaleString()}개`,
       });
       (o.batches||[]).forEach((b,i) => {
         const bKey = b.date.toISOString().slice(0,10);
@@ -1477,24 +1531,20 @@ function renderStockGantt(stockTimeline, allOrders) {
         map[bKey].push({
           kind: 'receive',
           isPrepaid,
-          label: `입고\n${b.qty.toLocaleString()}개`,
-          color: isPrepaid ? '#fbbf24' : '#faff00',
+          label: `${o.product.name} ${i+1}차 입고 ${b.qty.toLocaleString()}개`,
         });
       });
     });
     return map;
   }
 
-  // 모든 제품 상태맵·이벤트맵 사전 계산
   const statusMaps = {};
   const eventMaps  = {};
-  PRODUCTS.forEach(p => {
+  SIM_PRODUCTS.forEach(p => {
     statusMaps[p.id] = getStatusMap(p.id);
     eventMaps[p.id]  = getEventMap(p.id);
   });
 
-  // ── 월 구분 계산 ──────────────────────────────────────
-  // 각 월의 첫 날 인덱스
   const monthStarts = [];
   let prevMonth = -1;
   dates.forEach((dd, idx) => {
@@ -1504,18 +1554,14 @@ function renderStockGantt(stockTimeline, allOrders) {
     }
   });
 
-  // ── 셀 너비 ────────────────────────────────────────────
-  const CELL_W = 14; // px
-  const LABEL_W = 80; // px
+  const CELL_W = 16;
 
-  // ── 월 헤더 HTML ──────────────────────────────────────
   const monthHeaderHTML = monthStarts.map((ms, i) => {
     const nextIdx = monthStarts[i+1]?.idx ?? dates.length;
     const spanDays = nextIdx - ms.idx;
     return `<div style="display:inline-block;width:${spanDays*CELL_W}px;text-align:center;font-size:10px;font-weight:600;color:var(--muted);border-right:1px solid var(--border);box-sizing:border-box;padding:2px 0">${ms.month}월</div>`;
   }).join('');
 
-  // ── 날짜 헤더 HTML (1,5,10,15,20,25,말일만 표시) ──────
   const dateHeaderHTML = dates.map(dd => {
     const dom = dd.getDate();
     const isToday = dd.getTime() === today.getTime();
@@ -1524,50 +1570,85 @@ function renderStockGantt(stockTimeline, allOrders) {
     return `<div style="display:inline-block;width:${CELL_W}px;text-align:center;font-size:8px;color:${isToday?'var(--accent)':'var(--muted)'};font-family:var(--mono);overflow:hidden;box-sizing:border-box;${isToday?'font-weight:700;':''}">${showLabel?dom:''}</div>`;
   }).join('');
 
-  // ── 제품 행 HTML ──────────────────────────────────────
-  const prodRowsHTML = PRODUCTS.map(p => {
-    const smap = statusMaps[p.id] || {};
-    const emap = eventMaps[p.id]  || {};
+  function mergedStatus(group, key) {
+    const statuses = group.productIds.map(pid => statusMaps[pid]?.[key] || 'ok');
+    if(statuses.includes('out')) return 'out';
+    if(statuses.includes('danger')) return 'danger';
+    return 'ok';
+  }
 
-    const cells = dates.map(dd => {
+  function groupEvents(group, key) {
+    return group.productIds.flatMap(pid => eventMaps[pid]?.[key] || []);
+  }
+
+  function firstStatusDate(group, status) {
+    const hit = dates.find(dd => group.productIds.some(pid => (statusMaps[pid]?.[dd.toISOString().slice(0,10)] || 'ok') === status));
+    return hit || null;
+  }
+
+  const groupRowsHTML = SIM_PRODUCT_GROUPS.map(group => {
+    const firstOut = firstStatusDate(group, 'out');
+    const firstWarn = firstStatusDate(group, 'danger');
+    const runwayDate = firstOut || firstWarn;
+    const runwayDays = runwayDate ? Math.ceil((runwayDate - today) / 86400000) : null;
+    const runwayCls = firstOut ? 'runway-danger' : firstWarn ? 'runway-warn' : 'runway-ok';
+    const runwayText = firstOut
+      ? (runwayDays <= 0 ? '품절' : `품절 D-${runwayDays}`)
+      : firstWarn
+        ? (runwayDays <= 0 ? '주의' : `주의 D-${runwayDays}`)
+    // 품절 구간: 연속 out 일 수 계산 → 중간 셀에 일수 표시
+    const outRuns = [];
+    let outStart = null, outCount = 0;
+    dates.forEach((dd, idx) => {
+      const k  = dd.toISOString().slice(0,10);
+      const st = mergedStatus(group, k);
+      if(st === 'out') {
+        if(outStart === null) { outStart = idx; outCount = 0; }
+        outCount++;
+      } else {
+        if(outStart !== null) {
+          outRuns.push({ midIdx: outStart + Math.floor(outCount/2), days: outCount });
+          outStart = null; outCount = 0;
+        }
+      }
+    });
+    if(outStart !== null) outRuns.push({ midIdx: outStart + Math.floor(outCount/2), days: outCount });
+    const outLabelMap = {};
+    outRuns.forEach(r => { outLabelMap[r.midIdx] = r.days; });
+
+    const cells = dates.map((dd, idx) => {
       const key     = dd.toISOString().slice(0,10);
-      const status  = smap[key] || 'ok';
-      const events  = emap[key] || [];
+      const status  = mergedStatus(group, key);
+      const events  = groupEvents(group, key);
       const isToday = dd.getTime() === today.getTime();
       const dom     = dd.getDate();
       const isMonthStart = dom === 1;
-
-      // 배경색
-      let bg = status === 'out'
-        ? 'repeating-linear-gradient(45deg,#7f1d1d,#7f1d1d 2px,#dc2626 2px,#dc2626 4px)'
-        : 'rgba(34,197,94,0.25)';
-
-      // 이벤트 문구 (발주/입고)
-      let inner = '';
-      if(events.length > 0) {
-        const ev = events[0];
-        const lines = ev.label.split('\n');
-        inner = `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;pointer-events:none">
-          <div style="font-size:6px;font-weight:800;color:${ev.color};line-height:1;white-space:nowrap;text-shadow:0 0 3px #000">${lines[0]}</div>
-          <div style="font-size:5px;color:${ev.color};line-height:1;white-space:nowrap">${lines[1]||''}</div>
-        </div>`;
-        bg = status === 'out'
-          ? 'repeating-linear-gradient(45deg,#7f1d1d,#7f1d1d 2px,#dc2626 2px,#dc2626 4px)'
-          : 'rgba(34,197,94,0.45)';
-      }
-
-      // 오늘 강조
-      const todayBorder = isToday ? 'border-left:2px solid var(--accent);' : (isMonthStart ? 'border-left:1px solid var(--border2);' : '');
-
-      // 툴팁
-      const title = events.map(e=>e.label.replace('\n',' ')).join(' / ') || (status==='out'?'품절':'재고있음');
-
-      return `<div style="display:inline-block;width:${CELL_W}px;height:28px;position:relative;background:${bg};${todayBorder}border-bottom:1px solid var(--border);box-sizing:border-box;vertical-align:top" title="${dd.getMonth()+1}/${dom} ${title}">${inner}</div>`;
+      const orderEvents   = events.filter(e => e.kind === 'order');
+      const receiveEvents = events.filter(e => e.kind === 'receive');
+      const hasPrepaidOrder   = orderEvents.some(e => e.isPrepaid);
+      const hasPrepaidReceive = receiveEvents.some(e => e.isPrepaid);
+      const statusLabel = status==='out' ? '품절' : status==='danger' ? '안전재고 이하' : '재고 안전';
+      const title = [`${dd.getMonth()+1}/${dom}`, statusLabel, ...events.map(e=>e.label)].join(' · ');
+      const cls = [
+        'stock-day-cell',
+        `stock-day-${status}`,
+        isToday ? 'stock-day-today' : (isMonthStart ? 'stock-day-month' : ''),
+        orderEvents.length   ? (hasPrepaidOrder   ? 'stock-day-has-order-prepaid'   : 'stock-day-has-order')   : '',
+        receiveEvents.length ? (hasPrepaidReceive ? 'stock-day-has-receive-prepaid' : 'stock-day-has-receive') : '',
+      ].filter(Boolean).join(' ');
+      const outLabel = outLabelMap[idx] ? `<div class="stock-out-label">${outLabelMap[idx]}일</div>` : '';
+      return `<div class="${cls}" title="${title}">${outLabel}</div>`;
     }).join('');
 
-    return `<div style="display:flex;align-items:stretch;border-bottom:1px solid var(--border)">
-      <div style="width:${LABEL_W}px;flex-shrink:0;padding:0 8px;font-size:11px;font-weight:500;color:var(--muted);display:flex;align-items:center;border-right:1px solid var(--border2);background:var(--bg3)">${p.name}</div>
-      <div style="overflow-x:hidden;white-space:nowrap">${cells}</div>
+    return `<div class="stock-timeline-row">
+      <div class="stock-timeline-label">
+        <div class="stock-timeline-name">${group.name}</div>
+        <div class="stock-timeline-meta">
+          ${group.chips.map(chip => `<span class="sku-chip">${chip}</span>`).join('')}
+          <span class="runway-chip ${runwayCls}">${runwayText}</span>
+        </div>
+      </div>
+      <div class="stock-timeline-days">${cells}</div>
     </div>`;
   }).join('');
 
@@ -1576,29 +1657,39 @@ function renderStockGantt(stockTimeline, allOrders) {
   return `
     <section class="sec">
       <div class="sec-header">
-        <span class="sec-lbl">제품별 재고 타임라인</span>
-        <span class="sec-sub">5/1~12/31 · 오늘(${todayStr}) · 초록=재고있음 · 빨간사선=품절</span>
+        <span class="sec-lbl">제품군별 재고 타임라인</span>
+        <span class="sec-sub">MK 단독 · PH/DW는 실버+블랙 묶음 · 오늘(${todayStr})</span>
       </div>
-      <div class="table-card" style="padding:0;overflow:hidden">
-        <div class="gantt-legend" style="padding:10px 14px 8px;border-bottom:1px solid var(--border);display:flex;gap:14px;flex-wrap:wrap">
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:rgba(34,197,94,0.25);border-radius:2px;display:inline-block"></span>재고있음</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:repeating-linear-gradient(45deg,#7f1d1d,#7f1d1d 2px,#dc2626 2px,#dc2626 4px);border-radius:2px;display:inline-block"></span>품절</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:#faff00;border-radius:1px;display:inline-block"></span>신규발주/입고</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:#fbbf24;border-radius:1px;display:inline-block"></span>선금완료 요청/입고</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:var(--accent);display:inline-block"></span>오늘(${todayStr})</span>
+      <div class="table-card stock-timeline-card">
+        <div class="gantt-legend" style="padding:10px 14px 8px;border-bottom:1px solid var(--border);display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:rgba(34,197,94,0.22);border-radius:2px;display:inline-block"></span>재고 안전</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:rgba(245,158,11,0.30);border-radius:2px;display:inline-block"></span>안전재고 이하</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:repeating-linear-gradient(45deg,#450a0a,#450a0a 3px,#991b1b 3px,#991b1b 6px);border-radius:2px;display:inline-block"></span>품절</span>
+          <span style="display:flex;align-items:center;gap:4px">
+            <span style="display:inline-block;width:14px;height:10px;position:relative;background:rgba(34,197,94,0.22);border-radius:2px"><span style="position:absolute;top:0;left:0;right:0;height:3px;background:#facc15;border-radius:2px 2px 0 0"></span></span>
+            신규 발주/요청일
+          </span>
+          <span style="display:flex;align-items:center;gap:4px">
+            <span style="display:inline-block;width:14px;height:10px;position:relative;background:rgba(34,197,94,0.22);border-radius:2px"><span style="position:absolute;bottom:0;left:0;right:0;height:3px;background:#38bdf8;border-radius:0 0 2px 2px"></span></span>
+            신규 입고일
+          </span>
+          <span style="display:flex;align-items:center;gap:4px">
+            <span style="display:inline-block;width:14px;height:10px;position:relative;background:rgba(34,197,94,0.22);border-radius:2px"><span style="position:absolute;top:0;left:0;right:0;height:3px;background:#f59e0b;border-radius:2px 2px 0 0"></span></span>
+            선금완료 요청/입고
+          </span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:2.5px;height:12px;background:var(--accent);display:inline-block;border-radius:1px"></span>오늘(${todayStr})</span>
         </div>
-        <div style="overflow-x:auto">
-          <!-- 헤더 -->
-          <div style="display:flex;position:sticky;top:0;z-index:10;background:var(--bg2)">
-            <div style="width:${LABEL_W}px;flex-shrink:0;border-right:1px solid var(--border2);background:var(--bg3)"></div>
+        <div class="stock-timeline-scroll">
+          <div class="stock-timeline-head">
+            <div class="stock-timeline-label-head"></div>
             <div style="white-space:nowrap">
               <div style="border-bottom:1px solid var(--border)">${monthHeaderHTML}</div>
               <div style="border-bottom:1px solid var(--border)">${dateHeaderHTML}</div>
             </div>
           </div>
-          <!-- 제품 행 -->
-          ${prodRowsHTML}
+          ${groupRowsHTML}
         </div>
+        <div class="stock-timeline-note">묶음 제품은 실버/블랙 중 하나라도 품절이면 전체 줄이 품절로 표시됩니다. 주황 구간은 리드타임 기준 안전재고 이하라서 발주를 미루면 판매량 방어가 어려워지는 구간입니다.</div>
       </div>
     </section>`;
 }
@@ -1629,6 +1720,13 @@ function renderSimulation(cfg) {
   const weekKeys  = Object.keys(weeks).sort();
   const maxTotal  = Math.max(...Object.values(months).map(m=>m.total), 1);
   const limitH    = Math.round(SIM_ORDER_LIMIT_WON/maxTotal*120);
+  const activeMonthTotals = monthKeys.map(k => months[k].total);
+  const activeMonthAvg = activeMonthTotals.reduce((s,v)=>s+v,0) / Math.max(activeMonthTotals.length, 1);
+  const maxMonthTotal = Math.max(...activeMonthTotals, 0);
+  const overMonthCount = activeMonthTotals.filter(v => v > SIM_ORDER_LIMIT_WON).length;
+  const variancePct = activeMonthAvg > 0
+    ? Math.round(activeMonthTotals.reduce((s,v)=>s+Math.abs(v-activeMonthAvg),0) / activeMonthTotals.length / activeMonthAvg * 100)
+    : 0;
 
   // ① 간트 차트
   const ganttHTML = renderStockGantt(stockTimeline, allOrders);
@@ -1660,16 +1758,24 @@ function renderSimulation(cfg) {
   allOrders.filter(o=>o.type==='new').forEach(o=>{
     if(!nextMap[o.product.id]&&o.orderDate>=today) nextMap[o.product.id]=o;
   });
-  const prodRowsHTML=SIM_PRODUCTS.map(p=>{
-    const next=nextMap[p.id];
-    const safe=Math.ceil(p.dailySales*p.leadDays);
+  const prodRowsHTML=SIM_PRODUCT_GROUPS.map(group=>{
+    const products = group.productIds.map(id => SIM_PRODUCTS.find(p => p.id === id)).filter(Boolean);
+    const groupOrders = group.productIds.map(id => nextMap[id]).filter(Boolean).sort((a,b)=>a.orderDate-b.orderDate);
+    const next=groupOrders[0];
+    const daily = products.reduce((s,p)=>s+p.dailySales,0);
+    const safe = products.reduce((s,p)=>s+Math.ceil(p.dailySales*p.leadDays),0);
+    const leadDays = Math.max(...products.map(p=>p.leadDays));
+    const moq = products.reduce((s,p)=>s+p.moq,0);
+    const maker = [...new Set(products.map(p=>p.maker))].join(' / ');
+    const prepayPct = products.length ? Math.round(products.reduce((s,p)=>s+p.prepayPct,0)/products.length*100) : 0;
+    const unitCostAvg = products.length ? Math.round(products.reduce((s,p)=>s+p.unitCost,0)/products.length) : 0;
     const d2n=next?Math.ceil((next.orderDate-today)/86400000):null;
     const urg=d2n===null?'muted':d2n<=7?'red':d2n<=14?'amber':'green';
     return `<div class="sim-prod-row">
-      <div class="sim-prod-info"><div class="sim-prod-name">${p.name}</div><div class="sim-prod-meta">${p.maker} · MOQ ${p.moq.toLocaleString()} · 리드타임 ${p.leadDays}일 · 안전재고 ${safe.toLocaleString()}개</div></div>
-      <div class="sim-prod-daily"><div class="sim-prod-daily-val">${p.dailySales}<span>개/일</span></div><div class="sim-prod-daily-lbl">일평균</div></div>
-      <div class="sim-prod-next">${next?`<div class="sim-next-date ${urg}">${d2n===0?'오늘 발주':`D-${d2n} (${simMD(next.orderDate)})`}${next.adjusted?'<span class="sim-adj-tag">조정</span>':''}</div><div class="sim-next-detail">총 ${next.qty.toLocaleString()}개 → ${next.batches.length}회 분할수령 (${next.batches.map((b,i)=>`${i+1}차 ${simMD(b.date)}`).join(', ')})</div><div class="sim-next-cost"><span class="sim-tag-prepay">선금 ${simWon(next.prepayAmt)}</span><span class="sim-tag-balance">잔금 ${simWon(next.balanceAmt)}</span></div>`:'<div class="sim-next-date muted">발주 없음</div>'}</div>
-      <div class="sim-prod-prepay"><div style="font-size:11px;color:var(--muted)">선금비율</div><div style="font-size:18px;font-weight:700;font-family:var(--mono)">${Math.round(p.prepayPct*100)}%</div><div style="font-size:10px;color:var(--muted)">${p.unitCost.toLocaleString()}원/개</div></div>
+      <div class="sim-prod-info"><div class="sim-prod-name">${group.name}</div><div class="sim-prod-meta">${group.subtitle} · ${maker} · MOQ 합계 ${moq.toLocaleString()} · 최대 리드타임 ${leadDays}일 · 안전재고 합계 ${safe.toLocaleString()}개</div></div>
+      <div class="sim-prod-daily"><div class="sim-prod-daily-val">${daily}<span>개/일</span></div><div class="sim-prod-daily-lbl">묶음 일평균</div></div>
+      <div class="sim-prod-next">${next?`<div class="sim-next-date ${urg}">${d2n===0?'오늘 발주':`D-${d2n} (${simMD(next.orderDate)})`}${next.adjusted?'<span class="sim-adj-tag">조정</span>':''}</div><div class="sim-next-detail">${next.product.name} ${next.qty.toLocaleString()}개 → ${next.batches.length}회 분할수령 (${next.batches.map((b,i)=>`${i+1}차 ${simMD(b.date)}`).join(', ')})${groupOrders.length>1?` 외 ${groupOrders.length-1}건`:''}</div><div class="sim-next-cost"><span class="sim-tag-prepay">선금 ${simWon(next.prepayAmt)}</span><span class="sim-tag-balance">잔금 ${simWon(next.balanceAmt)}</span></div>`:'<div class="sim-next-date muted">발주 없음</div>'}</div>
+      <div class="sim-prod-prepay"><div style="font-size:11px;color:var(--muted)">평균 선금비율</div><div style="font-size:18px;font-weight:700;font-family:var(--mono)">${prepayPct}%</div><div style="font-size:10px;color:var(--muted)">${unitCostAvg.toLocaleString()}원/개 평균</div></div>
     </div>`;
   }).join('');
 
@@ -1744,10 +1850,32 @@ function renderSimulation(cfg) {
 
   document.getElementById('sim-content').innerHTML = `
     ${ganttHTML}
+    <section class="sim-kpi-row">
+      <div class="sim-kpi-card ${overMonthCount===0?'good':'bad'}">
+        <div class="sim-kpi-label">월 한도 초과</div>
+        <div class="sim-kpi-value" style="color:${overMonthCount===0?'var(--green)':'var(--red)'}">${overMonthCount}개월</div>
+        <div class="sim-kpi-sub">한도 ${simWon(SIM_ORDER_LIMIT_WON)} 기준</div>
+      </div>
+      <div class="sim-kpi-card ${variancePct<=25?'good':variancePct<=45?'warn':'bad'}">
+        <div class="sim-kpi-label">월별 발주비 흔들림</div>
+        <div class="sim-kpi-value" style="color:${variancePct<=25?'var(--green)':variancePct<=45?'var(--amber)':'var(--red)'}">${variancePct}%</div>
+        <div class="sim-kpi-sub">낮을수록 현금흐름 예측이 쉬움</div>
+      </div>
+      <div class="sim-kpi-card">
+        <div class="sim-kpi-label">월 평균 발주비</div>
+        <div class="sim-kpi-value">${simWon(activeMonthAvg)}</div>
+        <div class="sim-kpi-sub">5월~12월 분할 집행 평균</div>
+      </div>
+      <div class="sim-kpi-card ${maxMonthTotal<=SIM_ORDER_LIMIT_WON?'good':'warn'}">
+        <div class="sim-kpi-label">최대 집중 월</div>
+        <div class="sim-kpi-value" style="color:${maxMonthTotal<=SIM_ORDER_LIMIT_WON?'var(--text)':'var(--amber)'}">${simWon(maxMonthTotal)}</div>
+        <div class="sim-kpi-sub">가장 크게 몰리는 월의 발주비</div>
+      </div>
+    </section>
     ${riskHTML}
     ${prepaidHTML}
     <section class="sec">
-      <div class="sec-header"><span class="sec-lbl">제품별 다음 발주 시점</span><span class="sec-sub">월 한도 ${simWon(SIM_ORDER_LIMIT_WON)} · 분할수령</span></div>
+      <div class="sec-header"><span class="sec-lbl">제품군별 다음 발주 시점</span><span class="sec-sub">MK 단독 · PH/DW는 실버+블랙 묶음 · 월 한도 ${simWon(SIM_ORDER_LIMIT_WON)}</span></div>
       <div class="table-card" style="padding:0">${prodRowsHTML}</div>
     </section>
     <section class="sec">
