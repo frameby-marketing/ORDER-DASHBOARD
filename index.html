@@ -1460,7 +1460,10 @@ function renderStockGantt(stockTimeline, allOrders) {
       const newOrds = allOrders.filter(o => o.product.id===pid && o.type==='new' && o.orderDate>=today);
       const orderMks = newOrds.map(o => {
         const op = pctOf(o.orderDate);
-        return `<div style="position:absolute;top:-7px;left:calc(${op}% - 4px);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:8px solid #fbbf24;z-index:4;cursor:pointer" title="발주 ${simMD(o.orderDate)} · ${o.qty.toLocaleString()}개 · 선금 ${simWon(o.prepayAmt)}"></div>`;
+        return `<div style="position:absolute;top:-7px;left:calc(${op}% - 4px);z-index:4;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px" title="발주 ${simMD(o.orderDate)} · ${o.qty.toLocaleString()}개 · 선금 ${simWon(o.prepayAmt)}">
+          <div style="font-size:8px;font-weight:700;color:#fbbf24;font-family:var(--mono);white-space:nowrap;line-height:1;transform:translateX(-50%);margin-left:4px">${simMD(o.orderDate)}</div>
+          <div style="width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:8px solid #fbbf24"></div>
+        </div>`;
       }).join('');
 
       // 입고 마커 → 세로선
