@@ -331,6 +331,22 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
 
 
 .row-amber td { background: rgba(245,158,11,0.04); }
+
+/* ── GANTT CHART ─────────────────────────────────────────── */
+.gantt-legend { display:flex; gap:14px; flex-wrap:wrap; font-size:11px; color:var(--muted); margin-bottom:14px; align-items:center; }
+.gantt-legend i { display:inline-block; width:12px; height:12px; border-radius:2px; margin-right:3px; vertical-align:middle; }
+.gantt-rows { display:flex; flex-direction:column; gap:10px; }
+.gantt-row { display:flex; align-items:center; gap:12px; }
+.gantt-label { width:132px; flex-shrink:0; }
+.gantt-prod-name { font-size:12px; font-weight:600; color:var(--text); line-height:1.3; }
+.gantt-prod-sub  { font-size:10px; color:var(--muted); margin-top:2px; }
+.gantt-bar-wrap {
+  flex:1; height:24px; background:var(--bg3);
+  border-radius:4px; position:relative; overflow:visible;
+  border:1px solid var(--border);
+}
+.gantt-month-header { overflow:hidden; }
+
   </style>
 </head>
 <body>
@@ -1246,8 +1262,9 @@ function createOrderWithSplit(p, orderDate, qty, months, allEvents) {
 function runSimV3(products, initStocks, prePaid, months, weeks) {
   const today   = new Date(); today.setHours(0,0,0,0);
   const endDate = new Date(today.getFullYear(), 11, 31);
-  const allOrders = [];  // 모든 발주 이벤트
-  const risks     = [];  // 리스크 알림
+  const allOrders     = [];  // 모든 발주 이벤트
+  const risks         = [];  // 리스크 알림
+  const stockTimeline = {};  // 제품별 날짜별 재고 스냅샷 { pid: [{date, stock, safeStock, status}] }
 
   products.forEach(p => {
     const safeStock   = Math.ceil(p.dailySales * p.leadDays); // 안전재고
@@ -1255,6 +1272,7 @@ function runSimV3(products, initStocks, prePaid, months, weeks) {
 
     let stock   = initStocks[p.id] ?? (p.dailySales * p.targetHoldDays);
     const pending = []; // { date, qty, balanceAmt, label }
+    stockTimeline[p.id] = { product:p, safeStock: Math.ceil(p.dailySales*p.leadDays), snapshots:[] };
 
     // ── 선금완료 중국재고 ─────────────────────────────────
     // 분할수령: 월 소비량 단위로 요청 가능, 잔금도 수령분만큼 분납
@@ -1411,12 +1429,20 @@ function runSimV3(products, initStocks, prePaid, months, weeks) {
         });
       }
 
+      // 매일 스냅샷 기록 (주 1회 샘플링으로 성능 최적화)
+      if(d.getDay() === 1 || stock === 0) { // 월요일 또는 품절
+        const safe = Math.ceil(p.dailySales * p.leadDays);
+        const status = stock === 0 ? 'out'
+          : stock <= safe ? 'danger'
+          : 'ok';
+        stockTimeline[p.id].snapshots.push({ date: new Date(d), stock, status });
+      }
       stock = Math.max(0, stock - p.dailySales);
       d = simAdd(d, 1);
     }
   });
 
-  return { allOrders, risks };
+  return { allOrders, risks, stockTimeline };
 }
 
 // ── 렌더 ──────────────────────────────────────────────────
@@ -1439,7 +1465,7 @@ function renderSimulation(cfg) {
 
   const today = new Date(); today.setHours(0,0,0,0);
   const { months, weeks } = initBuckets(today);
-  const { allOrders, risks } = runSimV3(SIM_PRODUCTS, initStocks, prePaid, months, weeks);
+  const { allOrders, risks, stockTimeline } = runSimV3(SIM_PRODUCTS, initStocks, prePaid, months, weeks);
 
   const monthKeys = Object.keys(months).sort();
   const weekKeys  = Object.keys(weeks).sort();
@@ -1639,7 +1665,11 @@ function renderSimulation(cfg) {
       </table>`;
 
   // ── 렌더링 ───────────────────────────────────────────
+  const ganttHTML = renderStockGantt(stockTimeline, allOrders);
+
   document.getElementById('sim-content').innerHTML = `
+
+    ${ganttHTML}
 
     ${riskHTML}
 
@@ -1708,6 +1738,165 @@ function renderSimulation(cfg) {
     </section>
   `;
 }
+
+// ── 간트 차트 렌더 함수 ───────────────────────────────────
+function renderStockGantt(stockTimeline, allOrders) {
+  const today   = new Date(); today.setHours(0,0,0,0);
+  const endDate = new Date(today.getFullYear(), 11, 31);
+  const totalDays = Math.ceil((endDate - today) / 86400000) + 1;
+
+  // 월 구분선 계산
+  const monthMarkers = [];
+  let d = new Date(today);
+  while(d <= endDate) {
+    if(d.getDate() === 1 || d.getTime() === today.getTime()) {
+      monthMarkers.push({
+        pct: (d - today) / (endDate - today) * 100,
+        label: `${d.getMonth()+1}월`
+      });
+    }
+    d = simAdd(d, 28); // 대략 월별
+    d.setDate(1);
+  }
+
+  const rows = Object.values(stockTimeline).map(tl => {
+    const p = tl.product;
+    const snaps = tl.snapshots;
+    const safe  = tl.safeStock;
+
+    if(snaps.length === 0) return '';
+
+    // 재고 상태 구간 계산
+    // 연속된 같은 상태를 세그먼트로 합침
+    const segments = [];
+    let seg = null;
+    snaps.forEach(s => {
+      const pct = Math.max(0, Math.min(100, (s.date - today) / (endDate - today) * 100));
+      if(!seg || seg.status !== s.status) {
+        if(seg) { seg.endPct = pct; segments.push(seg); }
+        seg = { status: s.status, startPct: pct, endPct: pct };
+      } else {
+        seg.endPct = pct;
+      }
+    });
+    if(seg) { seg.endPct = 100; segments.push(seg); }
+
+    // 발주 이벤트 마커 (이 제품의 발주일 + 입고일)
+    const prodOrders = allOrders.filter(o => o.product.id === p.id && o.type === 'new' && o.orderDate >= today);
+    const orderMarkers  = prodOrders.map(o => ({
+      pct: Math.min(100, (o.orderDate - today) / (endDate - today) * 100),
+      label: `발주 ${simMD(o.orderDate)}`, type:'order'
+    }));
+    const receiveMarkers = prodOrders.flatMap(o => o.batches.map((b,i) => ({
+      pct: Math.min(100, (b.date - today) / (endDate - today) * 100),
+      label: `입고 ${simMD(b.date)} ${b.qty.toLocaleString()}개`, type:'receive'
+    })));
+
+    // 품절 구간
+    const outSegs = segments.filter(s => s.status === 'out');
+    const hasOut  = outSegs.length > 0;
+
+    // 세그먼트 색상
+    const colorMap = { ok:'#22c55e', danger:'#f59e0b', out:'#ef4444' };
+
+    const segBars = segments.map(s => {
+      const w = Math.max(0.2, s.endPct - s.startPct);
+      const bg = s.status === 'out'
+        ? 'repeating-linear-gradient(45deg,#ef4444,#ef4444 4px,#7f1d1d 4px,#7f1d1d 8px)'
+        : s.status === 'danger'
+        ? '#f59e0b'
+        : '#22c55e';
+      return `<div style="position:absolute;top:0;bottom:0;left:${s.startPct}%;width:${w}%;background:${bg};opacity:0.85;border-radius:${s.startPct<0.5?'4px':0} ${s.endPct>99.5?'4px':0} ${s.endPct>99.5?'4px':0} ${s.startPct<0.5?'4px':0}" title="${s.status==='out'?'품절':s.status==='danger'?'위험':'정상'}"></div>`;
+    }).join('');
+
+    // 발주 마커 (주황 삼각형)
+    const orderMarkerHTML = orderMarkers.map(m => `
+      <div style="position:absolute;top:-8px;left:calc(${m.pct}% - 5px);width:0;height:0;
+        border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:10px solid #f59e0b;
+        z-index:4;cursor:pointer" title="${m.label}"></div>`).join('');
+
+    // 입고 마커 (파란 원)
+    const receiveMarkerHTML = receiveMarkers.map(m => `
+      <div style="position:absolute;top:50%;left:calc(${m.pct}% - 5px);transform:translateY(-50%);
+        width:10px;height:10px;border-radius:50%;background:#38bdf8;border:2px solid #0ea5e9;
+        z-index:4;cursor:pointer" title="${m.label}"></div>`).join('');
+
+    // 오늘 선
+    const todayLine = `<div style="position:absolute;top:-4px;bottom:-4px;left:0;width:2px;background:var(--accent);z-index:5;border-radius:1px"></div>`;
+
+    // 품절 경고 뱃지
+    const outBadge = hasOut
+      ? `<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(239,68,68,0.15);color:var(--red);margin-left:6px">품절위험</span>`
+      : '';
+
+    return `
+      <div class="gantt-row">
+        <div class="gantt-label">
+          <div class="gantt-prod-name">${p.name}${outBadge}</div>
+          <div class="gantt-prod-sub">일 ${p.dailySales}개 · 안전재고 ${tl.safeStock.toLocaleString()}개</div>
+        </div>
+        <div class="gantt-bar-wrap">
+          ${todayLine}
+          ${segBars}
+          ${orderMarkerHTML}
+          ${receiveMarkerHTML}
+        </div>
+      </div>`;
+  }).join('');
+
+  // 월 헤더
+  const monthHeaderHTML = (() => {
+    const markers = [];
+    let cur = new Date(today.getFullYear(), today.getMonth(), 1);
+    const end = new Date(today.getFullYear(), 11, 31);
+    while(cur <= end) {
+      const pct = Math.max(0, (cur - today) / (endDate - today) * 100);
+      if(pct <= 100) {
+        markers.push({ pct, label: `${cur.getMonth()+1}월` });
+      }
+      cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+    }
+    return markers.map(m =>
+      `<div style="position:absolute;left:${m.pct}%;font-size:10px;color:var(--muted);transform:translateX(-50%);white-space:nowrap">${m.label}</div>`
+    ).join('');
+  })();
+
+  // 범례
+  const legendHTML = `
+    <div class="gantt-legend">
+      <span><i style="background:#22c55e"></i>재고 안전</span>
+      <span><i style="background:#f59e0b"></i>안전재고 이하 (위험)</span>
+      <span><i style="background:#ef4444"></i>품절</span>
+      <span style="display:flex;align-items:center;gap:4px">
+        <span style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid #f59e0b;display:inline-block"></span>발주일
+      </span>
+      <span style="display:flex;align-items:center;gap:4px">
+        <span style="width:9px;height:9px;border-radius:50%;background:#38bdf8;display:inline-block"></span>입고일
+      </span>
+      <span style="display:flex;align-items:center;gap:4px">
+        <span style="width:2px;height:12px;background:var(--accent);display:inline-block"></span>오늘
+      </span>
+    </div>`;
+
+  return `
+    <section class="sec">
+      <div class="sec-header">
+        <span class="sec-lbl">제품별 재고 타임라인</span>
+        <span class="sec-sub">오늘~12월 · 품절 없는 시나리오 기준</span>
+      </div>
+      <div class="table-card" style="padding:1.25rem">
+        ${legendHTML}
+        <div class="gantt-month-header" style="position:relative;height:20px;margin-left:140px;margin-bottom:6px">
+          ${monthHeaderHTML}
+        </div>
+        <div class="gantt-rows">${rows}</div>
+        <div class="table-footer" style="margin-top:12px">
+          초록=안전 · 주황=안전재고 이하(위험구간) · 빨강=품절 / ▲ 발주일 · ● 입고일 · 마우스 오버 시 상세 확인
+        </div>
+      </div>
+    </section>`;
+}
+
 // ============================================================
 // END SIMULATION ENGINE
 // ============================================================
