@@ -1507,7 +1507,7 @@ function renderStockGantt(stockTimeline, allOrders) {
         const bp = pctOf(b.date);
         if(bp < 0 || bp > 100) return '';
         const isPrepaid = o.type==='prepaid' || o.type==='china';
-        const color = isPrepaid ? '#a78bfa' : '#38bdf8'; // 선금완료=보라, 신규=파랑
+        const color = isPrepaid ? '#fbbf24' : '#faff00'; // 선금완료=노란, 신규=형광노란
         const label = isPrepaid
           ? `선금완료 입고 ${simMD(b.date)} · ${b.qty.toLocaleString()}개 (${i+1}차)`
           : `입고 ${simMD(b.date)} · ${b.qty.toLocaleString()}개 (${i+1}차) · 잔금 ${simWon(b.balanceAmt)}`;
@@ -1564,8 +1564,8 @@ function renderStockGantt(stockTimeline, allOrders) {
           <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:repeating-linear-gradient(45deg,#7f1d1d,#7f1d1d 3px,#dc2626 3px,#dc2626 6px);border-radius:2px;display:inline-block"></span>품절</span>
           <span style="display:flex;align-items:center;gap:4px"><span style="width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:8px solid #faff00;display:inline-block"></span>신규발주일</span>
           <span style="display:flex;align-items:center;gap:4px"><span style="width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:8px solid #fbbf24;display:inline-block"></span>선금완료 요청일</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:#38bdf8;border-radius:1px;display:inline-block"></span>신규발주 입고일</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:#a78bfa;border-radius:1px;display:inline-block"></span>선금완료 입고일</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:#faff00;border-radius:1px;display:inline-block"></span>신규발주 입고일</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:#fbbf24;border-radius:1px;display:inline-block"></span>선금완료 입고일</span>
           <span style="display:flex;align-items:center;gap:4px"><span style="width:2.5px;height:12px;background:var(--accent);border-radius:1px;display:inline-block"></span>오늘(${todayStr})</span>
         </div>
         <!-- 월 헤더 -->
