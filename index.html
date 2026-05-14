@@ -1458,6 +1458,7 @@ function renderStockGantt(stockTimeline, allOrders) {
       }).join('');
 
       // 발주 마커 (삼각형)
+      // 신규 발주만 삼각형 마커 (선금완료 항목은 발주일 표시 안 함)
       const newOrds = allOrders.filter(o => o.product.id===pid && o.type==='new' && o.orderDate>=today);
       const orderMks = newOrds.map(o => {
         const op = pctOf(o.orderDate);
@@ -1467,10 +1468,19 @@ function renderStockGantt(stockTimeline, allOrders) {
         </div>`;
       }).join('');
 
-      // 입고 마커 → 세로선
-      const receiveMks = newOrds.flatMap(o => o.batches.map((b,i) => {
+      // 입고 마커: 신규발주 + 선금완료 모두 포함 (파란 세로선)
+      const allProdOrders = allOrders.filter(o => o.product.id===pid);
+      const receiveMks = allProdOrders.flatMap(o => (o.batches||[]).map((b,i) => {
         const bp = pctOf(b.date);
-        return `<div style="position:absolute;top:-5px;bottom:-5px;left:${bp}%;width:2px;background:#38bdf8;z-index:4;border-radius:1px;opacity:0.9;cursor:pointer" title="입고 ${simMD(b.date)} · ${b.qty.toLocaleString()}개 (${i+1}차) · 잔금 ${simWon(b.balanceAmt)}"></div>`;
+        if(bp < 0 || bp > 100) return '';
+        const isPrepaid = o.type==='prepaid' || o.type==='china';
+        const color = isPrepaid ? '#a78bfa' : '#38bdf8'; // 선금완료=보라, 신규=파랑
+        const label = isPrepaid
+          ? `선금완료 입고 ${simMD(b.date)} · ${b.qty.toLocaleString()}개 (${i+1}차)`
+          : `입고 ${simMD(b.date)} · ${b.qty.toLocaleString()}개 (${i+1}차) · 잔금 ${simWon(b.balanceAmt)}`;
+        return `<div style="position:absolute;top:-5px;bottom:-5px;left:${bp}%;width:2px;background:${color};z-index:4;border-radius:1px;opacity:0.9;cursor:pointer" title="${label}">
+          <div style="position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-size:8px;font-weight:700;color:${color};font-family:var(--mono);white-space:nowrap;line-height:1;margin-bottom:2px;background:var(--bg2);padding:0 2px;border-radius:2px">${simMD(b.date)}</div>
+        </div>`;
       })).join('');
 
       const hasOut = segs.some(s => s.status==='out');
@@ -1520,7 +1530,8 @@ function renderStockGantt(stockTimeline, allOrders) {
           <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:#22c55e;border-radius:2px;display:inline-block;opacity:0.72"></span>재고있음</span>
           <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:repeating-linear-gradient(45deg,#7f1d1d,#7f1d1d 3px,#dc2626 3px,#dc2626 6px);border-radius:2px;display:inline-block"></span>품절</span>
           <span style="display:flex;align-items:center;gap:4px"><span style="width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:8px solid #fbbf24;display:inline-block"></span>발주일</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:#38bdf8;border-radius:1px;display:inline-block"></span>입고일</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:#38bdf8;border-radius:1px;display:inline-block"></span>신규발주 입고일</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:#a78bfa;border-radius:1px;display:inline-block"></span>선금완료 입고일</span>
           <span style="display:flex;align-items:center;gap:4px"><span style="width:2.5px;height:12px;background:var(--accent);border-radius:1px;display:inline-block"></span>오늘(${todayStr})</span>
         </div>
         <!-- 월 헤더 -->
