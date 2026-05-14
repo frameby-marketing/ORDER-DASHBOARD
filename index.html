@@ -1191,8 +1191,8 @@ function buildPrePaid(cfg) {
     { id:'ph_s', qty:+cfg['prepaid_ph_s_1_qty']||2000, date:cfg['prepaid_ph_s_1_date']||'2026-06-04' },
     { id:'ph_s', qty:+cfg['prepaid_ph_s_2_qty']||1500, date:cfg['prepaid_ph_s_2_date']||'2026-06-28' },
     { id:'ph_b', qty:+cfg['prepaid_ph_b_1_qty']||1500, date:cfg['prepaid_ph_b_1_date']||'2026-06-28' },
-    { id:'mk',   qty:+cfg['prepaid_mk_prod_qty']||5336, date:cfg['prepaid_mk_prod_date']||'2026-07-15' },
-    { id:'mk',   qty:+cfg['prepaid_mk_done_qty']||500,  date:'', leadDays:5 },
+    { id:'mk',   qty:+cfg['prepaid_mk_prod_qty']||5336, date:'', leadDays:14 }, // 선금완료·제작미시작: 요청 후 14일
+    { id:'mk',   qty:+cfg['prepaid_mk_done_qty']||500,  date:'', leadDays:5  }, // 제작완료·중국재고: 요청 후 5일
   ].filter(c=>c.qty>0);
 
   return { china, inProd };
@@ -1292,15 +1292,16 @@ function runSimV4(products, initStocks, prePaid, months, weeks) {
         if(ev.date.getTime() === d.getTime()) curStock += ev.qty;
       });
 
-      // 현재 총 inbound (오늘 이후 예정)
+      // 리드타임 내에 도착하는 inbound만 계산 (그 이후는 현재 재고 부족을 메우지 못함)
+      const leadDeadline = simAdd(d, p.leadDays);
       const futureInbound = inboundEvents
-        .filter(ev => ev.date > d)
+        .filter(ev => ev.date > d && ev.date <= leadDeadline)
         .reduce((s,ev) => s+ev.qty, 0);
 
       const projected = curStock + futureInbound;
 
-      // 발주 트리거: projected ≤ safeStock이고 같은날 이미 발주 안했을 때
-      if(projected <= safeStock && lastOrderDate.getTime() < d.getTime()) {
+      // 발주 트리거: 리드타임 내 입고 포함 재고가 0 이하 예상될 때
+      if(projected <= 0 && lastOrderDate.getTime() < d.getTime()) {
         // 발주일 결정 (월 한도 체크)
         let actualOrderDate = new Date(d);
         let adjusted = false, budgetForced = false;
