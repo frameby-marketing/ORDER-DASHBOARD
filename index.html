@@ -1301,7 +1301,7 @@ function runSimV4(products, initStocks, prePaid, months, weeks) {
       const projected = curStock + futureInbound;
 
       // 발주 트리거: 리드타임 내 입고 포함 재고가 0 이하 예상될 때
-      if(projected <= 0 && lastOrderDate.getTime() < d.getTime()) {
+      if(projected <= safeStock && lastOrderDate.getTime() < d.getTime()) {
         // 발주일 결정 (월 한도 체크)
         let actualOrderDate = new Date(d);
         let adjusted = false, budgetForced = false;
