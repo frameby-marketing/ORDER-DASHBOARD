@@ -365,39 +365,31 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
 .runway-danger { background:rgba(239,68,68,0.13); color:var(--red); }
 .stock-timeline-days { white-space:nowrap; }
 .stock-day-cell {
-  display:inline-block; width:16px; height:62px; position:relative;
-  border-bottom:1px solid var(--border); box-sizing:border-box; vertical-align:top;
-  cursor:default;
+  display:inline-block; width:16px; height:58px; position:relative;
+  border-bottom:1px solid var(--border); box-sizing:border-box; vertical-align:top; cursor:default;
 }
 .stock-day-ok     { background:rgba(34,197,94,0.22); }
-.stock-day-danger { background:rgba(245,158,11,0.30); }
+.stock-day-danger { background:rgba(245,158,11,0.28); }
 .stock-day-out    { background:repeating-linear-gradient(45deg,#450a0a,#450a0a 3px,#991b1b 3px,#991b1b 6px); }
-.stock-day-today  { border-left:2.5px solid var(--accent) !important; background-color:rgba(56,189,248,0.08); }
+.stock-day-today  { border-left:2.5px solid var(--accent) !important; }
 .stock-day-month  { border-left:1px solid var(--border2); }
-/* 발주 이벤트: 셀 상단 노란 띠 */
+/* 발주일: 셀 상단 4px 노란 띠 */
 .stock-day-has-order::before {
-  content:'';
-  position:absolute; top:0; left:0; right:0; height:4px;
-  background:#facc15; z-index:4;
+  content:''; position:absolute; top:0; left:0; right:0; height:4px; background:#facc15; z-index:4;
 }
 .stock-day-has-order-prepaid::before { background:#f59e0b; }
-/* 입고 이벤트: 셀 하단 파란 띠 */
+/* 입고일: 셀 하단 4px 띠 */
 .stock-day-has-receive::after {
-  content:'';
-  position:absolute; bottom:0; left:0; right:0; height:4px;
-  background:#38bdf8; z-index:4;
+  content:''; position:absolute; bottom:0; left:0; right:0; height:4px; background:#faff00; z-index:4;
 }
-.stock-day-has-receive-prepaid::after { background:#7dd3fc; }
-/* 품절 일수 텍스트 오버레이 (품절 구간 중간 셀에 표시) */
+.stock-day-has-receive-prepaid::after { background:#fbbf24; }
+/* 품절 일수 */
 .stock-out-label {
   position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
   font-size:7px; font-weight:800; color:#fca5a5;
-  white-space:nowrap; z-index:5; pointer-events:none;
-  text-shadow:0 0 4px #000;
+  white-space:nowrap; z-index:5; pointer-events:none; text-shadow:0 0 3px #000;
 }
 .stock-timeline-note { padding:9px 14px; font-size:11px; color:var(--muted); background:var(--bg3); border-top:1px solid var(--border); line-height:1.6; }
-/* 타임라인 행 높이도 맞추기 */
-.stock-timeline-row { display:flex; align-items:stretch; min-height:62px; border-bottom:1px solid var(--border); }
 .sim-kpi-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:1.5rem; }
 .sim-kpi-card { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:1rem 1.1rem; }
 .sim-kpi-card.good { border-color:rgba(34,197,94,0.28); }
@@ -640,7 +632,11 @@ function tab(name, el) {
 // ── CSV 유틸 ──────────────────────────────────────────────
 function fetchCSV(gid) {
   const url = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/export?format=csv&gid=${gid}&t=${Date.now()}`;
-  return fetch(url).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); });
+  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000));
+  return Promise.race([
+    fetch(url).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); }),
+    timeout
+  ]);
 }
 
 function parseCSV(raw) {
@@ -804,13 +800,14 @@ async function load() {
       deferralDeadline, deferralLimit, memoData: memoMap });
 
   } catch(e) {
-    setSyncStatus('error', '연결 실패');
+    setSyncStatus('error', '연결 실패 — 시뮬레이션은 기본값으로 표시');
     document.getElementById("err").innerHTML =
-      `<div class="err-box">⚠️ 데이터 로드 실패: <strong>${e.message}</strong><br><br>
-       1. Sheets 공유 → <strong>"링크가 있는 모든 사용자" 뷰어</strong> 설정<br>
-       2. 설정 시트 A열 키 이름 확인<br>
-       3. gid 번호 확인 (시트 탭 클릭 → URL 끝 #gid= 숫자)</div>`;
+      `<div class="err-box">⚠️ 시트 연결 실패: <strong>${e.message}</strong><br>
+       Sheets 공유 → <strong>"링크가 있는 모든 사용자" 뷰어</strong> 설정 확인<br>
+       <small>시뮬레이션 탭은 기본값으로 동작합니다.</small></div>`;
     document.getElementById("content").innerHTML = "";
+    // 시트 연결 실패해도 시뮬레이션은 기본값으로 실행
+    renderSimulation({});
   }
 }
 
@@ -1196,6 +1193,12 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
   `;
 }
 
+// 5분마다 자동 새로고침
+setInterval(load, 5 * 60 * 1000);
+load();
+
+
+// ============================================================
 // SIMULATION ENGINE v4 — 안정화 + 분할수령 + 월한도 평준화
 // ============================================================
 
@@ -1590,25 +1593,17 @@ function renderStockGantt(stockTimeline, allOrders) {
       ? (runwayDays <= 0 ? '품절' : `품절 D-${runwayDays}`)
       : firstWarn
         ? (runwayDays <= 0 ? '주의' : `주의 D-${runwayDays}`)
-    // 품절 구간: 연속 out 일 수 계산 → 중간 셀에 일수 표시
-    const outRuns = [];
-    let outStart = null, outCount = 0;
-    dates.forEach((dd, idx) => {
-      const k  = dd.toISOString().slice(0,10);
-      const st = mergedStatus(group, k);
-      if(st === 'out') {
-        if(outStart === null) { outStart = idx; outCount = 0; }
-        outCount++;
-      } else {
-        if(outStart !== null) {
-          outRuns.push({ midIdx: outStart + Math.floor(outCount/2), days: outCount });
-          outStart = null; outCount = 0;
-        }
-      }
+        : '안전';
+    // 품절 구간 계산
+    const outRuns = []; let outStart=null, outCount=0;
+    dates.forEach((dd,idx)=>{
+      const k=dd.toISOString().slice(0,10);
+      if(mergedStatus(group,k)==='out'){ if(outStart===null){outStart=idx;outCount=0;} outCount++; }
+      else{ if(outStart!==null){ outRuns.push({mid:outStart+Math.floor(outCount/2),days:outCount}); outStart=null;outCount=0; } }
     });
-    if(outStart !== null) outRuns.push({ midIdx: outStart + Math.floor(outCount/2), days: outCount });
-    const outLabelMap = {};
-    outRuns.forEach(r => { outLabelMap[r.midIdx] = r.days; });
+    if(outStart!==null) outRuns.push({mid:outStart+Math.floor(outCount/2),days:outCount});
+    const outLabelMap={};
+    outRuns.forEach(r=>{ outLabelMap[r.mid]=r.days; });
 
     const cells = dates.map((dd, idx) => {
       const key     = dd.toISOString().slice(0,10);
@@ -1617,18 +1612,17 @@ function renderStockGantt(stockTimeline, allOrders) {
       const isToday = dd.getTime() === today.getTime();
       const dom     = dd.getDate();
       const isMonthStart = dom === 1;
-      const orderEvents   = events.filter(e => e.kind === 'order');
-      const receiveEvents = events.filter(e => e.kind === 'receive');
-      const hasPrepaidOrder   = orderEvents.some(e => e.isPrepaid);
-      const hasPrepaidReceive = receiveEvents.some(e => e.isPrepaid);
-      const statusLabel = status==='out' ? '품절' : status==='danger' ? '안전재고 이하' : '재고 안전';
+      const orderEvents   = events.filter(e => e.kind==='order');
+      const receiveEvents = events.filter(e => e.kind==='receive');
+      const hasPrepaidOrd = orderEvents.some(e=>e.isPrepaid);
+      const hasPrepaidRcv = receiveEvents.some(e=>e.isPrepaid);
+      const statusLabel = status==='out'?'품절':status==='danger'?'안전재고 이하':'재고 안전';
       const title = [`${dd.getMonth()+1}/${dom}`, statusLabel, ...events.map(e=>e.label)].join(' · ');
       const cls = [
-        'stock-day-cell',
-        `stock-day-${status}`,
+        'stock-day-cell', `stock-day-${status}`,
         isToday ? 'stock-day-today' : (isMonthStart ? 'stock-day-month' : ''),
-        orderEvents.length   ? (hasPrepaidOrder   ? 'stock-day-has-order-prepaid'   : 'stock-day-has-order')   : '',
-        receiveEvents.length ? (hasPrepaidReceive ? 'stock-day-has-receive-prepaid' : 'stock-day-has-receive') : '',
+        orderEvents.length   ? (hasPrepaidOrd ? 'stock-day-has-order-prepaid'   : 'stock-day-has-order')   : '',
+        receiveEvents.length ? (hasPrepaidRcv ? 'stock-day-has-receive-prepaid' : 'stock-day-has-receive') : '',
       ].filter(Boolean).join(' ');
       const outLabel = outLabelMap[idx] ? `<div class="stock-out-label">${outLabelMap[idx]}일</div>` : '';
       return `<div class="${cls}" title="${title}">${outLabel}</div>`;
@@ -1655,23 +1649,13 @@ function renderStockGantt(stockTimeline, allOrders) {
         <span class="sec-sub">MK 단독 · PH/DW는 실버+블랙 묶음 · 오늘(${todayStr})</span>
       </div>
       <div class="table-card stock-timeline-card">
-        <div class="gantt-legend" style="padding:10px 14px 8px;border-bottom:1px solid var(--border);display:flex;gap:14px;flex-wrap:wrap;align-items:center">
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:rgba(34,197,94,0.22);border-radius:2px;display:inline-block"></span>재고 안전</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:rgba(245,158,11,0.30);border-radius:2px;display:inline-block"></span>안전재고 이하</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:repeating-linear-gradient(45deg,#450a0a,#450a0a 3px,#991b1b 3px,#991b1b 6px);border-radius:2px;display:inline-block"></span>품절</span>
-          <span style="display:flex;align-items:center;gap:4px">
-            <span style="display:inline-block;width:14px;height:10px;position:relative;background:rgba(34,197,94,0.22);border-radius:2px"><span style="position:absolute;top:0;left:0;right:0;height:3px;background:#facc15;border-radius:2px 2px 0 0"></span></span>
-            신규 발주/요청일
-          </span>
-          <span style="display:flex;align-items:center;gap:4px">
-            <span style="display:inline-block;width:14px;height:10px;position:relative;background:rgba(34,197,94,0.22);border-radius:2px"><span style="position:absolute;bottom:0;left:0;right:0;height:3px;background:#38bdf8;border-radius:0 0 2px 2px"></span></span>
-            신규 입고일
-          </span>
-          <span style="display:flex;align-items:center;gap:4px">
-            <span style="display:inline-block;width:14px;height:10px;position:relative;background:rgba(34,197,94,0.22);border-radius:2px"><span style="position:absolute;top:0;left:0;right:0;height:3px;background:#f59e0b;border-radius:2px 2px 0 0"></span></span>
-            선금완료 요청/입고
-          </span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:2.5px;height:12px;background:var(--accent);display:inline-block;border-radius:1px"></span>오늘(${todayStr})</span>
+        <div class="gantt-legend" style="padding:10px 14px 8px;border-bottom:1px solid var(--border);display:flex;gap:14px;flex-wrap:wrap">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:rgba(34,197,94,0.28);border-radius:2px;display:inline-block"></span>안전</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:rgba(245,158,11,0.34);border-radius:2px;display:inline-block"></span>안전재고 이하</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:repeating-linear-gradient(45deg,#7f1d1d,#7f1d1d 3px,#dc2626 3px,#dc2626 6px);border-radius:2px;display:inline-block"></span>품절</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;background:#facc15;border-radius:50%;display:inline-block"></span>발주/요청</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;background:#38bdf8;border-radius:50%;display:inline-block"></span>입고/잔금</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:var(--accent);display:inline-block"></span>오늘(${todayStr})</span>
         </div>
         <div class="stock-timeline-scroll">
           <div class="stock-timeline-head">
@@ -1903,13 +1887,6 @@ function renderSimulation(cfg) {
 }
 // ============================================================
 // END SIMULATION ENGINE
-
-// 5분마다 자동 새로고침
-setInterval(load, 5 * 60 * 1000);
-load();
-
-
-// ============================================================
 // ============================================================
 
 
