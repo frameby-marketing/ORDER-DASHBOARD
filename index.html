@@ -373,11 +373,9 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
 .stock-day-out    { background:repeating-linear-gradient(45deg,#450a0a,#450a0a 3px,#991b1b 3px,#991b1b 6px); }
 .stock-day-today  { border-left:2.5px solid var(--accent) !important; }
 .stock-day-month  { border-left:1px solid var(--border2); }
-/* 발주일: 셀 상단 4px 노란 띠 */
-.stock-day-has-order::before {
-  content:''; position:absolute; top:0; left:0; right:0; height:4px; background:#facc15; z-index:4;
-}
-.stock-day-has-order-prepaid::before { background:#f59e0b; }
+/* 발주 표시: 비활성 */
+.stock-day-has-order::before { content:none; }
+.stock-day-has-order-prepaid::before { display:none; }
 /* 입고일: 셀 하단 4px 띠 */
 .stock-day-has-receive::after {
   content:''; position:absolute; bottom:0; left:0; right:0; height:4px; background:#faff00; z-index:4;
@@ -386,8 +384,10 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
 /* 품절 일수 */
 .stock-out-label {
   position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-  font-size:7px; font-weight:800; color:#fca5a5;
-  white-space:nowrap; z-index:5; pointer-events:none; text-shadow:0 0 3px #000;
+  font-size:9px; font-weight:900; color:#fff;
+  white-space:nowrap; z-index:5; pointer-events:none;
+  text-shadow:0 0 4px #000, 0 0 8px rgba(0,0,0,0.8);
+  letter-spacing:-0.3px;
 }
 .stock-timeline-note { padding:9px 14px; font-size:11px; color:var(--muted); background:var(--bg3); border-top:1px solid var(--border); line-height:1.6; }
 .sim-kpi-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:1.5rem; }
@@ -1490,9 +1490,11 @@ function renderStockGantt(stockTimeline, allOrders) {
   const start   = new Date(today.getFullYear(), 4, 1); // 5/1 시작
   const endDate = new Date(today.getFullYear(), 11, 31); // 12/31
 
+  // 반드시 5/1부터 시작 (today와 무관)
   const dates = [];
-  let d = new Date(start);
-  while(d <= endDate) { dates.push(new Date(d)); d.setDate(d.getDate()+1); }
+  let d = new Date(today.getFullYear(), 4, 1); // 5월 1일 고정
+  const endDate2 = new Date(today.getFullYear(), 11, 31);
+  while(d <= endDate2) { dates.push(new Date(d)); d.setDate(d.getDate()+1); }
 
   function getStatusMap(pid) {
     const tl = stockTimeline[pid];
@@ -1634,16 +1636,20 @@ function renderStockGantt(stockTimeline, allOrders) {
       return `<div class="${cls}" title="${title}">${outLabel}</div>`;
     }).join('');
 
+    // 그룹 간 구분: MK 뒤, PH블랙 뒤, DW프로블랙 뒤 빈 행
+    const SEPARATORS = ['mk','ph_b','dw_pro_b'];
+    const needSep = SEPARATORS.includes(group.id);
+    const sepRow = needSep ? `<div style="height:6px;background:transparent;border-bottom:1px dashed var(--border2)"></div>` : '';
+
     return `<div class="stock-timeline-row">
       <div class="stock-timeline-label">
         <div class="stock-timeline-name">${group.name}</div>
         <div class="stock-timeline-meta">
-          ${group.chips.map(chip => `<span class="sku-chip">${chip}</span>`).join('')}
           <span class="runway-chip ${runwayCls}">${runwayText}</span>
         </div>
       </div>
       <div class="stock-timeline-days">${cells}</div>
-    </div>`;
+    </div>${sepRow}`;
   }).join('');
 
   const todayStr = `${today.getMonth()+1}/${today.getDate()}`;
@@ -1652,14 +1658,14 @@ function renderStockGantt(stockTimeline, allOrders) {
     <section class="sec">
       <div class="sec-header">
         <span class="sec-lbl">제품군별 재고 타임라인</span>
-        <span class="sec-sub">MK 단독 · PH/DW는 실버+블랙 묶음 · 오늘(${todayStr})</span>
+        <span class="sec-sub">오늘(${todayStr})</span>
       </div>
       <div class="table-card stock-timeline-card">
         <div class="gantt-legend" style="padding:10px 14px 8px;border-bottom:1px solid var(--border);display:flex;gap:14px;flex-wrap:wrap">
           <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:rgba(34,197,94,0.28);border-radius:2px;display:inline-block"></span>안전</span>
 
           <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:repeating-linear-gradient(45deg,#7f1d1d,#7f1d1d 3px,#dc2626 3px,#dc2626 6px);border-radius:2px;display:inline-block"></span>품절</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;background:#facc15;border-radius:50%;display:inline-block"></span>발주/요청</span>
+
           <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;background:#38bdf8;border-radius:50%;display:inline-block"></span>입고/잔금</span>
           <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:var(--accent);display:inline-block"></span>오늘(${todayStr})</span>
         </div>
