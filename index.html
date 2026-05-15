@@ -1254,18 +1254,18 @@ function applySheetDailySales(cfg) {
 
 function buildPrePaid(cfg) {
   const china = [
-    { id:'dw_pro_s',  qty:+cfg['china_dw_pro_s'] ||500 },
-    { id:'dw_pro_b',  qty:+cfg['china_dw_pro_b'] ||600 },
-    { id:'dw_plus_s', qty:+cfg['china_dw_plus_s']||100 },
-    { id:'dw_plus_b', qty:+cfg['china_dw_plus_b']||530 },
+    { id:'dw_pro_s',  qty:+cfg['china_dw_pro_s'] ||100 }, // 500-400 출고
+    { id:'dw_pro_b',  qty:+cfg['china_dw_pro_b'] ||580 }, // 600-20 출고
+    { id:'dw_plus_s', qty:+cfg['china_dw_plus_s']||0 },   // 100-100 출고
+    { id:'dw_plus_b', qty:+cfg['china_dw_plus_b']||470 }, // 530-60 출고
   ].filter(c=>c.qty>0);
 
   const inProd = [
     { id:'ph_s', qty:+cfg['prepaid_ph_s_1_qty']||2000, date:cfg['prepaid_ph_s_1_date']||'2026-06-04' },
     { id:'ph_s', qty:+cfg['prepaid_ph_s_2_qty']||1500, date:cfg['prepaid_ph_s_2_date']||'2026-06-28' },
     { id:'ph_b', qty:+cfg['prepaid_ph_b_1_qty']||1500, date:cfg['prepaid_ph_b_1_date']||'2026-06-28' },
-    { id:'mk',   qty:+cfg['prepaid_mk_prod_qty']||5336, date:'', leadDays:14 }, // 선금완료·제작미시작: 요청 후 14일
-    { id:'mk',   qty:+cfg['prepaid_mk_done_qty']||500,  date:'', leadDays:5  }, // 제작완료·중국재고: 요청 후 5일
+    // MK 전체 선금완료 통합: 5336(제작중,14일) + 500(완성품,5일) 합산 후 14일 기준
+    { id:'mk',   qty:(+cfg['prepaid_mk_prod_qty']||5336)+(+cfg['prepaid_mk_done_qty']||500), date:'', leadDays:14 },
   ].filter(c=>c.qty>0);
 
   return { china, inProd };
@@ -1567,13 +1567,7 @@ function renderStockGantt(stockTimeline, allOrders) {
     return `<div style="display:inline-block;width:${Math.max(spanDays*CELL_W,1)}px;text-align:center;font-size:10px;font-weight:600;color:var(--muted);border-right:1px solid var(--border);box-sizing:border-box;padding:2px 0">${ms.month}월</div>`;
   }).join('');
 
-  const dateHeaderHTML = dates.map(dd => {
-    const dom = dd.getDate();
-    const isToday = dd.getTime() === today.getTime();
-    const showLabel = dom===1||dom===5||dom===10||dom===15||dom===20||dom===25||
-      (new Date(dd.getFullYear(),dd.getMonth()+1,0).getDate()===dom);
-    return `<div style="display:inline-block;width:${CELL_W}px;text-align:center;font-size:8px;color:${isToday?'var(--accent)':'var(--muted)'};font-family:var(--mono);overflow:hidden;box-sizing:border-box;${isToday?'font-weight:700;':''}">${showLabel?dom:''}</div>`;
-  }).join('');
+  const dateHeaderHTML = ''; // 날짜 숫자 표시 안 함
 
   function mergedStatus(group, key) {
     const statuses = group.productIds.map(pid => statusMaps[pid]?.[key] || 'ok');
@@ -1592,16 +1586,31 @@ function renderStockGantt(stockTimeline, allOrders) {
   }
 
   const groupRowsHTML = SIM_PRODUCT_GROUPS.map(group => {
-    const firstOut = firstStatusDate(group, 'out');
-    const firstWarn = firstStatusDate(group, 'danger');
-    const runwayDate = firstOut || firstWarn;
-    const runwayDays = runwayDate ? Math.ceil((runwayDate - today) / 86400000) : null;
-    const runwayCls = firstOut ? 'runway-danger' : firstWarn ? 'runway-warn' : 'runway-ok';
-    const runwayText = firstOut
-      ? (runwayDays <= 0 ? '품절' : `품절 D-${runwayDays}`)
-      : firstWarn
-        ? (runwayDays <= 0 ? '주의' : `주의 D-${runwayDays}`)
-        : '안전';
+    // 품절 구간 전체 수집 (날짜 범위 + 총일수)
+    const outPeriodsAll = [];
+    let outS = null, outC = 0;
+    dates.forEach(dd => {
+      const k = dd.toISOString().slice(0,10);
+      if(mergedStatus(group, k) === 'out') {
+        if(!outS) { outS = new Date(dd); outC = 0; }
+        outC++;
+      } else {
+        if(outS) { outPeriodsAll.push({ start: new Date(outS), days: outC }); outS = null; outC = 0; }
+      }
+    });
+    if(outS) outPeriodsAll.push({ start: new Date(outS), days: outC });
+
+    let runwayCls, runwayText;
+    if(outPeriodsAll.length === 0) {
+      runwayCls = 'runway-ok';
+      runwayText = '품절없음';
+    } else {
+      runwayCls = 'runway-danger';
+      runwayText = outPeriodsAll.map(op => {
+        const endDate = simAdd(op.start, op.days - 1);
+        return `${simMD(op.start)}~${simMD(endDate)} (${op.days}일)`;
+      }).join(' / ');
+    }
     // 품절 구간 계산
     const outRuns = []; let outStart=null, outCount=0;
     dates.forEach((dd,idx)=>{
@@ -1674,12 +1683,12 @@ function renderStockGantt(stockTimeline, allOrders) {
             <div class="stock-timeline-label-head"></div>
             <div style="white-space:nowrap">
               <div style="border-bottom:1px solid var(--border)">${monthHeaderHTML}</div>
-              <div style="border-bottom:1px solid var(--border)">${dateHeaderHTML}</div>
+
             </div>
           </div>
           ${groupRowsHTML}
         </div>
-        <div class="stock-timeline-note">묶음 제품은 실버/블랙 중 하나라도 품절이면 전체 줄이 품절로 표시됩니다. 주황 구간은 리드타임 기준 안전재고 이하라서 발주를 미루면 판매량 방어가 어려워지는 구간입니다.</div>
+        
       </div>
     </section>`;
 }
@@ -1734,7 +1743,7 @@ function renderSimulation(cfg) {
   const prepaidOrders=allOrders.filter(o=>o.type==='china'||o.type==='prepaid');
   const prepaidHTML=prepaidOrders.length===0?'':`
     <section class="sec">
-      <div class="sec-header"><span class="sec-lbl">선금 완료된 제품 (중국 내 재고)</span><span class="sec-sub">잔금 분할수령 기준</span></div>
+      <div class="sec-header"><span class="sec-lbl">선금 완료된 제품 (중국 내 재고) 분할 수령 일정 제안</span><span class="sec-sub">잔금 분할수령 기준</span></div>
       <div class="table-card"><div class="table-wrap">
         <table>
           <thead><tr><th>구분</th><th>제품</th><th class="num">총수량</th><th>분할수령 일정</th><th class="num">잔금 합계</th></tr></thead>
