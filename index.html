@@ -369,7 +369,7 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
   border-bottom:1px solid var(--border); box-sizing:border-box; vertical-align:top; cursor:default;
 }
 .stock-day-ok     { background:rgba(34,197,94,0.22); }
-.stock-day-danger { background:rgba(245,158,11,0.28); }
+.stock-day-danger { background:rgba(34,197,94,0.25); }
 .stock-day-out    { background:repeating-linear-gradient(45deg,#450a0a,#450a0a 3px,#991b1b 3px,#991b1b 6px); }
 .stock-day-today  { border-left:2.5px solid var(--accent) !important; }
 .stock-day-month  { border-left:1px solid var(--border2); }
@@ -1619,7 +1619,7 @@ function renderStockGantt(stockTimeline, allOrders) {
       const receiveEvents = events.filter(e => e.kind==='receive');
       const hasPrepaidOrd = orderEvents.some(e=>e.isPrepaid);
       const hasPrepaidRcv = receiveEvents.some(e=>e.isPrepaid);
-      const statusLabel = status==='out'?'품절':status==='danger'?'안전재고 이하':'재고 안전';
+      const statusLabel = status==='out'?'품절':'재고있음';
       const title = [`${dd.getMonth()+1}/${dom}`, statusLabel, ...events.map(e=>e.label)].join(' · ');
       const cls = [
         'stock-day-cell', `stock-day-${status}`,
@@ -1654,7 +1654,7 @@ function renderStockGantt(stockTimeline, allOrders) {
       <div class="table-card stock-timeline-card">
         <div class="gantt-legend" style="padding:10px 14px 8px;border-bottom:1px solid var(--border);display:flex;gap:14px;flex-wrap:wrap">
           <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:rgba(34,197,94,0.28);border-radius:2px;display:inline-block"></span>안전</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:rgba(245,158,11,0.34);border-radius:2px;display:inline-block"></span>안전재고 이하</span>
+
           <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;background:repeating-linear-gradient(45deg,#7f1d1d,#7f1d1d 3px,#dc2626 3px,#dc2626 6px);border-radius:2px;display:inline-block"></span>품절</span>
           <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;background:#facc15;border-radius:50%;display:inline-block"></span>발주/요청</span>
           <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;background:#38bdf8;border-radius:50%;display:inline-block"></span>입고/잔금</span>
@@ -1868,17 +1868,22 @@ function renderSimulation(cfg) {
   // ── 월별 캘린더 ───────────────────────────────────────────
   // allOrders에서 날짜별 이벤트 인덱스 생성
   const calEventsByDate = {};
+  // maker 조회 헬퍼
+  function getMaker(productId) {
+    const p = SIM_PRODUCTS.find(x=>x.id===productId);
+    return p ? p.maker : '';
+  }
   allOrders.forEach(o => {
     // 선금: 발주일
     const ok = o.orderDate.toISOString().slice(0,10);
     if(!calEventsByDate[ok]) calEventsByDate[ok]=[];
     if(o.prepayAmt > 0)
-      calEventsByDate[ok].push({ type:'prepay', label:o.product.name, amt:o.prepayAmt });
+      calEventsByDate[ok].push({ type:'prepay', label:o.product.name, amt:o.prepayAmt, qty:o.qty, maker:o.product.maker||getMaker(o.product.id), orderType:o.type });
     // 잔금: 각 배치 수령일
-    (o.batches||[]).forEach(b => {
+    (o.batches||[]).forEach((b,bi) => {
       const bk = b.date.toISOString().slice(0,10);
       if(!calEventsByDate[bk]) calEventsByDate[bk]=[];
-      calEventsByDate[bk].push({ type:'balance', label:o.product.name, amt:b.balanceAmt });
+      calEventsByDate[bk].push({ type:'balance', label:o.product.name, amt:b.balanceAmt, qty:b.qty, maker:o.product.maker||getMaker(o.product.id), batchIdx:bi+1, orderType:o.type });
     });
   });
 
@@ -1920,8 +1925,14 @@ function renderSimulation(cfg) {
           const totalAmt = evs.reduce((s,e)=>s+e.amt,0);
           return `<div style="min-height:52px;border:1px solid var(--border);border-radius:4px;padding:3px 4px;background:${isToday?'rgba(56,189,248,0.1)':'var(--bg3)'};${isToday?'outline:1.5px solid var(--accent);':''}">
             <div style="font-size:10px;font-weight:${isToday?'700':'400'};color:${isToday?'var(--accent)':'var(--muted)'};margin-bottom:2px">${d}</div>
-            ${prepays.length?`<div style="font-size:8px;background:rgba(245,158,11,0.2);color:#f59e0b;border-radius:2px;padding:1px 3px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${prepays.map(e=>e.label+' 선금 '+simWon(e.amt)).join(', ')}">선금 ${simWonM(prepays.reduce((s,e)=>s+e.amt,0))}</div>`:''}
-            ${balances.length?`<div style="font-size:8px;background:rgba(56,189,248,0.2);color:#38bdf8;border-radius:2px;padding:1px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${balances.map(e=>e.label+' 잔금 '+simWon(e.amt)).join(', ')}">잔금 ${simWonM(balances.reduce((s,e)=>s+e.amt,0))}</div>`:''}
+            ${prepays.map(e=>`<div style="font-size:8px;background:rgba(245,158,11,0.18);color:#f59e0b;border-radius:2px;padding:1px 3px;margin-bottom:1px;line-height:1.4" title="${e.label} 선금 ${simWon(e.amt)}">
+              <div style="font-weight:700">선금 ${simWonM(e.amt)}</div>
+              <div style="opacity:0.85">${e.label} ${e.qty.toLocaleString()}개</div>
+            </div>`).join('')}
+            ${balances.map(e=>`<div style="font-size:8px;background:rgba(56,189,248,0.18);color:#38bdf8;border-radius:2px;padding:1px 3px;margin-bottom:1px;line-height:1.4" title="${e.label} ${e.batchIdx}차 잔금 ${simWon(e.amt)}">
+              <div style="font-weight:700">잔금 ${simWonM(e.amt)}</div>
+              <div style="opacity:0.85">${e.label} ${e.qty.toLocaleString()}개</div>
+            </div>`).join('')}
           </div>`;
         }).join('')}
       </div>`).join('');
@@ -1963,6 +1974,72 @@ function renderSimulation(cfg) {
       </div>`;
   }
 
+
+  // ── 업체별 결제 예정표 ────────────────────────────────
+  const MAKERS = [...new Set(SIM_PRODUCTS.map(p=>p.maker))].sort();
+
+  function buildVendorTable() {
+    const rows = MAKERS.map(maker => {
+      return monthKeys.map(mk => {
+        // 해당 maker, 해당 월 이벤트 집계
+        const prefix = mk; // YYYY-MM
+        let prepay=0, balance=0;
+        Object.entries(calEventsByDate).forEach(([k, evs]) => {
+          if(!k.startsWith(prefix)) return;
+          evs.forEach(e => {
+            if(e.maker !== maker) return;
+            if(e.type==='prepay')  prepay  += e.amt;
+            if(e.type==='balance') balance += e.amt;
+          });
+        });
+        return { mk, prepay, balance, total: prepay+balance };
+      });
+    });
+
+    const headerCells = monthKeys.map(mk=>`<th class="num">${simML(mk)}</th>`).join('');
+    const tableRows = MAKERS.map((maker,mi) => {
+      const monthData = rows[mi];
+      const totalPrepay  = monthData.reduce((s,m)=>s+m.prepay, 0);
+      const totalBalance = monthData.reduce((s,m)=>s+m.balance, 0);
+      const totalAll     = totalPrepay + totalBalance;
+      return `
+        <tr>
+          <td class="fw" rowspan="3" style="vertical-align:middle;background:var(--bg3);border-right:1px solid var(--border2)">${maker}</td>
+          <td style="font-size:11px;color:#f59e0b;white-space:nowrap">선금</td>
+          ${monthData.map(m=>`<td class="num" style="color:#f59e0b">${m.prepay>0?simWonM(m.prepay):'—'}</td>`).join('')}
+          <td class="num fw" style="color:#f59e0b">${totalPrepay>0?simWonM(totalPrepay):'—'}</td>
+        </tr>
+        <tr>
+          <td style="font-size:11px;color:#38bdf8;white-space:nowrap">잔금</td>
+          ${monthData.map(m=>`<td class="num" style="color:#38bdf8">${m.balance>0?simWonM(m.balance):'—'}</td>`).join('')}
+          <td class="num fw" style="color:#38bdf8">${totalBalance>0?simWonM(totalBalance):'—'}</td>
+        </tr>
+        <tr style="border-bottom:2px solid var(--border)">
+          <td style="font-size:11px;color:var(--text);white-space:nowrap">합계</td>
+          ${monthData.map(m=>`<td class="num fw">${m.total>0?simWonM(m.total):'—'}</td>`).join('')}
+          <td class="num fw" style="color:var(--accent)">${totalAll>0?simWonM(totalAll):'—'}</td>
+        </tr>`;
+    }).join('');
+
+    return `
+      <section class="sec">
+        <div class="sec-header"><span class="sec-lbl">업체별 결제 예정표</span><span class="sec-sub">타이루 · 리디안 · 선금/잔금 월별 합계</span></div>
+        <div class="table-card"><div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th style="min-width:60px">업체</th>
+              <th style="min-width:36px">구분</th>
+              ${headerCells}
+              <th class="num">합계</th>
+            </tr></thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+        </div></div>
+      </section>`;
+  }
+
+  const vendorTableHTML = buildVendorTable();
+
   // 현재 달부터 시작
   calPage = Math.max(0, today.getMonth() - 4); // 5월=0, 6월=1...
 
@@ -1970,7 +2047,8 @@ function renderSimulation(cfg) {
     <section class="sec">
       <div class="sec-header"><span class="sec-lbl">월별 결제 캘린더</span><span class="sec-sub">선금 · 잔금 납부 일정</span></div>
       <div id="cal-content">${renderCalendar(calPage)}</div>
-    </section>`;
+    </section>
+    ${vendorTableHTML}`;
 
   document.getElementById('sim-content').innerHTML = `
     ${ganttHTML}
