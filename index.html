@@ -348,15 +348,15 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
 .gantt-month-header { overflow:hidden; }
 .stock-timeline-card { overflow:hidden; }
 .stock-timeline-head { display:flex; position:sticky; top:0; z-index:10; background:var(--bg2); }
-.stock-timeline-label-head { width:164px; flex-shrink:0; border-right:1px solid var(--border2); background:var(--bg3); }
+.stock-timeline-label-head { width:120px; flex-shrink:0; border-right:1px solid var(--border2); background:var(--bg3); }
 .stock-timeline-scroll { overflow-x:hidden; }
 .stock-timeline-row { display:flex; align-items:stretch; min-height:48px; border-bottom:1px solid var(--border); }
 .stock-timeline-label {
-  width:164px; flex-shrink:0; padding:8px 10px;
+  width:120px; flex-shrink:0; padding:6px 8px;
   border-right:1px solid var(--border2); background:var(--bg3);
   display:flex; flex-direction:column; justify-content:center; gap:5px;
 }
-.stock-timeline-name { font-size:12px; font-weight:700; color:var(--text); line-height:1.25; }
+.stock-timeline-name { font-size:11px; font-weight:700; color:var(--text); line-height:1.25; }
 .stock-timeline-meta { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
 .sku-chip { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:16px; padding:0 5px; border-radius:3px; background:rgba(255,255,255,0.06); color:var(--muted); font-size:9px; font-weight:700; font-family:var(--mono); }
 .runway-chip { display:inline-flex; align-items:center; height:16px; padding:0 6px; border-radius:3px; font-size:9px; font-weight:800; font-family:var(--mono); }
@@ -401,7 +401,7 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
 @media (max-width: 900px) {
   .sim-kpi-row { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .sim-prod-row { grid-template-columns:1fr; gap:10px; }
-  .stock-timeline-label, .stock-timeline-label-head { width:132px; }
+  .stock-timeline-label, .stock-timeline-label-head { width:100px; }
   .stock-day-cell { width:9px; }
 }
 
@@ -1554,12 +1554,15 @@ function renderStockGantt(stockTimeline, allOrders) {
     }
   });
 
-  const CELL_W = 9;
+  // 컨테이너 너비에서 레이블(120px) 빼고 날짜수로 나눔
+  const LABEL_W_PX = 120;
+  const containerW = (document.getElementById('sim-content')?.offsetWidth || 900) - LABEL_W_PX - 20;
+  const CELL_W = Math.max(4, Math.floor(containerW / dates.length));
 
   const monthHeaderHTML = monthStarts.map((ms, i) => {
     const nextIdx = monthStarts[i+1]?.idx ?? dates.length;
     const spanDays = nextIdx - ms.idx;
-    return `<div style="display:inline-block;width:${spanDays*CELL_W}px;text-align:center;font-size:10px;font-weight:600;color:var(--muted);border-right:1px solid var(--border);box-sizing:border-box;padding:2px 0">${ms.month}월</div>`;
+    return `<div style="display:inline-block;width:${Math.max(spanDays*CELL_W,1)}px;text-align:center;font-size:10px;font-weight:600;color:var(--muted);border-right:1px solid var(--border);box-sizing:border-box;padding:2px 0">${ms.month}월</div>`;
   }).join('');
 
   const dateHeaderHTML = dates.map(dd => {
@@ -1773,19 +1776,24 @@ function renderSimulation(cfg) {
     const prepaid = nextPrepaidMap[pid];
     const d2n  = next    ? Math.ceil((next.orderDate - today)/86400000) : null;
     const d2p  = prepaid ? Math.ceil((prepaid.date   - today)/86400000) : null;
-    const urgN = d2n===null?'muted':d2n<=7?'red':d2n<=14?'amber':'green';
-    const urgP = d2p===null?'muted':d2p<=7?'red':d2p<=14?'amber':'green';
+    // 신규발주=빨간, 선금완료=초록
+    const urgN = d2n===null?'muted':'red';
+    const urgP = d2p===null?'muted':'green';
     return `<div class="sim-prod-row">
       <div class="sim-prod-info">
         <div class="sim-prod-name">${group.name}</div>
         <div class="sim-prod-meta">${p.maker} · MOQ ${p.moq.toLocaleString()} · 리드타임 ${p.leadDays}일 · 안전재고 ${Math.ceil(p.dailySales*p.leadDays).toLocaleString()}개</div>
       </div>
-      <div class="sim-prod-daily"><div class="sim-prod-daily-val">${p.dailySales}<span>개/일</span></div><div class="sim-prod-daily-lbl">일평균</div></div>
+      <div class="sim-prod-daily">
+        <div class="sim-prod-daily-val">${p.dailySales}<span>개/일</span></div>
+        <div class="sim-prod-daily-lbl">일평균</div>
+        <div class="sim-prod-daily-lbl" style="margin-top:2px">${(p.dailySales*30).toLocaleString()}개/월</div>
+      </div>
       <div class="sim-prod-next">
-        ${next?`<div class="sim-next-date ${urgN}">${d2n===0?'최대한 빠른 발주':`D-${d2n} (${simMD(next.orderDate)})`}${next.adjusted?'<span class="sim-adj-tag">조정</span>':''}</div>
+        ${next?`<div class="sim-next-date ${urgN}">신규발주 ${d2n===0?'최대한 빠른 발주':`D-${d2n} (${simMD(next.orderDate)})`}${next.adjusted?'<span class="sim-adj-tag">조정</span>':''}</div>
           <div class="sim-next-detail">신규발주 ${next.qty.toLocaleString()}개 → ${next.batches.length}회 분할</div>
           <div class="sim-next-cost"><span class="sim-tag-prepay">선금 ${simWon(next.prepayAmt)}</span><span class="sim-tag-balance">잔금 ${simWon(next.balanceAmt)}</span></div>`:''}
-        ${prepaid?`<div class="sim-next-date ${urgP}" style="margin-top:${next?'6px':'0'}">${d2p===0?'최대한 빠른 수령':`D-${d2p} (${simMD(prepaid.date)})`} <span style="font-size:10px;color:var(--muted)">선금완료 수령</span></div>
+        ${prepaid?`<div class="sim-next-date ${urgP}" style="margin-top:${next?'6px':'0'}">선금완료 발주 ${d2p===0?'최대한 빠른 수령':`D-${d2p} (${simMD(prepaid.date)})`}</div>
           <div class="sim-next-detail">${prepaid.qty.toLocaleString()}개 수령 예정</div>
           <div class="sim-next-cost"><span class="sim-tag-balance">잔금 ${simWon(prepaid.balanceAmt)}</span></div>`:''}
         ${!next&&!prepaid?'<div class="sim-next-date muted">일정 없음</div>':''}
@@ -2014,10 +2022,10 @@ function renderSimulation(cfg) {
           ${monthData.map(m=>`<td class="num" style="color:#38bdf8">${m.balance>0?simWonM(m.balance):'—'}</td>`).join('')}
           <td class="num fw" style="color:#38bdf8">${totalBalance>0?simWonM(totalBalance):'—'}</td>
         </tr>
-        <tr style="border-bottom:2px solid var(--border)">
-          <td style="font-size:11px;color:var(--text);white-space:nowrap">합계</td>
-          ${monthData.map(m=>`<td class="num fw">${m.total>0?simWonM(m.total):'—'}</td>`).join('')}
-          <td class="num fw" style="color:var(--accent)">${totalAll>0?simWonM(totalAll):'—'}</td>
+        <tr style="border-bottom:2px solid var(--border);background:rgba(255,255,255,0.04)">
+          <td style="font-size:11px;color:var(--text);white-space:nowrap;background:rgba(255,255,255,0.04)">합계</td>
+          ${monthData.map(m=>`<td class="num fw" style="background:rgba(255,255,255,0.04)">${m.total>0?simWonM(m.total):'—'}</td>`).join('')}
+          <td class="num fw" style="color:var(--accent);background:rgba(255,255,255,0.04)">${totalAll>0?simWonM(totalAll):'—'}</td>
         </tr>`;
     }).join('');
 
