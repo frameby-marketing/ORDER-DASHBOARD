@@ -1261,7 +1261,7 @@ function buildPrePaid(cfg) {
   const inProd = [
     { id:'ph_s', qty:+cfg['prepaid_ph_s_1_qty']||2000, date:cfg['prepaid_ph_s_1_date']||'2026-06-04' },
     { id:'ph_s', qty:+cfg['prepaid_ph_s_2_qty']||1500, date:cfg['prepaid_ph_s_2_date']||'2026-06-28' },
-    { id:'ph_b', qty:+cfg['prepaid_ph_b_1_qty']||1500, date:cfg['prepaid_ph_b_1_date']||'2026-06-28' },
+    { id:'ph_b', qty:+cfg['prepaid_ph_b_1_qty']||1500, date:cfg['prepaid_ph_b_1_date']||'2026-09-23' }, // 실버 소진 5일전 발주→리드50일
     // MK 전체 선금완료 통합: 5336(제작중,14일) + 500(완성품,5일) 합산 후 14일 기준
     { id:'mk',   qty:(+cfg['prepaid_mk_prod_qty']||5336)+(+cfg['prepaid_mk_done_qty']||500), date:'', leadDays:14 },
   ].filter(c=>c.qty>0);
@@ -1460,8 +1460,8 @@ function runSimV4(products, initStocks, prePaid, months, weeks) {
         lastOrderDate = new Date(actualOrderDate);
       }
 
-      // 스냅샷 (월요일 + 품절일)
-      if(d.getDay()===1 || curStock===0) {
+      // 스냅샷 매일 기록 (정확한 품절 구간 표시용)
+      {
         const status = curStock===0?'out': curStock<=safeStock?'danger':'ok';
         stockTimeline[p.id].snapshots.push({ date:new Date(d), stock:curStock, status });
       }
@@ -1711,9 +1711,19 @@ function renderSimulation(cfg) {
   applySheetDailySales(cfg);
   const prePaid = buildPrePaid(cfg);
   const initStocks = {};
+  // 기본 재고값 (시트에 없을 때 사용) — 실제 현황 반영
+  const DEFAULT_STOCKS = {
+    mk:        40  * 45,  // 기본
+    ph_s:      0,          // 현재 재고 없음 (6/4 입고 예정)
+    ph_b:      0,          // 현재 재고 없음 (6/28 입고 예정)
+    dw_pro_s:  100,        // 5/15 출고 후 잔여 (500-400)
+    dw_pro_b:  580,        // 5/15 출고 후 잔여 (600-20)
+    dw_plus_s: 0,          // 5/15 출고 후 잔여 (100-100)
+    dw_plus_b: 470,        // 5/15 출고 후 잔여 (530-60)
+  };
   SIM_PRODUCTS.forEach(p => {
     const v=parseFloat(cfg['stock_'+p.id]);
-    initStocks[p.id]=(!isNaN(v)&&v>=0)?v:p.dailySales*p.targetHoldDays;
+    initStocks[p.id]=(!isNaN(v)&&v>=0)?v:(DEFAULT_STOCKS[p.id] ?? p.dailySales*p.targetHoldDays);
   });
 
   const today = new Date(); today.setHours(0,0,0,0);
