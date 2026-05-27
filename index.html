@@ -371,25 +371,11 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
 .stock-day-ok     { background:rgba(34,197,94,0.22); }
 .stock-day-danger { background:rgba(34,197,94,0.25); }
 .stock-day-out    { background:repeating-linear-gradient(45deg,#450a0a,#450a0a 3px,#991b1b 3px,#991b1b 6px); }
-.stock-day-today  {
-  border-left:2.5px solid var(--accent) !important;
-  position:relative;
-}
-.stock-day-today::after {
-  content:'';
-  position:absolute;
-  top:-24px; /* 월 헤더 높이만큼 위로 */
-  left:-1.5px;
-  width:2.5px;
-  height:24px;
-  background:var(--accent);
-  pointer-events:none;
-  z-index:20;
-}
+.stock-day-today  { border-left:2px solid var(--accent) !important; }
 .stock-day-month  { border-left:1px solid var(--border2); }
-/* 발주 표시: 비활성 */
-.stock-day-has-order::before { display:none; }
-.stock-day-has-order-prepaid::before { display:none; }
+/* 발주 표시 완전 제거 */
+.stock-day-has-order::before { content:none !important; display:none !important; }
+.stock-day-has-order-prepaid::before { content:none !important; display:none !important; }
 /* 입고일: 셀 하단 4px 띠 */
 .stock-day-has-receive::after {
   content:''; position:absolute; bottom:0; left:0; right:0; height:4px; background:#faff00; z-index:4;
@@ -1572,8 +1558,10 @@ function renderStockGantt(stockTimeline, allOrders) {
 
   // 컨테이너 너비에서 레이블(120px) 빼고 날짜수로 나눔
   const LABEL_W_PX = 120;
-  const containerW = (document.getElementById('sim-content')?.offsetWidth || 900) - LABEL_W_PX - 20;
-  const CELL_W = Math.max(4, Math.floor(containerW / dates.length));
+  // stock-timeline-card 또는 table-card 중 실제 렌더된 너비 사용
+  const timelineCard = document.querySelector('.stock-timeline-card') || document.getElementById('sim-content');
+  const containerW = (timelineCard?.clientWidth || window.innerWidth - 60) - LABEL_W_PX - 4;
+  const CELL_W = Math.max(3, Math.floor(containerW / dates.length));
 
   const monthHeaderHTML = monthStarts.map((ms, i) => {
     const nextIdx = monthStarts[i+1]?.idx ?? dates.length;
@@ -1652,7 +1640,7 @@ function renderStockGantt(stockTimeline, allOrders) {
       const cls = [
         'stock-day-cell', `stock-day-${status}`,
         isToday ? 'stock-day-today' : (isMonthStart ? 'stock-day-month' : ''),
-        /* 발주일 표시 제거 */
+        /* no order class */  '',
         receiveEvents.length ? (hasPrepaidRcv ? 'stock-day-has-receive-prepaid' : 'stock-day-has-receive') : '',
       ].filter(Boolean).join(' ');
       const outLabel = outLabelMap[idx] ? `<div class="stock-out-label">${outLabelMap[idx]}일</div>` : '';
@@ -1677,6 +1665,10 @@ function renderStockGantt(stockTimeline, allOrders) {
 
   const todayStr = `${today.getMonth()+1}/${today.getDate()}`;
 
+  // 오늘 인덱스 계산 (5/1 기준)
+  const todayIdx = dates.findIndex(dd => dd.getTime() === today.getTime());
+  const todayLeftPct = todayIdx >= 0 ? (todayIdx / dates.length * 100) : -1;
+
   return `
     <section class="sec">
       <div class="sec-header">
@@ -1692,12 +1684,13 @@ function renderStockGantt(stockTimeline, allOrders) {
           <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;background:#38bdf8;border-radius:50%;display:inline-block"></span>입고/잔금</span>
           <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:var(--accent);display:inline-block"></span>오늘(${todayStr})</span>
         </div>
-        <div class="stock-timeline-scroll">
+        <div class="stock-timeline-scroll" style="position:relative">
+          <!-- 오늘 세로선 오버레이 -->
+          ${todayLeftPct >= 0 ? `<div style="position:absolute;top:0;bottom:0;left:calc(${LABEL_W_PX}px + ${todayLeftPct}%);width:2px;background:var(--accent);z-index:30;pointer-events:none;opacity:0.9"></div>` : ''}
           <div class="stock-timeline-head">
             <div class="stock-timeline-label-head"></div>
-            <div style="white-space:nowrap;overflow:visible">
-              <div style="border-bottom:1px solid var(--border);position:relative;overflow:visible">${monthHeaderHTML}</div>
-
+            <div style="white-space:nowrap">
+              <div style="border-bottom:1px solid var(--border)">${monthHeaderHTML}</div>
             </div>
           </div>
           ${groupRowsHTML}
