@@ -1316,7 +1316,7 @@ const INBOUND_SCHEDULE = [
 // ── 포맷 유틸 ──────────────────────────────────────────────
 function fmtWon(v) {
   if(v >= 100000000) return `${(v/100000000).toFixed(1)}억`;
-  if(v >= 10000000)  return `${Math.round(v/10000000)}천만`;
+  if(v >= 10000000)  return `${(v/10000000).toFixed(1)}천만`;
   if(v >= 1000000)   return `${(v/1000000).toFixed(1)}백만`;
   if(v >= 10000)     return `${Math.round(v/10000)}만`;
   return v.toLocaleString()+'원';
@@ -1396,6 +1396,29 @@ function renderSimulation(cfg) {
       </div>`;
   }).join('');
 
+  // 차트 아래 월별 요약 행
+  const chartSummaryHTML = `
+    <div style="display:flex;gap:0;margin-top:10px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+      <div style="width:56px;flex-shrink:0;background:var(--bg3);display:flex;flex-direction:column;justify-content:space-around;padding:6px 8px;border-right:1px solid var(--border)">
+        <div style="font-size:10px;font-weight:700;color:#f59e0b">선금</div>
+        <div style="font-size:10px;font-weight:700;color:#38bdf8">잔금</div>
+        <div style="font-size:10px;font-weight:700;color:var(--text)">총액</div>
+      </div>
+      ${MONTHS.map(m=>{
+        const mc=MONTHLY_COST[m];
+        return `<div style="flex:1;display:flex;flex-direction:column;justify-content:space-around;padding:6px 4px;text-align:center;border-right:1px solid var(--border)">
+          <div style="font-size:10px;font-family:var(--mono);color:${mc.prepay>0?'#f59e0b':'var(--border2)'}">${mc.prepay>0?fmtWon(mc.prepay):'—'}</div>
+          <div style="font-size:10px;font-family:var(--mono);color:#38bdf8">${fmtWon(mc.balance)}</div>
+          <div style="font-size:11px;font-family:var(--mono);font-weight:700;color:var(--text)">${fmtWon(mc.total)}</div>
+        </div>`;
+      }).join('')}
+      <div style="flex-shrink:0;width:80px;display:flex;flex-direction:column;justify-content:space-around;padding:6px 8px;text-align:right;background:rgba(56,189,248,0.04);border-left:1px solid var(--border2)">
+        <div style="font-size:10px;font-family:var(--mono);color:#f59e0b">${fmtWon(totalPrepay)}</div>
+        <div style="font-size:10px;font-family:var(--mono);color:#38bdf8">${fmtWon(totalBalance)}</div>
+        <div style="font-size:11px;font-family:var(--mono);font-weight:700;color:var(--accent)">${fmtWon(totalAnnual)}</div>
+      </div>
+    </div>`;
+
   const productCostRows = PRODUCTS.filter(p=>p.id!=='dw_pl_g').map(p => {
     const pid = p.id;
     const monthCostMap = { mk:'mk', ph_s:'ph_s', ph_b:'ph_b', dw_pro_s:'dw_pro_s', dw_pro_b:'dw_pro_b', dw_pl_s:'dw_pl_s', dw_pl_b:'dw_pl_b' };
@@ -1416,8 +1439,8 @@ function renderSimulation(cfg) {
 
   const monthTotalRow = `<tr style="background:var(--bg3);border-top:2px solid var(--border2)">
     <td colspan="2" class="fw" style="font-size:12px">월 합계</td>
-    ${MONTHS.map(m=>`<td class="num fw" style="font-size:12px;color:var(--text)">${fmtWon(MONTHLY_COST[m].total)}</td>`).join('')}
-    <td class="num fw" style="color:var(--accent)">${fmtWon(totalAnnual)}</td>
+    ${MONTHS.map(m=>`<td class="num fw" style="font-size:13px;color:var(--text)">${fmtWon(MONTHLY_COST[m].total)}</td>`).join('')}
+    <td class="num fw" style="font-size:13px;color:var(--accent)">${fmtWon(totalAnnual)}</td>
   </tr>
   <tr style="background:var(--bg3)">
     <td colspan="2" style="font-size:11px;color:#f59e0b">선금</td>
@@ -1438,6 +1461,7 @@ function renderSimulation(cfg) {
           <div style="display:flex;gap:12px;align-items:flex-end;padding-bottom:1rem;border-bottom:1px solid var(--border)">
             ${barsHTML}
           </div>
+          ${chartSummaryHTML}
           <div style="display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--muted)">
             <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#f59e0b;border-radius:2px;display:inline-block"></span>선금 (신규발주 즉시 지급)</span>
             <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#38bdf8;border-radius:2px;display:inline-block"></span>잔금 (도착일 기준 당월 15일 또는 30일)</span>
