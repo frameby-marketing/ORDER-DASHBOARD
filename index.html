@@ -264,6 +264,52 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
 }
 
 
+
+/* ── THEME TOGGLE ───────────────────────────────────────── */
+.theme-toggle-wrap{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.theme-toggle-btn{
+  padding:8px 14px;
+  border-radius:6px;
+  border:1px solid var(--border2);
+  background:var(--bg2);
+  color:var(--text);
+  font-size:12px;
+  cursor:pointer;
+  transition:all .15s;
+}
+.theme-toggle-btn:hover{
+  border-color:var(--accent);
+  color:var(--accent);
+}
+
+body.light-mode{
+  --bg:#f4f6f9;
+  --bg2:#ffffff;
+  --bg3:#eef2f7;
+  --border:rgba(15,23,42,0.08);
+  --border2:rgba(15,23,42,0.16);
+  --text:#0f172a;
+  --muted:#64748b;
+  --accent:#0284c7;
+  --green:#16a34a;
+  --red:#dc2626;
+  --amber:#b45309;
+}
+.theme-toggle-btn.active{
+  background:var(--accent);
+  color:#fff;
+  border-color:var(--accent);
+}
+@media print{
+  .sidebar,.theme-toggle-wrap,.refresh-btn{display:none!important}
+  .app{height:auto}
+  .main{overflow:visible}
+}
+
 /* ── SIM SUB TAB ─────────────────────────────────────────── */
 .sim-tab-btn {
   padding: 8px 14px; border: none; background: transparent;
@@ -470,7 +516,11 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
           <h1 class="page-title">발주 관리 대시보드</h1>
           <p class="page-sub" id="date-lbl"></p>
         </div>
-        <div></div>
+
+        <div class="theme-toggle-wrap">
+          <button class="theme-toggle-btn" id="btn-light" onclick="setTheme('light')">☀️ 일반모드</button>
+          <button class="theme-toggle-btn active" id="btn-dark"  onclick="setTheme('dark')">🌙 다크모드</button>
+        </div>
       </header>
       <div id="err"></div>
       <div id="content"><div class="loading"><div class="loading-spinner"></div><span>불러오는 중...</span></div></div>
@@ -484,6 +534,10 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
           <p class="page-sub" id="sim-date-lbl">제품별 최적 발주 타이밍 · 월별 현금흐름 예측</p>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
+          <div class="theme-toggle-wrap">
+          <button class="theme-toggle-btn" id="btn-light-sim" onclick="setTheme('light')">☀️ 일반모드</button>
+          <button class="theme-toggle-btn active" id="btn-dark-sim"  onclick="setTheme('dark')">🌙 다크모드</button>
+        </div>
           <span class="period-badge">26년 5월 ~ 12월</span>
         </div>
       </header>
@@ -497,7 +551,13 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
           <h1 class="page-title">발주 요청 사항</h1>
           <p class="page-sub">Google Sheets 연동</p>
         </div>
-        <div><span class="period-badge">팀장 · 과장 · 주임</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="theme-toggle-wrap">
+          <button class="theme-toggle-btn" id="btn-light-memo" onclick="setTheme('light')">☀️ 일반모드</button>
+          <button class="theme-toggle-btn active" id="btn-dark-memo"  onclick="setTheme('dark')">🌙 다크모드</button>
+        </div>
+          <span class="period-badge">팀장 · 과장 · 주임</span>
+        </div>
       </header>
       <div id="memo-content"><div class="loading"><div class="loading-spinner"></div><span>불러오는 중...</span></div></div>
     </div>
@@ -509,7 +569,13 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
           <h1 class="page-title">쿠팡 납품 현황</h1>
           <p class="page-sub">주차별 발주대비 납품율 · 노트북거치대</p>
         </div>
-        <div><span class="period-badge">쿠팡 납품</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="theme-toggle-wrap">
+          <button class="theme-toggle-btn" id="btn-light-coup" onclick="setTheme('light')">☀️ 일반모드</button>
+          <button class="theme-toggle-btn active" id="btn-dark-coup"  onclick="setTheme('dark')">🌙 다크모드</button>
+        </div>
+          <span class="period-badge">쿠팡 납품</span>
+        </div>
       </header>
       <div id="coupang-content"><div class="loading"><div class="loading-spinner"></div><span>불러오는 중...</span></div></div>
     </div>
@@ -605,6 +671,25 @@ const CONFIG = {
 // ============================================================
 // app.js — 발주 관리 대시보드 메인 로직
 // ============================================================
+
+
+// ── 테마 변경 ─────────────────────────────────────────────
+function setTheme(mode){
+  if(mode === 'light'){
+    document.body.classList.add('light-mode');
+    localStorage.setItem('dashboard-theme','light');
+  }else{
+    document.body.classList.remove('light-mode');
+    localStorage.setItem('dashboard-theme','dark');
+  }
+}
+
+(function(){
+  const savedTheme = localStorage.getItem('dashboard-theme');
+  if(savedTheme === 'light'){
+    document.body.classList.add('light-mode');
+  }
+})();
 
 // ── 날짜 헤더 ─────────────────────────────────────────────
 const _d = new Date();
@@ -1754,6 +1839,31 @@ function renderSimulation(cfg) {
 
 
 
+
+
+function setTheme(mode){
+  if(mode==='light'){
+    document.body.classList.add('light-mode');
+  } else {
+    document.body.classList.remove('light-mode');
+  }
+  localStorage.setItem('theme', mode);
+  // 모든 토글 버튼 active 상태 갱신
+  document.querySelectorAll('.theme-toggle-btn').forEach(function(btn){
+    var isLight = btn.id && btn.id.startsWith('btn-light');
+    if(mode==='light'){
+      btn.classList.toggle('active', isLight);
+    } else {
+      btn.classList.toggle('active', !isLight);
+    }
+  });
+}
+
+// 페이지 로드 시 저장된 테마 복원
+(function(){
+  var saved = localStorage.getItem('theme') || 'dark';
+  setTheme(saved);
+})();
 
 </script>
 </body>
