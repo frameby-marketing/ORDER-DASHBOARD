@@ -1317,7 +1317,7 @@ const PRODUCTS = [
 
 // ── 월별 발주 계획 (비용요약 기반) ────────────────────────
 const MONTHLY_COST = {
-  '6':  { mk:5983969,  ph_s:28270000, ph_b:0,       dw_pro_s:14214000, dw_pro_b:556200,   dw_pl_s:3890250, dw_pl_b:1105650, dw_pl_g:737100,  prepay:5137500,  balance:49619669, total:54757169 },
+  '6':  { mk:5983969,  ph_s:14000000, ph_b:0,       dw_pro_s:11000000, dw_pro_b:550000,   dw_pl_s:1840000, dw_pl_b:1100000, dw_pl_g:730000,  prepay:5137500,  balance:35203969, total:40341469 },
   '7':  { mk:8055600,  ph_s:0,        ph_b:0,       dw_pro_s:7593360,  dw_pro_b:3796680,  dw_pl_s:1884690, dw_pl_b:1256460, dw_pl_g:0,       prepay:0,        balance:22586790, total:22586790 },
   '8':  { mk:8055600,  ph_s:10007250, ph_b:3664350, dw_pro_s:7593360,  dw_pro_b:3796680,  dw_pl_s:1884690, dw_pl_b:1256460, dw_pl_g:0,       prepay:3900000,  balance:32358390, total:36258390 },
   '9':  { mk:11674600, ph_s:6107250,  ph_b:7564350, dw_pro_s:7593360,  dw_pro_b:3796680,  dw_pl_s:1884690, dw_pl_b:1256460, dw_pl_g:0,       prepay:7519000,  balance:32358390, total:39877390 },
@@ -1340,11 +1340,11 @@ const INBOUND_SCHEDULE = [
   { month:6, week:1, instrDate:'6.1',  arrDate:'-',    payDate:'즉시',  sku:'DWPR-S', name:'DW 프로 실버',   qty:null, amount:3090000, type:'prepay', note:'6월 신규발주 선금' },
   { month:6, week:1, instrDate:'6.1',  arrDate:'-',    payDate:'즉시',  sku:'DWPL-S', name:'DW 플러스 실버', qty:null, amount:2047500, type:'prepay', note:'6월 신규발주 선금' },
   { month:6, week:2, instrDate:'6.1',  arrDate:'6.15', payDate:'6.15',  sku:'MK',     name:'맥세이프 킥프레임', qty:1000, amount:5983969, type:'confirm', note:'6/15 도착' },
-  { month:6, week:4, instrDate:'6.25', arrDate:'6.30', payDate:'6.30',  sku:'DWPR-S', name:'DW 프로 실버',   qty:400,  amount:11124000, type:'confirm', note:'6/30 도착' },
-  { month:6, week:4, instrDate:'6.25', arrDate:'6.30', payDate:'6.30',  sku:'DWPR-B', name:'DW 프로 블랙',   qty:20,   amount:556200,   type:'confirm', note:'6/30 도착' },
-  { month:6, week:4, instrDate:'6.25', arrDate:'6.30', payDate:'6.30',  sku:'DWPL-S', name:'DW 플러스 실버', qty:100,  amount:1842750,  type:'confirm', note:'6/30 도착' },
-  { month:6, week:4, instrDate:'6.25', arrDate:'6.30', payDate:'6.30',  sku:'DWPL-B', name:'DW 플러스 블랙', qty:60,   amount:1105650,  type:'confirm', note:'6/30 도착' },
-  { month:6, week:4, instrDate:'6.25', arrDate:'6.30', payDate:'6.30',  sku:'DWPL-G', name:'DW 플러스 그린', qty:40,   amount:737100,   type:'confirm', note:'6/30 도착' },
+  { month:6, week:4, instrDate:'6.25', arrDate:'6.30', payDate:'6.30',  sku:'DWPR-S', name:'DW 프로 실버',   qty:400,  amount:11000000, type:'confirm', note:'6/30 도착' },
+  { month:6, week:4, instrDate:'6.25', arrDate:'6.30', payDate:'6.30',  sku:'DWPR-B', name:'DW 프로 블랙',   qty:20,   amount:550000,   type:'confirm', note:'6/30 도착' },
+  { month:6, week:4, instrDate:'6.25', arrDate:'6.30', payDate:'6.30',  sku:'DWPL-S', name:'DW 플러스 실버', qty:100,  amount:1840000,  type:'confirm', note:'6/30 도착' },
+  { month:6, week:4, instrDate:'6.25', arrDate:'6.30', payDate:'6.30',  sku:'DWPL-B', name:'DW 플러스 블랙', qty:60,   amount:1100000,  type:'confirm', note:'6/30 도착' },
+  { month:6, week:4, instrDate:'6.25', arrDate:'6.30', payDate:'6.30',  sku:'DWPL-G', name:'DW 플러스 그린', qty:40,   amount:730000,   type:'confirm', note:'6/30 도착' },
   // 7월
   { month:7, week:1, instrDate:'7.1',  arrDate:'7.6',  payDate:'7.15',  sku:'MK',     name:'맥세이프 킥프레임', qty:1200, amount:8055600, type:'plan', note:'7/6 도착' },
   { month:7, week:1, instrDate:'7.1',  arrDate:'7.6',  payDate:'7.15',  sku:'DWPR-S', name:'DW 프로 실버',   qty:240,  amount:7593360, type:'plan', note:'7/6 도착' },
