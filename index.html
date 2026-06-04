@@ -1,2063 +1,869 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>발주 관리 대시보드</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <style>
-/* ============================================================
-   style.css — 발주 관리 대시보드
-   Theme: dark industrial / monospace data terminal
-   ============================================================ */
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>발주 대시보드</title>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1e2334;
+    --border: #2a3047;
+    --text: #e8eaf0;
+    --text2: #8892a4;
+    --text3: #4e5a6e;
+    --accent: #4f8ef7;
+    --accent2: #7c5af0;
 
-:root {
-  /* ── 다크모드 배경/텍스트 ── */
-  --bg:     #0d0f12;
-  --bg2:    #13161b;
-  --bg3:    #1a1e26;
-  --border: rgba(255,255,255,0.07);
-  --border2:rgba(255,255,255,0.13);
-  --text:   #e8edf2;
-  --muted:  #6b7a92;
-  /* ── 이미지 팔레트 색상 ── */
-  --accent: #40C8E0;   /* 하늘 — 주요 강조 */
-  --green:  #1DB954;   /* 에메랄드 초록 */
-  --red:    #FF3B30;   /* 선명 빨강 */
-  --amber:  #F5C400;   /* 황금 노랑 (13.26:1 대비) */
-  --blue:   #2979FF;   /* 선명 파랑 */
-  --purple: #AB47BC;   /* 보라 */
-  --pink:   #E91E8C;   /* 로즈 핑크 */
-  --orange: #FF8C00;   /* 주황 */
-  --indigo: #5C6BC0;   /* 남보라 (5.64:1) */
-  --sidebar-w: 200px;
-  --mono: 'DM Mono', monospace;
-  --sans: 'Pretendard', -apple-system, sans-serif;
-}
+    --신: #4f8ef7;
+    --신-bg: rgba(79,142,247,0.12);
+    --추: #7c5af0;
+    --추-bg: rgba(124,90,240,0.12);
+    --요: #f0b429;
+    --요-bg: rgba(240,180,41,0.12);
+    --기: #2ecc71;
+    --기-bg: rgba(46,204,113,0.12);
+  }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── LAYOUT ────────────────────────────────────────────── */
-.app { display: flex; height: 100vh; overflow: hidden; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Pretendard', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-/* ── SIDEBAR ───────────────────────────────────────────── */
-.sidebar {
-  width: var(--sidebar-w); flex-shrink: 0;
-  background: var(--bg2); border-right: 1px solid var(--border);
-  display: flex; flex-direction: column; padding: 1.5rem 1rem; gap: 0.5rem;
-}
-.logo { display: flex; align-items: center; gap: 10px; padding: 0 0.5rem 1.5rem; border-bottom: 1px solid var(--border); margin-bottom: 0.5rem; }
-.logo-mark { font-size: 20px; color: var(--accent); line-height: 1; }
-.logo-text { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--text); line-height: 1.3; letter-spacing: 0.04em; }
-.nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
-.nav-item {
-  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
-  border-radius: 6px; border: none; background: transparent;
-  color: var(--muted); font-family: var(--sans); font-size: 13px;
-  cursor: pointer; transition: all 0.15s; text-align: left;
-}
-.nav-item:hover { background: var(--bg3); color: var(--text); }
-.nav-item.active { background: var(--bg3); color: var(--accent); }
-.sync-status { display: flex; align-items: center; gap: 7px; padding: 8px 10px; font-size: 11px; color: var(--muted); font-family: var(--mono); }
-.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
-.sync-dot.sync-ok      { background: var(--green); box-shadow: 0 0 6px var(--green); }
-.sync-dot.sync-loading { background: var(--accent); animation: pulse 1s infinite; }
-.sync-dot.sync-error   { background: var(--red); }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-.refresh-btn {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 8px; border-radius: 6px; border: 1px solid var(--border2);
-  background: transparent; color: var(--muted); font-size: 12px; font-family: var(--sans);
-  cursor: pointer; transition: all 0.15s;
-}
-.refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+  /* ── Header ── */
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .app-title { font-size: 15px; font-weight: 700; letter-spacing: 0.04em; color: var(--text); }
+  .app-title span { color: var(--accent); }
+  .gs-status {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text2);
+  }
+  .gs-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--기); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-/* ── MAIN ──────────────────────────────────────────────── */
-.main { flex: 1; overflow-y: auto; padding: 2rem; display: flex; flex-direction: column; }
-.panel { display: none; }
-.panel.on { display: block; }
+  /* ── Tabs ── */
+  .tab-bar {
+    display: flex;
+    gap: 2px;
+    padding: 0 32px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    padding: 14px 22px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all .2s;
+    font-family: inherit;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-/* ── PAGE HEADER ───────────────────────────────────────── */
-.page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; gap: 1rem; }
-.page-title { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
-.page-sub { font-size: 12px; color: var(--muted); font-family: var(--mono); margin-top: 4px; }
-.period-badge { font-family: var(--mono); font-size: 11px; padding: 4px 10px; border: 1px solid var(--border2); border-radius: 4px; color: var(--muted); white-space: nowrap; }
+  /* ── Tab Panels ── */
+  .tab-panel { display: none; padding: 28px 32px; }
+  .tab-panel.active { display: block; }
 
-/* ── SECTIONS ──────────────────────────────────────────── */
-.sec { margin-bottom: 1.5rem; }
-.sec-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
-.sec-lbl { font-size: 13px; font-weight: 600; color: var(--text); }
-.sec-sub { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  /* ── Section titles ── */
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 14px;
+  }
 
-/* ── KPI ROW ───────────────────────────────────────────── */
-.kpi-row { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; }
-.kpi-card {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 10px; padding: 1.1rem 1.25rem;
-}
-.kpi-wide { grid-column: span 1; }
-.kpi-label { font-size: 11px; color: var(--muted); margin-bottom: 10px; line-height: 1.5; }
-.kpi-label-sub { color: var(--muted); opacity: 0.7; margin-left: 4px; }
-.kpi-value { font-size: 24px; font-weight: 600; font-family: var(--mono); color: var(--text); letter-spacing: -0.02em; margin-bottom: 6px; }
-.kpi-value.pos { color: var(--green); }
-.kpi-value.neg { color: var(--red); }
-.kpi-sub { font-size: 11px; color: var(--muted); font-family: var(--mono); }
-.kpi-footer { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 10px; }
+  /* ── KPI Row ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .kpi-label { font-size: 11px; color: var(--text2); margin-bottom: 8px; letter-spacing: 0.05em; }
+  .kpi-value { font-size: 22px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--text); }
+  .kpi-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
 
-/* ── BADGE ─────────────────────────────────────────────── */
-.kpi-badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; margin-bottom: 4px; }
-.kpi-badge-green  { background: rgba(29,185,84,0.12);  color: var(--green); }
-.kpi-badge-red    { background: rgba(255,59,48,0.12);  color: var(--red); }
-.kpi-badge-amber  { background: rgba(245,196,0,0.12); color: var(--amber); }
-.kpi-badge-blue   { background: rgba(41,121,255,0.12); color: var(--blue); }
-.kpi-badge-purple { background: rgba(171,71,188,0.12); color: var(--purple); }
-.kpi-badge-pink   { background: rgba(233,30,140,0.12); color: var(--pink); }
+  /* ── Chart Area ── */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 24px;
+    margin-bottom: 28px;
+  }
+  .chart-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+  }
+  .chart-title { font-size: 13px; font-weight: 600; }
 
-/* ── BAR COMPARE ───────────────────────────────────────── */
-.bar-compare { display: flex; flex-direction: column; gap: 8px; }
-.bar-compare-row { display: flex; align-items: center; gap: 8px; }
-.bar-compare-tag { font-size: 10px; color: var(--muted); width: 30px; flex-shrink: 0; text-align: right; font-family: var(--mono); line-height: 1.3; }
-.bar-compare-track { flex: 1; height: 12px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
-.bar-compare-fill { height: 100%; border-radius: 3px; transition: width 0.7s cubic-bezier(.4,0,.2,1); }
-.bar-compare-val { font-size: 12px; font-weight: 600; font-family: var(--mono); width: 56px; flex-shrink: 0; color: var(--text); }
+  .bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 200px; }
+  .bar-group {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%;
+  }
+  .bar-wrap { flex: 1; display: flex; align-items: flex-end; width: 100%; justify-content: center; }
+  .bar {
+    width: 100%; max-width: 52px;
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+    border-radius: 4px 4px 0 0;
+    position: relative;
+    min-height: 4px;
+    transition: opacity .2s;
+    cursor: default;
+  }
+  .bar:hover { opacity: .85; }
+  .bar-amount {
+    position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; font-family: 'DM Mono', monospace; white-space: nowrap; color: var(--text2);
+  }
+  .bar-label { font-size: 11px; color: var(--text3); }
 
-/* ── PROGRESS BAR ──────────────────────────────────────── */
-.prog-track { height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin-top: 8px; }
-.prog-fill { height: 100%; border-radius: 3px; transition: width 0.7s cubic-bezier(.4,0,.2,1); }
+  /* Legend */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text2); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
 
-/* ── DONUT ─────────────────────────────────────────────── */
-.kpi-donut { display: flex; flex-direction: column; align-items: center; }
-.donut-wrap { position: relative; display: flex; align-items: center; justify-content: center; margin: 6px 0; }
-.donut-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-.donut-legend { display: flex; gap: 10px; font-size: 10px; color: var(--muted); margin-top: 6px; }
-.donut-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 3px; }
+  /* ── Calendar Section ── */
+  .month-nav {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .month-btn {
+    padding: 7px 16px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text2); font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all .2s; font-family: inherit;
+  }
+  .month-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .month-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-/* ── TABLES ────────────────────────────────────────────── */
-.table-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-thead tr { background: var(--bg3); border-bottom: 1px solid var(--border); }
-th { padding: 8px 14px; font-size: 11px; font-weight: 500; color: var(--muted); text-align: left; white-space: nowrap; }
-th.num { text-align: right; }
-td { padding: 7px 14px; border-top: 1px solid var(--border); color: var(--text); }
-td.num { text-align: right; font-family: var(--mono); font-size: 12px; }
-td.fw { font-weight: 600; }
-td.muted { color: var(--muted); }
-td.pos { color: var(--green); font-weight: 600; }
-td.neg { color: var(--red); font-weight: 600; }
-tr.row-target { background: rgba(64,200,224,0.05); }
-tr.row-current { background: rgba(245,196,0,0.07); }
-tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2); }
-.sc-note { font-size: 10px; color: var(--muted); font-weight: 400; }
-.sc-current-tag { font-size: 10px; color: var(--amber); font-weight: 700; margin-left: 6px; }
-.table-footer { padding: 8px 14px; font-size: 11px; color: var(--muted); background: var(--bg3); border-top: 1px solid var(--border); line-height: 1.7; }
+  .cal-header-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px 10px 0 0;
+    padding: 16px 20px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .cal-month-title { font-size: 18px; font-weight: 700; }
+  .cal-month-total { font-size: 13px; color: var(--text2); }
+  .cal-month-total strong { color: var(--text); font-family: 'DM Mono', monospace; }
 
-/* ── PRODUCT BARS ──────────────────────────────────────── */
-.prod-card { padding: 0; }
-.prod-row { display: flex; align-items: center; padding: 11px 18px; border-top: 1px solid var(--border); gap: 12px; }
-.prod-row:first-child { border-top: none; }
-.prod-soldout { opacity: 0.4; }
-.prod-name { width: 140px; flex-shrink: 0; font-size: 13px; font-weight: 500; }
-.prod-bar-wrap { flex: 1; min-width: 0; }
-.prod-bar-bg { height: 7px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
-.prod-bar-fill { height: 100%; border-radius: 4px; transition: width 0.7s cubic-bezier(.4,0,.2,1); }
-.prod-qty { width: 64px; flex-shrink: 0; font-size: 12px; font-weight: 600; text-align: right; font-family: var(--mono); }
-.prod-qty em { font-style: normal; font-weight: 400; color: var(--muted); }
-.prod-badge { flex-shrink: 0; width: 38px; text-align: center; font-size: 10px; font-weight: 700; padding: 3px 0; border-radius: 4px; }
-.badge-ok     { background: rgba(29,185,84,0.12);  color: var(--green); }
-.badge-warn   { background: rgba(245,196,0,0.12); color: var(--amber); }
-.badge-danger { background: rgba(255,59,48,0.12);  color: var(--red); }
-.badge-soldout{ background: var(--bg3); color: var(--muted); }
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr) 120px;
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .cal-head {
+    background: var(--surface2);
+    padding: 8px 4px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    letter-spacing: 0.06em;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .cal-head:last-child { color: var(--accent2); }
 
-/* ── STOCK GRID ────────────────────────────────────────── */
-.stock-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
-.stock-card {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 10px; padding: 1rem 1rem 0.9rem;
-  border-top: 3px solid var(--stock-accent, var(--border2));
-  position: relative;
-}
-.stock-expired { opacity: 0.45; }
-.stock-name { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 8px; line-height: 1.3; }
-.stock-dday { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; font-family: var(--mono); line-height: 1; }
-.stock-dday.red   { color: var(--red); }
-.stock-dday.amber { color: var(--amber); }
-.stock-dday.blue  { color: var(--blue); }
-.stock-dday.green { color: var(--green); }
-.stock-dday.muted { color: var(--muted); font-size: 20px; }
-.stock-dday.gray  { color: var(--muted); font-size: 20px; }
-.stock-tag-wrap { margin-top: 6px; }
-.stock-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
-.stock-tag.red   { background: rgba(255,59,48,0.12);  color: var(--red); }
-.stock-tag.amber { background: rgba(245,196,0,0.12); color: var(--amber); }
-.stock-tag.blue  { background: rgba(41,121,255,0.12); color: var(--blue); }
-.stock-tag.green { background: rgba(29,185,84,0.12);  color: var(--green); }
-.stock-tag.muted, .stock-tag.gray { background: var(--bg3); color: var(--muted); }
-.stock-divider { border-top: 1px dashed var(--border2); margin: 10px 0 8px; }
-.stock-restock { font-size: 11px; color: var(--muted); line-height: 1.5; }
-.stock-restock strong { color: var(--text); font-weight: 600; }
+  .cal-cell {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 6px;
+    min-height: 80px;
+    vertical-align: top;
+    position: relative;
+  }
+  .cal-cell:last-child { border-right: none; }
+  .cal-cell.empty { background: var(--bg); }
+  .cal-cell.today { background: rgba(79,142,247,0.05); }
 
-/* ── DEFERRED ──────────────────────────────────────────── */
-.deferred-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-.deferred-top { display: flex; align-items: flex-start; gap: 10px; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
-.deferred-icon { font-size: 16px; flex-shrink: 0; }
-.deferred-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
-.deferred-cells { display: grid; grid-template-columns: 1fr 1fr; }
-.deferred-cell { padding: 1rem 1.25rem; border-right: 1px solid var(--border); }
-.deferred-cell:last-child { border-right: none; }
-.deferred-note { padding: 10px 1.25rem 14px; font-size: 12px; color: var(--muted); line-height: 1.7; border-top: 1px solid var(--border); background: var(--bg3); }
-.deferred-note strong { color: var(--text); }
+  .cal-date {
+    font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 4px;
+  }
+  .cal-cell.sun .cal-date { color: #f56565; }
+  .cal-cell.sat .cal-date { color: var(--accent); }
 
-/* ── MEMO ──────────────────────────────────────────────── */
-.memo-card { padding: 0; }
-.memo-row { display: grid; grid-template-columns: 64px 1fr; min-height: 44px; }
-.memo-border { border-bottom: 1px solid var(--border); }
-.memo-role { padding: 12px 14px; font-size: 13px; font-weight: 600; background: var(--bg3); border-right: 1px solid var(--border); display: flex; align-items: center; }
-.memo-body { padding: 12px 14px; font-size: 13px; line-height: 1.6; word-break: break-word; }
+  .event-badge {
+    display: flex; align-items: flex-start; gap: 4px;
+    padding: 3px 5px; border-radius: 4px; margin-bottom: 3px;
+    font-size: 10px; line-height: 1.3;
+  }
+  .badge-circle {
+    width: 16px; height: 16px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700; flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .badge-신 { background: var(--신-bg); }
+  .badge-circle-신 { background: var(--신); color: #fff; }
+  .badge-추 { background: var(--추-bg); }
+  .badge-circle-추 { background: var(--추); color: #fff; }
+  .badge-요 { background: var(--요-bg); }
+  .badge-circle-요 { background: var(--요); color: #000; }
+  .badge-기 { background: var(--기-bg); }
+  .badge-circle-기 { background: var(--기); color: #fff; }
 
-/* ── COUPANG CHART ─────────────────────────────────────── */
-.coup-chart { padding: 1.25rem 1.25rem 0; }
-.coup-bars { display: flex; align-items: flex-end; gap: 6px; height: 110px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
-.coup-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
-.coup-bar-pct { font-size: 9px; color: var(--muted); font-family: var(--mono); font-weight: 500; }
-.coup-bar-fill { width: 100%; border-radius: 3px 3px 0 0; transition: height 0.7s cubic-bezier(.4,0,.2,1); }
-.coup-bar-lbl { font-size: 8px; color: var(--muted); text-align: center; line-height: 1.3; margin-top: 4px; }
-.coup-legend { display: flex; gap: 14px; padding: 8px 1.25rem 10px; font-size: 11px; color: var(--muted); align-items: center; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-.coup-leg-item { display: flex; align-items: center; gap: 4px; }
-.coup-leg-item i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; }
-.mini-bar-wrap { width: 60px; height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
-.mini-bar-fill { height: 100%; border-radius: 3px; }
+  .badge-info { display: flex; flex-direction: column; gap: 1px; }
+  .badge-product { color: var(--text); font-weight: 500; font-size: 9.5px; }
+  .badge-qty { color: var(--text2); font-size: 9px; }
+  .badge-cost { color: var(--text); font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; }
 
-/* ── ALERT BANNER ──────────────────────────────────────── */
-.alert-banner { padding: 10px 16px; border-radius: 8px; font-size: 12px; font-weight: 500; margin-bottom: 1rem; border-left: 3px solid; line-height: 1.6; }
-.alert-danger { background: rgba(255,59,48,0.08); border-color: var(--red); color: #fca5a5; }
-.alert-warn   { background: rgba(245,196,0,0.08); border-color: var(--amber); color: #fcd34d; }
+  /* Week cost column */
+  .week-cost-cell {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 10px;
+    display: flex; flex-direction: column; justify-content: center; align-items: flex-end;
+    font-family: 'DM Mono', monospace;
+  }
+  .week-cost-label { font-size: 9px; color: var(--text3); margin-bottom: 3px; }
+  .week-cost-value { font-size: 13px; font-weight: 600; color: var(--text); }
+  .week-cost-head {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 10px;
+    text-align: right;
+    font-size: 10px; font-weight: 600; color: var(--accent2);
+    letter-spacing: 0.06em;
+  }
 
-/* ── LOADING ───────────────────────────────────────────── */
-.loading { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 80px; color: var(--muted); font-size: 13px; font-family: var(--mono); }
-.loading-spinner { width: 16px; height: 16px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+  /* ── Google Sheets Config ── */
+  .gs-config {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 22px;
+  }
+  .gs-config-title { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 12px; }
+  .gs-input-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .gs-input {
+    flex: 1; min-width: 260px;
+    padding: 9px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .gs-input:focus { border-color: var(--accent); }
+  .gs-btn {
+    padding: 9px 18px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity .2s;
+    white-space: nowrap;
+  }
+  .gs-btn:hover { opacity: .85; }
+  .gs-hint { font-size: 11px; color: var(--text3); margin-top: 8px; }
 
-/* ── ERROR ─────────────────────────────────────────────── */
-.err-box { background: rgba(255,59,48,0.08); border: 1px solid rgba(255,59,48,0.25); border-radius: 8px; padding: 14px 16px; color: #fca5a5; font-size: 13px; margin-bottom: 14px; line-height: 1.7; }
-.err-box strong { color: var(--red); }
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-/* ── SETTINGS ──────────────────────────────────────────── */
-.info-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; font-size: 13px; color: var(--muted); line-height: 1.9; }
-.info-card h3 { font-size: 13px; font-weight: 600; color: var(--text); margin: 1.2rem 0 0.5rem; }
-.info-card h3:first-child { margin-top: 0; }
-.info-card strong { color: var(--text); font-weight: 500; }
-.info-card code { background: var(--bg3); border: 1px solid var(--border2); padding: 1px 6px; border-radius: 3px; font-family: var(--mono); font-size: 11px; color: var(--accent); }
-.btn-sheet { display: inline-block; margin-top: 1rem; padding: 9px 20px; background: var(--accent); color: #0d0f12; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 700; transition: opacity 0.15s; }
-.btn-sheet:hover { opacity: 0.85; }
-
-/* ── UTILS ─────────────────────────────────────────────── */
-.muted { color: var(--muted); }
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--muted); }
-
-@media (max-width: 900px) {
-  .sidebar { display: none; }
-  .main { padding: 1rem; }
-  .kpi-row { grid-template-columns: 1fr 1fr; }
-  .stock-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
-
-
-/* ── THEME TOGGLE ───────────────────────────────────────── */
-.theme-toggle-wrap{
-  display:flex;
-  gap:8px;
-  align-items:center;
-}
-.theme-toggle-btn{
-  padding:8px 14px;
-  border-radius:6px;
-  border:1px solid var(--border2);
-  background:var(--bg2);
-  color:var(--text);
-  font-size:12px;
-  cursor:pointer;
-  transition:all .15s;
-}
-.theme-toggle-btn:hover{
-  border-color:var(--accent);
-  color:var(--accent);
-}
-
-body.light-mode{
-  /* ── 라이트모드 배경/텍스트 ── */
-  --bg:#f5f7fa;
-  --bg2:#ffffff;
-  --bg3:#eaecf0;
-  --border:rgba(0,0,0,0.08);
-  --border2:rgba(0,0,0,0.15);
-  --text:#111827;
-  --muted:#4b5563;
-  /* ── 이미지 팔레트 — 라이트용 (채도 유지, 명도 약간 낮춤) ── */
-  --accent:#0095b3;   /* 하늘 → 짙게 */
-  --green:#138a3c;    /* 초록 → 짙게 */
-  --red:#d42b20;      /* 빨강 → 짙게 */
-  --amber:#b8900a;    /* 노랑 → 짙게 (가독성) */
-  --blue:#1a5fcc;     /* 파랑 → 짙게 */
-  --purple:#7b2d8b;   /* 보라 → 짙게 */
-  --pink:#b3156b;     /* 핑크 → 짙게 */
-  --orange:#cc6e00;   /* 주황 → 짙게 */
-  --indigo:#3949ab;   /* 남보라 → 짙게 */
-}
-.theme-toggle-btn.active{
-  background:var(--accent);
-  color:#fff;
-  border-color:var(--accent);
-}
-@media print{
-  .sidebar,.theme-toggle-wrap,.refresh-btn{display:none!important}
-  .app{height:auto}
-  .main{overflow:visible}
-}
-
-/* ── SIM SUB TAB ─────────────────────────────────────────── */
-.sim-tab-btn {
-  padding: 8px 14px; border: none; background: transparent;
-  color: var(--muted); font-size: 13px; font-family: var(--sans);
-  cursor: pointer; border-bottom: 2px solid transparent;
-  transition: all 0.15s; white-space: nowrap;
-}
-.sim-tab-btn:hover { color: var(--text); }
-.sim-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-/* ── SIMULATION TAB ─────────────────────────────────────── */
-.sim-prod-row {
-  display: grid;
-  grid-template-columns: 1fr 90px 180px 70px;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 18px;
-  border-top: 1px solid var(--border);
-}
-.sim-prod-row:first-child { border-top: none; }
-.sim-prod-name  { font-size: 13px; font-weight: 600; color: var(--text); }
-.sim-prod-meta  { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
-.sim-prod-daily-val { font-size: 20px; font-weight: 700; font-family: var(--mono); color: var(--accent); }
-.sim-prod-daily-val span { font-size: 11px; font-weight: 400; color: var(--muted); margin-left: 2px; }
-.sim-prod-daily-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
-.sim-next-date  { font-size: 13px; font-weight: 700; font-family: var(--mono); margin-bottom: 4px; }
-.sim-next-date.red   { color: var(--red); }
-.sim-next-date.amber { color: var(--amber); }
-.sim-next-date.green { color: var(--green); }
-.sim-next-date.muted { color: var(--muted); }
-.sim-next-detail { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-.sim-next-cost  { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.sim-tag-prepay  { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: rgba(245,196,0,0.12); color: var(--amber); }
-.sim-tag-balance { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: rgba(64,200,224,0.12); color: var(--accent); }
-
-/* 월별 차트 */
-.sim-legend { display: flex; gap: 14px; font-size: 11px; color: var(--muted); margin-bottom: 14px; }
-.sim-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
-.sim-month-row { display: flex; gap: 8px; align-items: flex-end; overflow-x: auto; padding-bottom: 4px; }
-.sim-month-card {
-  flex: 1; min-width: 60px;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 8px 6px; border-radius: 8px;
-  background: var(--bg3); border: 1px solid var(--border);
-  transition: border-color 0.15s;
-}
-.sim-month-card:hover { border-color: var(--border2); }
-.sim-month-current { border-color: var(--accent) !important; }
-.sim-month-label { font-size: 11px; font-weight: 600; color: var(--muted); }
-.sim-month-current .sim-month-label { color: var(--accent); }
-.sim-month-bar-wrap { display: flex; gap: 2px; align-items: flex-end; height: 130px; position: relative; overflow: visible; }
-.sim-month-bar-prepay  { width: 14px; background: var(--amber); border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.6s cubic-bezier(.4,0,.2,1); }
-.sim-month-bar-balance { width: 14px; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.6s cubic-bezier(.4,0,.2,1); }
-.sim-month-total { font-size: 11px; font-weight: 700; font-family: var(--mono); color: var(--text); text-align: center; }
-.sim-month-sub { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-
-.row-alt { background: rgba(255,255,255,0.015); }
-
-
-/* ── SIMULATION v2 ADDITIONS ────────────────────────────── */
-.risk-list { display:flex; flex-direction:column; gap:8px; }
-.risk-item { display:flex; align-items:flex-start; gap:12px; padding:12px 16px; border-radius:8px; border:1px solid; }
-.risk-stockout_risk { background:rgba(255,59,48,0.07); border-color:rgba(255,59,48,0.25); }
-.risk-budget_exceed { background:rgba(245,196,0,0.07); border-color:rgba(245,196,0,0.25); }
-.risk-icon { font-size:18px; flex-shrink:0; }
-.risk-title { font-size:12px; font-weight:700; color:var(--text); margin-bottom:3px; }
-.risk-msg   { font-size:12px; color:var(--muted); line-height:1.5; }
-.sim-adj-tag { display:inline-block; font-size:9px; padding:1px 5px; border-radius:3px; background:rgba(245,196,0,0.15); color:var(--amber); margin-left:5px; vertical-align:middle; }
-.sim-month-over { border-color: rgba(255,59,48,0.4) !important; }
-.sim-month-total.over { color: var(--red); }
-.sim-over-badge { display:inline-block; font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px; background:rgba(255,59,48,0.15); color:var(--red); margin-top:3px; }
-.row-over td { background:rgba(245,196,0,0.05); }
-.row-over td.neg { color:var(--red); }
-.week-month-cell { background:var(--bg3); font-size:12px; text-align:center; border-right:1px solid var(--border); }
-
-
-.row-amber td { background: rgba(245,196,0,0.04); }
-
-/* ── GANTT CHART ─────────────────────────────────────────── */
-.gantt-legend { display:flex; gap:14px; flex-wrap:wrap; font-size:11px; color:var(--muted); margin-bottom:14px; align-items:center; }
-.gantt-legend i { display:inline-block; width:12px; height:12px; border-radius:2px; margin-right:3px; vertical-align:middle; }
-.gantt-rows { display:flex; flex-direction:column; gap:10px; }
-.gantt-row { display:flex; align-items:center; gap:12px; }
-.gantt-label { width:132px; flex-shrink:0; }
-.gantt-prod-name { font-size:12px; font-weight:600; color:var(--text); line-height:1.3; }
-.gantt-prod-sub  { font-size:10px; color:var(--muted); margin-top:2px; }
-.gantt-bar-wrap {
-  flex:1; height:24px; background:var(--bg3);
-  border-radius:4px; position:relative; overflow:visible;
-  border:1px solid var(--border);
-}
-.gantt-month-header { overflow:hidden; }
-.stock-timeline-card { overflow:hidden; }
-.stock-timeline-head { display:flex; position:sticky; top:0; z-index:10; background:var(--bg2); }
-.stock-timeline-label-head { width:120px; flex-shrink:0; border-right:1px solid var(--border2); background:var(--bg3); }
-.stock-timeline-scroll { overflow-x:hidden; overflow-y:visible; }
-.stock-timeline-row { display:flex; align-items:stretch; min-height:48px; border-bottom:1px solid var(--border); }
-.stock-timeline-label {
-  width:120px; flex-shrink:0; padding:6px 8px;
-  border-right:1px solid var(--border2); background:var(--bg3);
-  display:flex; flex-direction:column; justify-content:center; gap:5px;
-}
-.stock-timeline-name { font-size:11px; font-weight:700; color:var(--text); line-height:1.25; }
-.stock-timeline-meta { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
-.sku-chip { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:16px; padding:0 5px; border-radius:3px; background:rgba(255,255,255,0.06); color:var(--muted); font-size:9px; font-weight:700; font-family:var(--mono); }
-.runway-chip { display:inline-flex; align-items:center; height:16px; padding:0 6px; border-radius:3px; font-size:9px; font-weight:800; font-family:var(--mono); }
-.runway-ok { background:rgba(29,185,84,0.12); color:var(--green); }
-.runway-warn { background:rgba(245,196,0,0.13); color:var(--amber); }
-.runway-danger { background:rgba(255,59,48,0.13); color:var(--red); }
-.stock-timeline-days { white-space:nowrap; }
-.stock-day-cell {
-  display:inline-block; width:9px; height:52px; position:relative;
-  border-bottom:1px solid var(--border); box-sizing:border-box; vertical-align:top; cursor:default;
-}
-.stock-day-ok     { background:rgba(29,185,84,0.22); }
-.stock-day-danger { background:rgba(29,185,84,0.25); }
-.stock-day-out    { background:repeating-linear-gradient(45deg,#450a0a,#450a0a 3px,#991b1b 3px,#991b1b 6px); }
-.stock-day-today  { /* 오늘 표시는 절대위치 오버레이로만 */ }
-.stock-day-month  { border-left:1px solid var(--border2); }
-/* 발주 표시 완전 제거 */
-.stock-day-has-order::before { content:none !important; display:none !important; }
-.stock-day-has-order-prepaid::before { content:none !important; display:none !important; }
-/* 입고일: 셀 하단 4px 띠 */
-.stock-day-has-receive::after { display:none !important; content:none !important; }
-.stock-day-has-receive-prepaid::after { display:none !important; content:none !important; }
-/* 품절 일수 */
-.stock-out-label {
-  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-  font-size:9px; font-weight:900; color:#fff;
-  white-space:nowrap; z-index:5; pointer-events:none;
-  text-shadow:0 0 4px #000, 0 0 8px rgba(0,0,0,0.8);
-  letter-spacing:-0.3px;
-}
-.stock-timeline-note { padding:9px 14px; font-size:11px; color:var(--muted); background:var(--bg3); border-top:1px solid var(--border); line-height:1.6; }
-.sim-kpi-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:1.5rem; }
-.sim-kpi-card { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:1rem 1.1rem; }
-.sim-kpi-card.good { border-color:rgba(29,185,84,0.28); }
-.sim-kpi-card.warn { border-color:rgba(245,196,0,0.3); }
-.sim-kpi-card.bad { border-color:rgba(255,59,48,0.3); }
-.sim-kpi-label { font-size:11px; color:var(--muted); margin-bottom:6px; }
-.sim-kpi-value { font-size:22px; font-weight:800; font-family:var(--mono); color:var(--text); letter-spacing:0; line-height:1.2; }
-.sim-kpi-sub { font-size:11px; color:var(--muted); margin-top:5px; line-height:1.45; }
-@media (max-width: 900px) {
-  .sim-kpi-row { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .sim-prod-row { grid-template-columns:1fr; gap:10px; }
-  .stock-timeline-label, .stock-timeline-label-head { width:100px; }
-  .stock-day-cell { width:9px; }
-}
-
-  </style>
+  /* ── Overview tab ── */
+  .product-table {
+    width: 100%; border-collapse: collapse;
+    background: var(--surface);
+    border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .product-table th {
+    padding: 10px 16px; text-align: left;
+    font-size: 11px; font-weight: 600; color: var(--text3);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .product-table td {
+    padding: 11px 16px; font-size: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .product-table tr:last-child td { border-bottom: none; }
+  .product-table tr:hover td { background: var(--surface2); }
+  .mono { font-family: 'DM Mono', monospace; }
+</style>
 </head>
 <body>
-<div class="app">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="logo">
-      <span class="logo-mark">▸</span>
-      <span class="logo-text">Order<br>Monitor</span>
+<header class="app-header">
+  <div class="app-title">📦 발주 <span>대시보드</span></div>
+  <div class="gs-status">
+    <div class="gs-dot" id="gsDot" style="background:#4e5a6e"></div>
+    <span id="gsStatusText">Google Sheets 미연결</span>
+  </div>
+</header>
+
+<nav class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('simulation')">발주 시뮬레이션</button>
+  <button class="tab-btn" onclick="switchTab('overview')">전체 현황</button>
+</nav>
+
+<!-- ══════════════════════════════════════════ TAB: SIMULATION ══ -->
+<div class="tab-panel active" id="tab-simulation">
+
+  <!-- Google Sheets 연동 설정 -->
+  <div class="gs-config">
+    <div class="gs-config-title">🔗 Google Sheets 연동 설정</div>
+    <div class="gs-input-row">
+      <input class="gs-input" id="sheetIdInput" placeholder="Google Sheets ID (URL의 /d/ 이후 부분)" />
+      <input class="gs-input" style="max-width:180px;" id="sheetNameInput" placeholder="시트명 (예: 타임라인)" />
+      <button class="gs-btn" onclick="connectSheet()">연동하기</button>
+      <button class="gs-btn" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);" onclick="loadBuiltIn()">샘플데이터</button>
     </div>
-    <nav class="nav">
-      
-      <button class="nav-item active" onclick="tab('simulation', this)">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/><circle cx="12" cy="12" r="1"/></svg>
-        발주 시뮬레이션
-      </button>
-      <button class="nav-item" onclick="tab('memo', this)">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        발주 요청 사항
-      </button>
-      <button class="nav-item" onclick="tab('coupang', this)">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 8l3 4 3-3 3 3 3-4"/></svg>
-        쿠팡 납품 현황
-      </button>
-      <button class="nav-item" onclick="tab('input', this)">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        데이터 입력
-      </button>
-      <button class="nav-item" onclick="tab('trend', this)">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        추이
-      </button>
-    </nav>
-    <div class="sync-status">
-      <div class="sync-dot" id="syncDot"></div>
-      <span id="syncText">연결 대기</span>
+    <div class="gs-hint">※ 스프레드시트는 "링크가 있는 모든 사용자" 공개 설정이 필요합니다 · 시트명 기본값: Sheet1</div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row" id="kpiRow">
+    <div class="kpi-card">
+      <div class="kpi-label">총 지출 (6–12월)</div>
+      <div class="kpi-value" id="kpiTotal">—</div>
+      <div class="kpi-sub">신규+추가입고+잔금</div>
     </div>
-    <button class="refresh-btn" onclick="load()">
-      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
-      새로고침
-    </button>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="main">
-
-    <!-- 현황 -->
-    <div id="p-current" class="panel" style="display:none">
-      <header class="page-header">
-        <div>
-          <h1 class="page-title">발주 관리 대시보드</h1>
-          <p class="page-sub" id="date-lbl"></p>
-        </div>
-
-        <div class="theme-toggle-wrap">
-          <button class="theme-toggle-btn" id="btn-light" onclick="setTheme('light')">☀️ 일반모드</button>
-          <button class="theme-toggle-btn active" id="btn-dark"  onclick="setTheme('dark')">🌙 다크모드</button>
-        </div>
-      </header>
-      <div id="err"></div>
-      <div id="content"><div class="loading"><div class="loading-spinner"></div><span>불러오는 중...</span></div></div>
+    <div class="kpi-card">
+      <div class="kpi-label">월평균 발주비</div>
+      <div class="kpi-value" id="kpiAvg">—</div>
+      <div class="kpi-sub">7개월 기준</div>
     </div>
-
-    <!-- 발주 시뮬레이션 -->
-    <div id="p-simulation" class="panel on">
-      <header class="page-header">
-        <div>
-          <h1 class="page-title">발주 시뮬레이션</h1>
-          <p class="page-sub" id="sim-date-lbl">제품별 최적 발주 타이밍 · 월별 현금흐름 예측</p>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div class="theme-toggle-wrap">
-          <button class="theme-toggle-btn" id="btn-light-sim" onclick="setTheme('light')">☀️ 일반모드</button>
-          <button class="theme-toggle-btn active" id="btn-dark-sim"  onclick="setTheme('dark')">🌙 다크모드</button>
-        </div>
-          <span class="period-badge">26년 5월 ~ 12월</span>
-        </div>
-      </header>
-      <div id="sim-content"></div>
+    <div class="kpi-card" style="border-top-color: var(--신);">
+      <div class="kpi-label" style="color:var(--신)">신규 생산 발주</div>
+      <div class="kpi-value" id="kpi신">—</div>
+      <div class="kpi-sub" id="kpi신cnt">— 건</div>
     </div>
-
-    <!-- 발주 요청 사항 -->
-    <div id="p-memo" class="panel">
-      <header class="page-header">
-        <div>
-          <h1 class="page-title">발주 요청 사항</h1>
-          <p class="page-sub">Google Sheets 연동</p>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div class="theme-toggle-wrap">
-          <button class="theme-toggle-btn" id="btn-light-memo" onclick="setTheme('light')">☀️ 일반모드</button>
-          <button class="theme-toggle-btn active" id="btn-dark-memo"  onclick="setTheme('dark')">🌙 다크모드</button>
-        </div>
-          <span class="period-badge">팀장 · 과장 · 주임</span>
-        </div>
-      </header>
-      <div id="memo-content"><div class="loading"><div class="loading-spinner"></div><span>불러오는 중...</span></div></div>
+    <div class="kpi-card" style="border-top-color: var(--추);">
+      <div class="kpi-label" style="color:var(--추)">추가 입고</div>
+      <div class="kpi-value" id="kpi추">—</div>
+      <div class="kpi-sub" id="kpi추cnt">— 건</div>
     </div>
-
-    <!-- 쿠팡 납품 현황 -->
-    <div id="p-coupang" class="panel">
-      <header class="page-header">
-        <div>
-          <h1 class="page-title">쿠팡 납품 현황</h1>
-          <p class="page-sub">주차별 발주대비 납품율 · 노트북거치대</p>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div class="theme-toggle-wrap">
-          <button class="theme-toggle-btn" id="btn-light-coup" onclick="setTheme('light')">☀️ 일반모드</button>
-          <button class="theme-toggle-btn active" id="btn-dark-coup"  onclick="setTheme('dark')">🌙 다크모드</button>
-        </div>
-          <span class="period-badge">쿠팡 납품</span>
-        </div>
-      </header>
-      <div id="coupang-content"><div class="loading"><div class="loading-spinner"></div><span>불러오는 중...</span></div></div>
+    <div class="kpi-card" style="border-top-color: var(--기);">
+      <div class="kpi-label" style="color:var(--기)">기존 잔금</div>
+      <div class="kpi-value" id="kpi기">—</div>
+      <div class="kpi-sub" id="kpi기cnt">— 건</div>
     </div>
+  </div>
 
-    <!-- 데이터 입력 -->
-    <div id="p-input" class="panel">
-      <header class="page-header">
-        <div>
-          <h1 class="page-title">데이터 입력 가이드</h1>
-          <p class="page-sub">Google Sheets 설정 항목</p>
-        </div>
-      </header>
-      <div class="info-card">
-        <h3>📋 설정 시트 항목</h3>
-        <p>설정 시트 <strong>A열에 키 이름</strong>, <strong>B열에 숫자값(만원)</strong>을 입력하세요.</p>
-        <p>• <code>자사몰목표</code> — 자사몰 목표 일매출</p>
-        <p>• <code>네이버목표</code> — 네이버 목표 일매출</p>
-        <p>• <code>현재일매출_자사몰</code> — 자사몰 현재 평균 일매출</p>
-        <p>• <code>현재일매출_네이버</code> — 네이버 현재 평균 일매출</p>
-        <p>• <code>누적발주지출</code> — 현재 누적 발주 지출액 (만원)</p>
-        <p>• <code>경과일</code> / <code>총일수</code></p>
-        <h3>💳 조건부 발주 설정</h3>
-        <p>• <code>결제유예가능일</code> — 유예 마감일 (<code>2026-06-10</code> 형식)</p>
-        <p>• <code>유예월발주한도</code> — 추가 발주 가능 최대 금액 (만원)</p>
-        <h3>📝 발주요청사항 시트</h3>
-        <p>시트 이름: <code>발주요청사항</code> · 1행 헤더: <code>역할 | 내용</code></p>
-        <p>• A열: <code>팀장</code> / <code>과장</code> / <code>주임</code></p>
-        <p>• B열: 발주 요청 내용 (자유 입력)</p>
-        <h3>📦 재고현황 시트</h3>
-        <p>시트 이름: <code>재고</code> · 1행 헤더: <code>제품명 | 품절예정일 | 재입고수량 | 재입고예정일</code></p>
-        <p>• B열, D열: <code>2026-05-20</code> 형식</p>
-        <h3>📊 발주 시뮬레이션 설정</h3>
-        <p>• <code>sim_monthly_target</code> — 월 목표 매출 (만원, 기본 20000)</p>
-        <p>• <code>sim_order_limit_pct</code> — 발주비 한도 비율 (%, 기본 18)</p>
-        <p>• <code>sim_daily_mk</code> ~ <code>sim_daily_dw_plus_b</code> — 제품별 일평균 판매수량</p>
-        <p>• <code>stock_mk</code> ~ <code>stock_dw_plus_b</code> — 현재 재고수량</p>
-        <p>• <code>china_dw_pro_s</code> 등 — 중국 보유 재고 (선금완료)</p>
-        <p>• <code>prepaid_ph_s_1_qty</code> / <code>prepaid_ph_s_1_date</code> 등 — 제작중 항목</p>
-        <h3>📅 타임라인 시트</h3>
-        <p>시트 이름: <code>타임라인</code> · 1행 헤더, 2행부터 데이터</p>
-        <p>• <strong>A열</strong>: 날짜 — <code>6/4</code>, <code>11/17</code> 형식 (월/일)</p>
-        <p>• <strong>B열</strong>: 유형 — <code>신</code> (신규 생산 발주) / <code>추</code> (추가 입고, 중국→한국) / <code>요</code> (입고 요청) / <code>기</code> (기존 생산물량 잔금)</p>
-        <p>• <strong>C열</strong>: 제품명 — 예: <code>맥세이프 킥프레임</code>, <code>PH 스탠드 실버</code></p>
-        <p>• <strong>D열</strong>: 수량 — 숫자만 (없으면 빈칸)</p>
-        <p>• <strong>E열</strong>: 금액 — 숫자만, 원화 (없으면 빈칸)</p>
-        <p>• <strong>F열</strong>: 비고 — 자유 입력</p>
-        <p style="margin-top:8px;color:var(--amber)">⚡ 시트 GID를 설정하면 새로고침 시 달력이 시트 데이터로 자동 업데이트됩니다. GID는 시트 URL의 <code>gid=숫자</code> 부분입니다.</p>
-        <a class="btn-sheet" id="sheet-link" href="#" target="_blank">📊 Google Sheets 열기</a>
+  <!-- Bar Chart -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div class="chart-title">월별 지출 금액</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--신)"></div>신규 발주</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--추)"></div>추가 입고</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--기)"></div>기존 잔금</div>
       </div>
     </div>
-
-    <!-- 추이 -->
-    <div id="p-trend" class="panel">
-      <header class="page-header">
-        <div><h1 class="page-title">추이</h1><p class="page-sub">준비 중</p></div>
-      </header>
-      <div class="info-card" style="text-align:center;padding:60px;color:var(--muted)">
-        📈 추이 기능은 준비 중입니다.
-      </div>
+    <div class="bar-chart" id="barChart">
+      <div style="color:var(--text3);font-size:12px;margin:auto;">데이터를 불러오면 차트가 표시됩니다</div>
     </div>
+  </div>
 
-  </main>
+  <!-- Month navigation -->
+  <div class="section-title">월별 발주 캘린더</div>
+  <div class="month-nav" id="monthNav"></div>
+  <div id="calendarArea"></div>
+
 </div>
+
+<!-- ══════════════════════════════════════════ TAB: OVERVIEW ══ -->
+<div class="tab-panel" id="tab-overview">
+  <div class="section-title">제품별 발주 현황</div>
+  <table class="product-table" id="productTable">
+    <thead>
+      <tr>
+        <th>제품명</th>
+        <th>총 신규발주</th>
+        <th>총 추가입고</th>
+        <th>총 지출</th>
+        <th>발주 건수</th>
+      </tr>
+    </thead>
+    <tbody id="productTableBody">
+      <tr><td colspan="5" style="text-align:center;color:var(--text3);padding:40px;">샘플 데이터 또는 Google Sheets 연동 후 확인 가능합니다</td></tr>
+    </tbody>
+  </table>
+</div>
+
 <script>
-// ============================================================
-// config.js — 발주 관리 대시보드 설정
-// ============================================================
+// ──────────────────────────── DATA LAYER ────────────────────────────
+const BUILTIN = [
+  {date:'6/4',type:'기',product:'PH 실버',qty:null,amount:14000000,note:'기존 생산물량 잔금'},
+  {date:'6/15',type:'기',product:'맥세이프 킥프레임',qty:null,amount:5983969,note:'기존 생산물량 잔금'},
+  {date:'6/15',type:'요',product:'맥세이프 킥프레임',qty:1200,amount:null,note:'입고 요청 · 6/20 입고 예정'},
+  {date:'6/20',type:'추',product:'맥세이프 킥프레임',qty:1200,amount:7250040,note:'추가 입고'},
+  {date:'6/25',type:'요',product:'DW 프로 블랙',qty:90,amount:null,note:'입고 요청 · 6/30 입고 예정'},
+  {date:'6/26',type:'신',product:'DW 프로 실버',qty:500,amount:1545000,note:'신규 생산 발주 · 8/15 생산완료예정'},
+  {date:'6/26',type:'요',product:'DW 플러스 그린',qty:45,amount:null,note:'입고 요청 · 7/1 입고 예정'},
+  {date:'6/27',type:'신',product:'DW 플러스 실버',qty:500,amount:1023750,note:'신규 생산 발주 · 8/16 생산완료예정'},
+  {date:'6/30',type:'기',product:'DW 프로 실버',qty:null,amount:11124000,note:'기존 생산물량 잔금'},
+  {date:'6/30',type:'기',product:'DW 프로 블랙',qty:null,amount:556200,note:'기존 생산물량 잔금'},
+  {date:'6/30',type:'기',product:'DW 플러스 실버',qty:null,amount:1842750,note:'기존 생산물량 잔금'},
+  {date:'6/30',type:'기',product:'DW 플러스 블랙',qty:null,amount:1105650,note:'기존 생산물량 잔금'},
+  {date:'6/30',type:'기',product:'DW 플러스 그린',qty:null,amount:737100,note:'기존 생산물량 잔금'},
+  {date:'6/30',type:'추',product:'DW 프로 블랙',qty:90,amount:2562759,note:'추가 입고'},
+  {date:'7/1',type:'요',product:'DW 플러스 블랙',qty:90,amount:null,note:'입고 요청 · 7/6 입고 예정'},
+  {date:'7/1',type:'추',product:'DW 플러스 그린',qty:45,amount:848110,note:'추가 입고'},
+  {date:'7/5',type:'요',product:'PH 실버',qty:1500,amount:null,note:'입고 요청 · 7/10 입고 예정'},
+  {date:'7/5',type:'요',product:'PH 블랙',qty:1500,amount:null,note:'입고 요청 · 7/10 입고 예정'},
+  {date:'7/6',type:'추',product:'DW 플러스 블랙',qty:90,amount:1696221,note:'추가 입고'},
+  {date:'7/10',type:'추',product:'PH 실버',qty:1500,amount:7328700,note:'추가 입고'},
+  {date:'7/10',type:'추',product:'PH 블랙',qty:1500,amount:7328700,note:'추가 입고'},
+  {date:'7/15',type:'요',product:'맥세이프 킥프레임',qty:1200,amount:null,note:'입고 요청 · 7/20 입고 예정'},
+  {date:'7/20',type:'추',product:'맥세이프 킥프레임',qty:1200,amount:7250040,note:'추가 입고'},
+  {date:'7/20',type:'신',product:'PH 실버',qty:1000,amount:3900000,note:'신규 생산 발주'},
+  {date:'7/24',type:'요',product:'DW 프로 실버',qty:100,amount:null,note:'입고 요청 · 7/29 입고 예정'},
+  {date:'7/25',type:'요',product:'DW 프로 블랙',qty:90,amount:null,note:'입고 요청 · 7/30 입고 예정'},
+  {date:'7/29',type:'추',product:'DW 프로 실버',qty:100,amount:2847510,note:'추가 입고'},
+  {date:'7/30',type:'추',product:'DW 프로 블랙',qty:90,amount:2562759,note:'추가 입고'},
+  {date:'8/10',type:'요',product:'DW 프로 실버',qty:180,amount:null,note:'입고 요청 · 8/15 입고 예정'},
+  {date:'8/11',type:'요',product:'DW 플러스 실버',qty:90,amount:null,note:'입고 요청 · 8/16 입고 예정'},
+  {date:'8/14',type:'요',product:'맥세이프 킥프레임',qty:1200,amount:null,note:'입고 요청 · 8/19 입고 예정'},
+  {date:'8/15',type:'추',product:'DW 프로 실버',qty:180,amount:5125518,note:'추가 입고'},
+  {date:'8/15',type:'요',product:'DW 플러스 블랙',qty:90,amount:null,note:'입고 요청 · 8/20 입고 예정'},
+  {date:'8/16',type:'추',product:'DW 플러스 실버',qty:90,amount:1696221,note:'추가 입고'},
+  {date:'8/19',type:'추',product:'맥세이프 킥프레임',qty:1200,amount:7250040,note:'추가 입고'},
+  {date:'8/20',type:'추',product:'DW 플러스 블랙',qty:90,amount:1696221,note:'추가 입고'},
+  {date:'8/24',type:'요',product:'DW 프로 블랙',qty:90,amount:null,note:'입고 요청 · 8/29 입고 예정'},
+  {date:'8/29',type:'신',product:'PH 블랙',qty:1000,amount:3900000,note:'신규 생산 발주 · 10/18 입고분'},
+  {date:'8/29',type:'추',product:'DW 프로 블랙',qty:90,amount:2562759,note:'추가 입고'},
+  {date:'9/3',type:'요',product:'PH 실버',qty:1000,amount:null,note:'입고 요청 · 9/8 입고 예정'},
+  {date:'9/4',type:'신',product:'DW 프로 실버',qty:500,amount:1545000,note:'신규 생산 발주 · 10/24 생산완료분'},
+  {date:'9/8',type:'추',product:'PH 실버',qty:1000,amount:4885800,note:'추가 입고'},
+  {date:'9/9',type:'요',product:'DW 프로 실버',qty:180,amount:null,note:'입고 요청 · 9/14 입고 예정'},
+  {date:'9/10',type:'요',product:'DW 플러스 실버',qty:90,amount:null,note:'입고 요청 · 9/15 입고 예정'},
+  {date:'9/13',type:'요',product:'맥세이프 킥프레임',qty:1200,amount:null,note:'입고 요청 · 9/18 입고 예정'},
+  {date:'9/14',type:'추',product:'DW 프로 실버',qty:180,amount:5125518,note:'추가 입고'},
+  {date:'9/15',type:'추',product:'DW 플러스 실버',qty:90,amount:1696221,note:'추가 입고'},
+  {date:'9/18',type:'추',product:'맥세이프 킥프레임',qty:1200,amount:7250040,note:'추가 입고'},
+  {date:'9/18',type:'신',product:'PH 실버',qty:1000,amount:3900000,note:'신규 생산 발주'},
+  {date:'9/18',type:'신',product:'맥세이프 킥프레임',qty:5000,amount:3619000,note:'신규 생산 발주'},
+  {date:'9/23',type:'요',product:'DW 프로 블랙',qty:90,amount:null,note:'입고 요청 · 9/28 입고 예정'},
+  {date:'9/26',type:'요',product:'DW 플러스 그린',qty:45,amount:null,note:'입고 요청 · 10/1 입고 예정'},
+  {date:'9/28',type:'추',product:'DW 프로 블랙',qty:90,amount:2562759,note:'추가 입고'},
+  {date:'9/29',type:'요',product:'DW 플러스 블랙',qty:90,amount:null,note:'입고 요청 · 10/4 입고 예정'},
+  {date:'10/1',type:'추',product:'DW 플러스 그린',qty:45,amount:848110,note:'추가 입고'},
+  {date:'10/4',type:'추',product:'DW 플러스 블랙',qty:90,amount:1696221,note:'추가 입고'},
+  {date:'10/9',type:'요',product:'DW 프로 실버',qty:140,amount:null,note:'입고 요청 · 10/14 입고 예정'},
+  {date:'10/10',type:'요',product:'DW 플러스 실버',qty:90,amount:null,note:'입고 요청 · 10/15 입고 예정'},
+  {date:'10/13',type:'요',product:'맥세이프 킥프레임',qty:1200,amount:null,note:'입고 요청 · 10/18 입고 예정'},
+  {date:'10/13',type:'요',product:'PH 블랙',qty:1000,amount:null,note:'입고 요청 · 10/18 입고 예정'},
+  {date:'10/14',type:'추',product:'DW 프로 실버',qty:140,amount:3986514,note:'추가 입고'},
+  {date:'10/15',type:'추',product:'DW 플러스 실버',qty:90,amount:1696221,note:'추가 입고'},
+  {date:'10/18',type:'추',product:'맥세이프 킥프레임',qty:1200,amount:7250040,note:'추가 입고'},
+  {date:'10/18',type:'추',product:'PH 블랙',qty:1000,amount:4885800,note:'추가 입고'},
+  {date:'10/19',type:'요',product:'DW 프로 실버',qty:180,amount:null,note:'입고 요청 · 10/24 입고 예정'},
+  {date:'10/23',type:'요',product:'DW 프로 블랙',qty:90,amount:null,note:'입고 요청 · 10/28 입고 예정'},
+  {date:'10/24',type:'추',product:'DW 프로 실버',qty:180,amount:5125518,note:'추가 입고'},
+  {date:'10/28',type:'추',product:'DW 프로 블랙',qty:90,amount:2562759,note:'추가 입고'},
+  {date:'11/2',type:'요',product:'PH 실버',qty:1000,amount:null,note:'입고 요청 · 11/7 입고 예정'},
+  {date:'11/3',type:'신',product:'PH 블랙',qty:1000,amount:3900000,note:'신규 생산 발주 · 12/23 입고분'},
+  {date:'11/7',type:'추',product:'PH 실버',qty:1000,amount:4885800,note:'추가 입고'},
+  {date:'11/7',type:'신',product:'DW 프로 블랙',qty:500,amount:1545000,note:'신규 생산 발주 · 12/27 생산완료'},
+  {date:'11/9',type:'요',product:'DW 플러스 실버',qty:90,amount:null,note:'입고 요청 · 11/14 입고 예정'},
+  {date:'11/12',type:'요',product:'맥세이프 킥프레임',qty:1200,amount:null,note:'입고 요청 · 11/17 입고 예정'},
+  {date:'11/13',type:'신',product:'DW 프로 실버',qty:500,amount:1545000,note:'신규 생산 발주 · 1/2 생산완료분'},
+  {date:'11/13',type:'요',product:'DW 플러스 블랙',qty:90,amount:null,note:'입고 요청 · 11/18 입고 예정'},
+  {date:'11/14',type:'추',product:'DW 플러스 실버',qty:90,amount:1696221,note:'추가 입고'},
+  {date:'11/17',type:'추',product:'맥세이프 킥프레임',qty:1200,amount:7250040,note:'추가 입고'},
+  {date:'11/17',type:'신',product:'PH 실버',qty:1000,amount:3900000,note:'신규 생산 발주'},
+  {date:'11/18',type:'요',product:'DW 프로 실버',qty:180,amount:null,note:'입고 요청 · 11/23 입고 예정'},
+  {date:'11/18',type:'추',product:'DW 플러스 블랙',qty:90,amount:1696221,note:'추가 입고'},
+  {date:'11/22',type:'요',product:'DW 프로 블랙',qty:90,amount:null,note:'입고 요청 · 11/27 입고 예정'},
+  {date:'11/23',type:'추',product:'DW 프로 실버',qty:180,amount:5125518,note:'추가 입고'},
+  {date:'11/27',type:'추',product:'DW 프로 블랙',qty:90,amount:2562759,note:'추가 입고'},
+  {date:'12/9',type:'요',product:'DW 플러스 실버',qty:90,amount:null,note:'입고 요청 · 12/14 입고 예정'},
+  {date:'12/12',type:'요',product:'맥세이프 킥프레임',qty:1200,amount:null,note:'입고 요청 · 12/17 입고 예정'},
+  {date:'12/13',type:'신',product:'DW 플러스 블랙',qty:500,amount:1023750,note:'신규 생산 발주 · 2/1 생산완료'},
+  {date:'12/14',type:'추',product:'DW 플러스 실버',qty:90,amount:1696221,note:'추가 입고'},
+  {date:'12/17',type:'추',product:'맥세이프 킥프레임',qty:1200,amount:7250040,note:'추가 입고'},
+  {date:'12/18',type:'요',product:'PH 블랙',qty:1000,amount:null,note:'입고 요청 · 12/23 입고 예정'},
+  {date:'12/18',type:'요',product:'DW 프로 실버',qty:140,amount:null,note:'입고 요청 · 12/23 입고 예정'},
+  {date:'12/22',type:'요',product:'DW 프로 블랙',qty:90,amount:null,note:'입고 요청 · 12/27 입고 예정'},
+  {date:'12/23',type:'추',product:'PH 블랙',qty:1000,amount:4885800,note:'추가 입고'},
+  {date:'12/23',type:'추',product:'DW 프로 실버',qty:140,amount:3986514,note:'추가 입고'},
+  {date:'12/24',type:'신',product:'DW 플러스 실버',qty:500,amount:1023750,note:'신규 생산 발주 · 2/12 생산완료'},
+  {date:'12/27',type:'추',product:'DW 프로 블랙',qty:90,amount:2562759,note:'추가 입고'},
+  {date:'12/27',type:'요',product:'DW 플러스 그린',qty:45,amount:null,note:'입고 요청 · 1/1 입고 예정'},
+  {date:'12/28',type:'요',product:'DW 프로 실버',qty:180,amount:null,note:'입고 요청 · 1/2 입고 예정'},
+  {date:'12/28',type:'요',product:'DW 플러스 블랙',qty:90,amount:null,note:'입고 요청 · 1/2 입고 예정'},
+];
 
-const CONFIG = {
-  // ── Google Sheets 연동 ──────────────────────────────────
-  SHEET_ID:    "1p-ko7c4--yUwYOYE2fL8X6Z1U3O1lWoJ36AZuBanGmQ",
-  GID_CONFIG:  "0",           // 설정 시트 gid
-  GID_PROD:    "408610443",   // 제품 시트 gid
-  GID_SALES:   "202369795",   // 매출 시트 gid
-  GID_COUPANG: "1570889941",  // 쿠팡납품 시트 gid
-  GID_STOCK:   "1079489460",  // 재고 시트 gid
-  GID_MEMO:    "1699680751",  // 발주요청사항 시트 gid
-  GID_TIMELINE: "667758003",   // 타임라인 시트 gid
+let currentData = [];
+let currentMonth = 6;
 
-  // ── 계산 기준 ───────────────────────────────────────────
-  NAVER_RATIO:   0.70,   // 자사몰+네이버가 전체 매출의 70%
-  ORDER_RATIO:   0.18,   // 발주비는 매출의 18%
-  TARGET_MONTHLY: 20000, // 월 목표 매출 (만원)
+const MONTHS = [
+  {m:6,label:'6월',year:2026,days:30},
+  {m:7,label:'7월',year:2026,days:31},
+  {m:8,label:'8월',year:2026,days:31},
+  {m:9,label:'9월',year:2026,days:30},
+  {m:10,label:'10월',year:2026,days:31},
+  {m:11,label:'11월',year:2026,days:30},
+  {m:12,label:'12월',year:2026,days:31},
+];
 
-  // ── 시나리오 구간 ────────────────────────────────────────
-  SCENARIOS: [
-    { multiplier: 1.00, note: '목표',  isTarget: true },
-    { multiplier: 0.90, note: '-10%' },
-    { multiplier: 0.80, note: '-20%' },
-    { multiplier: 0.70, note: '-30%' },
-    { multiplier: 0.60, note: '-40%' },
-  ],
+// ──────────────────────────── FORMAT ────────────────────────────
+function fmtAmount(v) {
+  if (!v) return null;
+  if (v >= 100000000) {
+    return (v / 100000000).toFixed(1) + '억';
+  } else if (v >= 10000000) {
+    return (v / 10000000).toFixed(1) + '천만';
+  } else if (v >= 1000000) {
+    return (v / 1000000).toFixed(1) + '백만';
+  } else if (v >= 10000) {
+    return Math.round(v / 10000) + '만';
+  }
+  return v.toLocaleString() + '원';
+}
 
-  // ── 제품 고정 순서 ────────────────────────────────────────
-  STOCK_PRODUCTS: [
-    "킥프레임",
-    "PH 실버", "PH 블랙",
-    "DW프로 실버", "DW프로 블랙",
-    "DW플러스 실버", "DW플러스 블랙", "DW플러스 그린"
-  ],
-};
+function fmtAmountFull(v) {
+  if (!v) return '—';
+  return '₩' + v.toLocaleString();
+}
 
-// ============================================================
-// app.js — 발주 관리 대시보드 메인 로직
-// ============================================================
+// ──────────────────────────── TAB ────────────────────────────
+function switchTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+  if (id === 'overview') renderOverview();
+}
 
+// ──────────────────────────── PARSE ────────────────────────────
+function parseRow(row) {
+  // row: {date, type, product, qty, amount, note}
+  if (!row.date || !row.type || !row.product) return null;
+  const parts = String(row.date).split('/');
+  if (parts.length < 2) return null;
+  const m = parseInt(parts[0]);
+  const d = parseInt(parts[1]);
+  if (isNaN(m) || isNaN(d)) return null;
+  const t = String(row.type).trim();
+  if (!['신','추','요','기'].includes(t)) return null;
+  return {
+    month: m, day: d,
+    type: t,
+    product: String(row.product).trim(),
+    qty: row.qty ? parseInt(row.qty) : null,
+    amount: row.amount ? parseInt(String(row.amount).replace(/[₩,]/g,'')) : null,
+    note: row.note || ''
+  };
+}
 
-// ── 테마 변경 ─────────────────────────────────────────────
-function setTheme(mode){
-  if(mode === 'light'){
-    document.body.classList.add('light-mode');
-    localStorage.setItem('dashboard-theme','light');
-  }else{
-    document.body.classList.remove('light-mode');
-    localStorage.setItem('dashboard-theme','dark');
+// ──────────────────────────── GOOGLE SHEETS ────────────────────────────
+async function connectSheet() {
+  const id = document.getElementById('sheetIdInput').value.trim();
+  const sheetName = document.getElementById('sheetNameInput').value.trim() || 'Sheet1';
+  if (!id) { alert('Sheets ID를 입력해주세요.'); return; }
+
+  setStatus('연결 중…', '#f0b429');
+  try {
+    // Use CSV export URL (public sheet)
+    const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('응답 오류: ' + resp.status);
+    const text = await resp.text();
+    const rows = parseCSV(text);
+    if (rows.length < 2) throw new Error('데이터가 없습니다.');
+    const header = rows[0].map(h => String(h).trim().toLowerCase());
+    const data = rows.slice(1).map(row => {
+      const obj = {};
+      header.forEach((h, i) => { obj[h] = row[i] || ''; });
+      // Map Korean headers
+      return {
+        date: obj['날짜'] || obj['date'] || '',
+        type: obj['유형'] || obj['type'] || '',
+        product: obj['제품명'] || obj['product'] || '',
+        qty: obj['수량'] || obj['qty'] || '',
+        amount: obj['금액'] || obj['amount'] || '',
+        note: obj['비고'] || obj['note'] || ''
+      };
+    });
+    const parsed = data.map(parseRow).filter(Boolean);
+    if (!parsed.length) throw new Error('파싱 가능한 데이터가 없습니다.');
+    currentData = parsed;
+    setStatus('연결됨 · ' + parsed.length + '건', '#2ecc71');
+    renderAll();
+  } catch(e) {
+    setStatus('연결 실패: ' + e.message, '#f56565');
+    alert('Google Sheets 연동 실패: ' + e.message + '\n\n※ 스프레드시트가 "링크가 있는 모든 사용자에게 공개"로 설정되어 있는지 확인해주세요.');
   }
 }
 
-(function(){
-  const savedTheme = localStorage.getItem('dashboard-theme');
-  if(savedTheme === 'light'){
-    document.body.classList.add('light-mode');
-  }
-})();
-
-// ── 날짜 헤더 ─────────────────────────────────────────────
-const _d = new Date();
-document.getElementById("date-lbl").textContent =
-  `${_d.getFullYear()}년 ${_d.getMonth()+1}월 ${_d.getDate()}일 기준`;
-document.getElementById("sheet-link").href =
-  `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}`;
-
-// ── 숫자 포맷 ─────────────────────────────────────────────
-function f(v) {
-  const n = Math.round(v);
-  if (n >= 10000) return `${+(n / 10000).toFixed(1)}억`;
-  if (n >= 1000) {
-    const chun = Math.floor(n / 1000);
-    const baek = Math.floor((n % 1000) / 100);
-    if (baek === 0) return `${chun}천만`;
-    return `${chun}천${baek}백만`;
-  }
-  return `${n.toLocaleString()}만`;
-}
-function fSign(v) {
-  return (v >= 0 ? '+' : '') + f(v);
-}
-
-// ── 탭 전환 ───────────────────────────────────────────────
-function tab(name, el) {
-  document.querySelectorAll(".nav-item").forEach(t => t.classList.remove("active"));
-  document.querySelectorAll(".panel").forEach(p => p.classList.remove("on"));
-  el.classList.add("active");
-  document.getElementById(`p-${name}`).classList.add("on");
-}
-
-// ── CSV 유틸 (Apps Script 프록시 — CORS 완전 해결) ──────
-const PROXY_URL = 'https://script.google.com/macros/s/AKfycbxumY19203ydMlB4KKKO_Opsr8ZKkkd8s0UYj3XkqWxH0X38dKRGahh4fSgfTocOmMtWQ/exec';
-function fetchCSV(gid) {
-  const url = `${PROXY_URL}?gid=${gid}&_=${Date.now()}`;
-  const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('timeout')), 20000)
-  );
-  return Promise.race([
-    fetch(url)
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); }),
-    timeout
-  ]);
-}
-
-function parseCSV(raw) {
+function parseCSV(text) {
   const rows = [];
-  let row = [], field = '', inQ = false, i = 0;
-  const s = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-  while (i < s.length) {
-    const c = s[i];
-    if (inQ) {
-      if (c === '"') {
-        if (s[i+1] === '"') { field += '"'; i += 2; continue; }
-        inQ = false; i++; continue;
+  let i = 0;
+  while (i < text.length) {
+    const row = [];
+    while (i < text.length && text[i] !== '\n') {
+      if (text[i] === '"') {
+        let cell = '';
+        i++;
+        while (i < text.length) {
+          if (text[i] === '"' && text[i+1] === '"') { cell += '"'; i += 2; }
+          else if (text[i] === '"') { i++; break; }
+          else { cell += text[i++]; }
+        }
+        row.push(cell);
+        if (text[i] === ',') i++;
+      } else {
+        let cell = '';
+        while (i < text.length && text[i] !== ',' && text[i] !== '\n') { cell += text[i++]; }
+        row.push(cell.trim());
+        if (text[i] === ',') i++;
       }
-      field += c; i++; continue;
     }
-    if (c === '"') { inQ = true; i++; continue; }
-    if (c === ',') { row.push(field.trim()); field = ''; i++; continue; }
-    if (c === '\n') {
-      row.push(field.trim()); rows.push(row);
-      row = []; field = ''; i++; continue;
-    }
-    field += c; i++;
+    if (text[i] === '\n') i++;
+    if (row.some(c => c)) rows.push(row);
   }
-  row.push(field.trim());
-  if (row.some(v => v !== '')) rows.push(row);
   return rows;
 }
 
-function n(s) { return parseFloat(String(s).replace(/[^0-9.-]/g, "")) || 0; }
-
-function calcDday(dateStr) {
-  if (!dateStr) return null;
-  const target = new Date(dateStr);
-  if (isNaN(target.getTime())) return null;
-  const today = new Date(); today.setHours(0,0,0,0); target.setHours(0,0,0,0);
-  return Math.ceil((target - today) / (1000*60*60*24));
+function setStatus(msg, color) {
+  document.getElementById('gsDot').style.background = color;
+  document.getElementById('gsStatusText').textContent = msg;
 }
 
-function fmtDate(dateStr) {
-  if (!dateStr) return null;
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return null;
-  return `${d.getMonth()+1}월 ${d.getDate()}일`;
+function loadBuiltIn() {
+  currentData = BUILTIN.map(parseRow).filter(Boolean);
+  setStatus('샘플 데이터 · ' + currentData.length + '건', '#4f8ef7');
+  renderAll();
 }
 
-function ddayInfo(d) {
-  if (d === null) return { cls: 'gray', label: '미입력', accent: '#2a2e38' };
-  if (d < 0)      return { cls: 'gray', label: '품절',   accent: '#2a2e38' };
-  if (d < 10)     return { cls: 'red',  label: '초임박', accent: 'var(--red)' };
-  if (d < 20)     return { cls: 'amber',label: '임박',   accent: 'var(--amber)' };
-  if (d < 30)     return { cls: 'blue', label: '주의',   accent: 'var(--blue)' };
-  if (d < 40)     return { cls: 'green',label: '관심',   accent: 'var(--green)' };
-  return                 { cls: 'muted',label: '안전',   accent: '#4b5563' };
+// ──────────────────────────── RENDER ALL ────────────────────────────
+function renderAll() {
+  renderKPIs();
+  renderBarChart();
+  renderMonthNav();
+  renderCalendar(currentMonth);
 }
 
-function gradeInfo(pct) {
-  if (pct >= 130) return { cls: 'pink',   label: '우수 성과', color: 'var(--pink)' };
-  if (pct >= 110) return { cls: 'purple', label: '초과 성과', color: 'var(--purple)' };
-  if (pct >= 100) return { cls: 'green',  label: '목표 달성', color: 'var(--green)' };
-  if (pct >= 90)  return { cls: 'blue',   label: '방어 성공', color: 'var(--blue)' };
-  if (pct >= 80)  return { cls: 'amber',  label: '경고',      color: 'var(--amber)' };
-  return                 { cls: 'red',    label: '위험',      color: 'var(--red)' };
+// ──────────────────────────── KPIs ────────────────────────────
+function renderKPIs() {
+  const total = currentData.reduce((s, r) => s + (r.amount || 0), 0);
+  const monthly = total / 7;
+
+  const 신total = currentData.filter(r=>r.type==='신').reduce((s,r)=>s+(r.amount||0),0);
+  const 추total = currentData.filter(r=>r.type==='추').reduce((s,r)=>s+(r.amount||0),0);
+  const 기total = currentData.filter(r=>r.type==='기').reduce((s,r)=>s+(r.amount||0),0);
+
+  document.getElementById('kpiTotal').textContent = fmtAmount(total) || '—';
+  document.getElementById('kpiAvg').textContent = fmtAmount(Math.round(monthly)) || '—';
+  document.getElementById('kpi신').textContent = fmtAmount(신total) || '—';
+  document.getElementById('kpi추').textContent = fmtAmount(추total) || '—';
+  document.getElementById('kpi기').textContent = fmtAmount(기total) || '—';
+  document.getElementById('kpi신cnt').textContent = currentData.filter(r=>r.type==='신').length + '건';
+  document.getElementById('kpi추cnt').textContent = currentData.filter(r=>r.type==='추').length + '건';
+  document.getElementById('kpi기cnt').textContent = currentData.filter(r=>r.type==='기').length + '건';
 }
 
-// ── 동기화 상태 ───────────────────────────────────────────
-function setSyncStatus(type, text) {
-  const dot  = document.getElementById('syncDot');
-  const span = document.getElementById('syncText');
-  dot.className  = 'sync-dot sync-' + type;
-  span.textContent = text;
+// ──────────────────────────── BAR CHART ────────────────────────────
+function renderBarChart() {
+  const monthlyTotals = MONTHS.map(mo => ({
+    label: mo.label,
+    total: currentData.filter(r => r.month === mo.m).reduce((s,r) => s+(r.amount||0), 0)
+  }));
+  const maxVal = Math.max(...monthlyTotals.map(m => m.total), 1);
+
+  const html = monthlyTotals.map(mo => `
+    <div class="bar-group">
+      <div class="bar-wrap">
+        <div class="bar" style="height:${Math.max((mo.total/maxVal)*100,2)}%">
+          ${mo.total ? `<div class="bar-amount">${fmtAmount(mo.total)}</div>` : ''}
+        </div>
+      </div>
+      <div class="bar-label">${mo.label}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('barChart').innerHTML = html;
 }
 
-function nowTime() {
-  return new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+// ──────────────────────────── MONTH NAV ────────────────────────────
+function renderMonthNav() {
+  const nav = document.getElementById('monthNav');
+  nav.innerHTML = MONTHS.map(mo => `
+    <button class="month-btn ${mo.m === currentMonth ? 'active' : ''}"
+      onclick="selectMonth(${mo.m})">${mo.label}</button>
+  `).join('');
 }
 
-// ── 메인 로드 ─────────────────────────────────────────────
-async function load() {
-  document.getElementById("content").innerHTML =
-    `<div class="loading"><div class="loading-spinner"></div><span>데이터를 불러오는 중...</span></div>`;
-  document.getElementById("err").innerHTML = "";
-  setSyncStatus('loading', '동기화 중...');
+function selectMonth(m) {
+  currentMonth = m;
+  renderMonthNav();
+  renderCalendar(m);
+}
 
-  try {
-    // 모든 시트를 안전하게 fetch — 하나 실패해도 전체 중단 없음
-    const safe = gid => fetchCSV(gid).catch(e => { console.warn('fetch gid='+gid+' 실패:', e.message); return ""; });
+// ──────────────────────────── CALENDAR ────────────────────────────
+function renderCalendar(m) {
+  const moInfo = MONTHS.find(x => x.m === m);
+  if (!moInfo) return;
 
-    const [cfgR, prodR, salesR, coupangR, stockR, memoR, timelineR] = await Promise.all([
-      safe(CONFIG.GID_CONFIG),
-      safe(CONFIG.GID_PROD),
-      safe(CONFIG.GID_SALES),
-      safe(CONFIG.GID_COUPANG),
-      CONFIG.GID_STOCK    ? safe(CONFIG.GID_STOCK)    : Promise.resolve(""),
-      CONFIG.GID_MEMO     ? safe(CONFIG.GID_MEMO)     : Promise.resolve(""),
-      CONFIG.GID_TIMELINE ? safe(CONFIG.GID_TIMELINE) : Promise.resolve(""),
-    ]);
-    console.log('시트 로드 완료 — cfg:', cfgR.slice(0,50), '| prod:', prodR.slice(0,30));
+  const monthData = currentData.filter(r => r.month === m);
+  const monthTotal = monthData.reduce((s,r) => s+(r.amount||0), 0);
 
-    // 설정 시트
-    const cfg = {};
-    parseCSV(cfgR).slice(1).forEach(r => { if (r[0]) cfg[r[0]] = r[1]; });
+  // Group by day
+  const byDay = {};
+  monthData.forEach(r => {
+    if (!byDay[r.day]) byDay[r.day] = [];
+    byDay[r.day].push(r);
+  });
 
-    // 제품 시트
-    const products = parseCSV(prodR).slice(1).filter(r => r[0])
-      .map(r => ({ name: r[0], actual: n(r[1]), target: n(r[2]), soldout: r[1].trim() === '품절' }));
+  // First day of month (2026)
+  const firstDate = new Date(2026, m-1, 1);
+  const firstDow = firstDate.getDay(); // 0=Sun
 
-    // 매출 시트
-    const salesRows  = parseCSV(salesR).slice(1).filter(r => r[0]);
-    const totalSales = n(salesRows.at(-1)?.[1] ?? 0);
+  const days = moInfo.days;
+  const DAYS = ['일','월','화','수','목','금','토'];
 
-    // 쿠팡납품 시트
-    const coupangRows = parseCSV(coupangR).slice(1).filter(r => r[0]);
-    const coupangData = coupangRows.map(r => ({
-      week:      r[0],
-      period:    r[1],
-      ordered:   n(r[2]),
-      delivered: n(r[3]),
-      rate:      n(r[2]) > 0 ? (n(r[3]) / n(r[2]) * 100) : 0,
-    }));
+  // Build weeks for week-cost column
+  // week boundary: each row of 7 cells
+  const totalCells = firstDow + days;
+  const numWeeks = Math.ceil(totalCells / 7);
 
-    // 재고 시트
-    const stockMap = {};
-    if (stockR) {
-      parseCSV(stockR).slice(1).filter(r => r[0]).forEach(r => {
-        stockMap[r[0].trim()] = {
-          stockoutDate: r[1] || "",
-          restockQty:   r[2] ? n(r[2]) : null,
-          restockDate:  r[3] || "",
-        };
-      });
-    }
-    const stockData = CONFIG.STOCK_PRODUCTS.map(name => {
-      const s = stockMap[name] || {};
-      return { name, dday: calcDday(s.stockoutDate), restockQty: s.restockQty ?? null, restockDate: s.restockDate || "" };
-    });
+  let calHtml = `
+    <div class="cal-header-row">
+      <div class="cal-month-title">2026년 ${moInfo.label}</div>
+      <div class="cal-month-total">월 합산 지출 <strong>${monthTotal ? fmtAmountFull(monthTotal) : '—'}</strong></div>
+    </div>
+    <div class="calendar-grid">
+  `;
 
-    // 발주요청사항 시트
-    const memoMap = { team: '', manager: '', staff: '' };
-    const roleKey = { '팀장': 'team', '과장': 'manager', '주임': 'staff' };
-    if (memoR) {
-      parseCSV(memoR).slice(1).filter(r => r[0]).forEach(r => {
-        const k = roleKey[r[0].trim()];
-        if (k) memoMap[k] = r[1] || '';
-      });
-    }
+  // Header row (7 days + week cost)
+  DAYS.forEach(d => {
+    calHtml += `<div class="cal-head">${d}</div>`;
+  });
+  calHtml += `<div class="cal-head week-cost-head">주간 합계</div>`;
 
-    // 타임라인 시트 파싱
-    // 시트 형식: 날짜(A) | 유형(B) | 제품명(C) | 수량(D) | 금액(E) | 비고(F)
-    // 유형: 신/추/요/기
-    let timelineData = null;
-    if (timelineR && timelineR.trim()) {
-      const tRows = parseCSV(timelineR).slice(1).filter(r => r[0] && r[1]);
-      if (tRows.length > 0) {
-        timelineData = {};
-        tRows.forEach(r => {
-          const dateStr = r[0].trim(); // 예: "6/4", "6/15"
-          const type    = r[1].trim(); // 신/추/요/기
-          const prod    = r[2] ? r[2].trim() : '';
-          const qty     = r[3] ? (parseInt(r[3].replace(/[^0-9]/g,'')) || null) : null;
-          const cost    = r[4] ? (parseInt(r[4].replace(/[^0-9]/g,'')) || null) : null;
-          const note    = r[5] ? r[5].trim() : '';
-          const parts   = dateStr.split('/');
-          if (parts.length !== 2) return;
-          const month = parseInt(parts[0]);
-          const day   = parseInt(parts[1]);
-          if (!month || !day) return;
-          if (!timelineData[month]) timelineData[month] = [];
-          timelineData[month].push({ date: dateStr, day, type, product: prod, qty, cost, note });
-        });
+  // Cells
+  for (let week = 0; week < numWeeks; week++) {
+    let weekCost = 0;
+
+    for (let dow = 0; dow < 7; dow++) {
+      const cellIdx = week * 7 + dow;
+      const dayNum = cellIdx - firstDow + 1;
+
+      if (dayNum < 1 || dayNum > days) {
+        calHtml += `<div class="cal-cell empty"></div>`;
+        continue;
       }
+
+      const events = byDay[dayNum] || [];
+      events.forEach(e => { weekCost += (e.amount || 0); });
+
+      let evHtml = events.map(e => `
+        <div class="event-badge badge-${e.type}" title="${e.note}">
+          <div class="badge-circle badge-circle-${e.type}">${e.type}</div>
+          <div class="badge-info">
+            <div class="badge-product">${e.product}</div>
+            ${e.qty ? `<div class="badge-qty">${e.qty.toLocaleString()}개</div>` : ''}
+            ${e.amount ? `<div class="badge-cost">${fmtAmount(e.amount)}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+
+      const dayClass = dow === 0 ? 'sun' : dow === 6 ? 'sat' : '';
+      calHtml += `
+        <div class="cal-cell ${dayClass}">
+          <div class="cal-date">${dayNum}</div>
+          ${evHtml}
+        </div>
+      `;
     }
 
-    const elapsedDays  = n(cfg["경과일"] ?? 24);
-    const totalDays    = n(cfg["총일수"] ?? 30);
-    const targetMain   = n(cfg["자사몰목표"] ?? 0) + n(cfg["네이버목표"] ?? 0);
-    const currentMain  = n(cfg["현재일매출_자사몰"] ?? 0) + n(cfg["현재일매출_네이버"] ?? 0);
-    const allDailyAvg  = elapsedDays > 0 ? Math.round(totalSales / elapsedDays) : 0;
-    const deferralDeadline = cfg["결제유예가능일"] || "";
-    const deferralLimit    = n(cfg["유예월발주한도"] ?? 0);
-
-    setSyncStatus(Object.keys(cfg).length > 0 ? 'ok' : 'loading', `${nowTime()} 업데이트`);
-    renderSimulation(cfg, timelineData);
-    render({ targetMain, currentMain, allDailyAvg, spentBudget: n(cfg["누적발주지출"] ?? 0),
-      coupangData, elapsedDays, totalDays, totalSales, products, stockData,
-      deferralDeadline, deferralLimit, memoData: memoMap });
-
-  } catch(e) {
-    console.error('load() 전체 오류:', e);
-    setSyncStatus('error', '연결 실패 — 기본값으로 표시');
-    document.getElementById("err").innerHTML =
-      `<div class="err-box">⚠️ 오류: <strong>${e.message}</strong></div>`;
-    document.getElementById("content").innerHTML = "";
-    renderSimulation({}, null);
+    // Week cost column
+    calHtml += `
+      <div class="week-cost-cell">
+        <div class="week-cost-label">${week+1}주차</div>
+        <div class="week-cost-value">${weekCost ? fmtAmount(weekCost) : '—'}</div>
+      </div>
+    `;
   }
+
+  calHtml += `</div>`;
+  document.getElementById('calendarArea').innerHTML = calHtml;
 }
 
-// ── 렌더 ──────────────────────────────────────────────────
-function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays, totalDays,
-                  totalSales, products, coupangData, stockData, deferralDeadline, deferralLimit, memoData = {} }) {
+// ──────────────────────────── OVERVIEW TAB ────────────────────────────
+function renderOverview() {
+  if (!currentData.length) return;
 
-  const pct        = targetMain > 0 ? (currentMain / targetMain * 100) : 0;
-  const remain     = totalDays - elapsedDays;
-  const projected  = Math.round((currentMain * elapsedDays + currentMain * remain) / CONFIG.NAVER_RATIO);
-  const adjBudget  = Math.round(projected * CONFIG.ORDER_RATIO);
-  const spendRatio = projected > 0 ? (spentBudget / projected * 100) : 0;
-  const extraBudget = adjBudget - spentBudget;
-  const G = gradeInfo(pct);
-
-  const needDaily = remain > 0 && currentMain < targetMain
-    ? Math.round((targetMain * totalDays - currentMain * elapsedDays) / remain)
-    : targetMain;
-
-  // ── 시나리오 HTML ────────────────────────────────────────
-  function buildScenarioRow(dailyMain, note, isCurrent, isTarget) {
-    const mainMonthly  = currentMain * elapsedDays + dailyMain * remain;
-    const scProj       = Math.round(mainMonthly / CONFIG.NAVER_RATIO);
-    const scAdj        = Math.round(scProj * CONFIG.ORDER_RATIO);
-    const scExtra      = scAdj - spentBudget;
-    const extraCls     = scExtra >= 0 ? 'pos' : 'neg';
-    const rowCls       = isCurrent ? 'row-current' : isTarget ? 'row-target' : '';
-    const noteTag      = `<span class="sc-note">(${note})</span>`;
-    const currentTag   = isCurrent ? '<span class="sc-current-tag">◀ 현재</span>' : '';
-    return `
-      <tr class="${rowCls}">
-        <td>${dailyMain.toLocaleString()}만원 ${noteTag}${currentTag}</td>
-        <td class="num">${f(scProj)}</td>
-        <td class="num">${f(scAdj)}</td>
-        <td class="num ${extraCls}">${scExtra >= 0 ? '+' : ''}${f(scExtra)}</td>
-      </tr>`;
-  }
-
-  const currentIsTarget = Math.abs(currentMain - targetMain) < targetMain * 0.02;
-  const scenarioVals = CONFIG.SCENARIOS.map(s => Math.round(targetMain * s.multiplier));
-  let insertBefore = scenarioVals.length;
-  for (let i = 0; i < scenarioVals.length; i++) {
-    if (currentMain > scenarioVals[i] * 1.02) { insertBefore = i; break; }
-    if (Math.abs(currentMain - scenarioVals[i]) <= scenarioVals[i] * 0.02) { insertBefore = -1; break; }
-  }
-
-  const scenarioRows = (() => {
-    const rows = [];
-    if (!currentIsTarget && insertBefore === 0) rows.push(buildScenarioRow(currentMain, '현재', true, false));
-    CONFIG.SCENARIOS.forEach((s, i) => {
-      rows.push(buildScenarioRow(Math.round(targetMain * s.multiplier), s.note, false, s.isTarget));
-      if (!currentIsTarget && insertBefore === i + 1) rows.push(buildScenarioRow(currentMain, '현재', true, false));
-    });
-    if (!currentIsTarget && insertBefore === CONFIG.SCENARIOS.length) rows.push(buildScenarioRow(currentMain, '현재', true, false));
-    return rows.join('');
-  })();
-
-  // ── 조건부 발주 ─────────────────────────────────────────
-  const ddayDefer   = calcDday(deferralDeadline);
-  const ddayLabel   = ddayDefer === null ? '—' : ddayDefer < 0 ? `D+${Math.abs(ddayDefer)}` : `D-${ddayDefer}`;
-  const noDeadline  = !deferralDeadline;
-  const noLimit     = !(deferralLimit > 0);
-  const deferralRemain = deferralLimit - Math.max(0, -extraBudget);
-
-  // ── 제품 바 ─────────────────────────────────────────────
-  const prodHTML = products.map(p => {
-    if (p.soldout) return `
-      <div class="prod-row prod-soldout">
-        <div class="prod-name muted">${p.name}</div>
-        <div class="prod-bar-wrap"><div class="prod-bar-bg"><div class="prod-bar-fill" style="width:0%"></div></div></div>
-        <div class="prod-qty muted">—<em>/—</em></div>
-        <span class="prod-badge badge-soldout">품절</span>
-      </div>`;
-    const r   = p.actual / p.target;
-    const w   = Math.min(Math.round(r * 100), 100);
-    const col = r >= 1 ? 'var(--blue)' : 'var(--amber)';
-    const badge = r < 0.55
-      ? `<span class="prod-badge badge-danger">급감</span>`
-      : r >= 1
-        ? `<span class="prod-badge badge-ok">정상</span>`
-        : `<span class="prod-badge badge-warn">부진</span>`;
-    return `
-      <div class="prod-row">
-        <div class="prod-name">${p.name}</div>
-        <div class="prod-bar-wrap">
-          <div class="prod-bar-bg"><div class="prod-bar-fill" style="width:${w}%;background:${col};"></div></div>
-        </div>
-        <div class="prod-qty">${p.actual}<em>/${p.target}</em></div>
-        ${badge}
-      </div>`;
-  }).join('');
-
-  // ── 재고 카드 ────────────────────────────────────────────
-  const stockHTML = stockData.map(s => {
-    const info      = ddayInfo(s.dday);
-    const isExpired = s.dday !== null && s.dday < 0;
-    const ddLabel   = s.dday === null ? '—'
-      : s.dday < 0 ? `D+${Math.abs(s.dday)}`
-      : `D-${s.dday}`;
-    const restockTxt = (s.restockQty || s.restockDate)
-      ? `<strong>${s.restockQty ? s.restockQty.toLocaleString()+'개' : '미정'}</strong> 재입고${s.restockDate ? ` · ${fmtDate(s.restockDate)}` : ''}`
-      : `<span class="muted">재입고 정보 없음</span>`;
-    return `
-      <div class="stock-card ${isExpired ? 'stock-expired' : ''}" style="--stock-accent:${info.accent}">
-        <div class="stock-name ${isExpired ? 'muted' : ''}">${s.name}</div>
-        <div class="stock-dday ${info.cls}">${ddLabel}</div>
-        <div class="stock-tag-wrap"><span class="stock-tag ${info.cls}">${isExpired ? '품절' : info.label}</span></div>
-        <div class="stock-divider"></div>
-        <div class="stock-restock ${isExpired ? 'muted' : ''}">${restockTxt}</div>
-      </div>`;
-  }).join('');
-
-  // ── 쿠팡 차트 + 테이블 ───────────────────────────────────
-  const totalOrdered   = coupangData.reduce((s, d) => s + d.ordered, 0);
-  const totalDelivered = coupangData.reduce((s, d) => s + d.delivered, 0);
-  const totalRate      = totalOrdered > 0 ? totalDelivered / totalOrdered * 100 : 0;
-
-  const coupangBars = coupangData.map((d, i) => {
-    const h   = Math.max(4, Math.round(d.rate * 1.1));
-    const col = d.rate >= 70 ? 'var(--green)' : d.rate >= 50 ? 'var(--blue)' : d.rate >= 30 ? 'var(--amber)' : 'var(--red)';
-    const isLast = i === coupangData.length - 1;
-    return `<div class="coup-bar-col">
-      <div class="coup-bar-pct">${d.rate.toFixed(0)}%</div>
-      <div class="coup-bar-fill" style="height:${h}px;background:${col};${isLast ? 'outline:1.5px solid var(--accent);outline-offset:-1.5px;' : ''}"></div>
-      <div class="coup-bar-lbl">${d.week}</div>
-    </div>`;
-  }).join('');
-
-  const coupangTableRows = coupangData.map((d, i) => {
-    const col     = d.rate >= 70 ? 'var(--green)' : d.rate >= 50 ? 'var(--blue)' : d.rate >= 30 ? 'var(--amber)' : 'var(--red)';
-    const isLast  = i === coupangData.length - 1;
-    const barW    = Math.min(Math.round(d.rate), 100);
-    return `<tr class="${isLast ? 'row-current' : ''}">
-      <td class="fw">${d.week}</td>
-      <td class="muted">${d.period}</td>
-      <td class="num">${d.ordered.toLocaleString()}</td>
-      <td class="num">${d.delivered.toLocaleString()}</td>
-      <td class="num fw" style="color:${col}">${d.rate.toFixed(2)}%</td>
-      <td><div class="mini-bar-wrap"><div class="mini-bar-fill" style="width:${barW}%;background:${col}"></div></div></td>
-    </tr>`;
-  }).join('');
-
-  // ── 경고 배너 ────────────────────────────────────────────
-  const alertBanner = (pct < 80 && currentMain > 0)
-    ? `<div class="alert-banner alert-danger">⚠ [위험] 자사몰+네이버 달성률 ${pct.toFixed(1)}% — 목표 달성을 위한 잔여 일 매출이 평소 대비 ${Math.round(needDaily / currentMain * 100)}% 이상 필요합니다.</div>`
-    : (pct < 90 && currentMain > 0)
-    ? `<div class="alert-banner alert-warn">⚡ [경고] 자사몰+네이버 달성률 ${pct.toFixed(1)}% — 목표 대비 부족합니다. 추이를 주시하세요.</div>`
-    : '';
-
-  // ── 바 스케일 계산 ────────────────────────────────────────
-  const barMin  = Math.min(adjBudget, spentBudget) * 0.85;
-  const range   = Math.max(adjBudget, spentBudget) - barMin || 1;
-  const adjW    = Math.round((adjBudget   - barMin) / range * 100);
-  const spentW  = Math.round((spentBudget - barMin) / range * 100);
-  const spentCol = spendRatio <= 18 ? 'var(--green)' : 'var(--red)';
-
-  // ── SVG 도넛 ─────────────────────────────────────────────
-  const R = 34, C = 42;
-  const circ = 2 * Math.PI * R;
-  const spentArc = Math.min(spendRatio, 100) / 100 * circ;
-  const limitArc = Math.min(18, 100) / 100 * circ;
-
-  document.getElementById("content").innerHTML = `
-
-    ${alertBanner}
-
-    <!-- ① 일매출 달성 현황 -->
-    <section class="sec">
-      <div class="sec-header"><span class="sec-lbl">일매출 달성 현황</span></div>
-      <div class="kpi-row">
-
-        <!-- 목표 vs 현재 -->
-        <div class="kpi-card kpi-wide">
-          <div class="kpi-label">목표 vs 현재 평균 일매출 <span class="kpi-label-sub">자사몰+네이버</span></div>
-          <div class="bar-compare">
-            <div class="bar-compare-row">
-              <span class="bar-compare-tag">목표</span>
-              <div class="bar-compare-track"><div class="bar-compare-fill" style="width:100%;background:var(--border2)"></div></div>
-              <span class="bar-compare-val">${f(targetMain)}</span>
-            </div>
-            <div class="bar-compare-row">
-              <span class="bar-compare-tag">현재</span>
-              <div class="bar-compare-track">
-                <div class="bar-compare-fill" style="width:${Math.min(pct,100)}%;background:${currentMain >= targetMain ? 'var(--green)' : 'var(--red)'};"></div>
-              </div>
-              <span class="bar-compare-val" style="color:${currentMain >= targetMain ? 'var(--green)' : 'var(--red)'}">${f(currentMain)}</span>
-            </div>
-          </div>
-          <div class="kpi-footer">${elapsedDays}일 경과 / ${totalDays}일 · 달성률 ${pct.toFixed(1)}%</div>
-        </div>
-
-        <!-- 달성률 -->
-        <div class="kpi-card">
-          <div class="kpi-label">목표 달성률</div>
-          <div class="kpi-value" style="color:${G.color}">${pct.toFixed(1)}%</div>
-          <div class="kpi-badge kpi-badge-${G.cls}">${G.label}</div>
-          <div class="prog-track"><div class="prog-fill" style="width:${Math.min(pct,130)/1.3}%;background:${G.color}"></div></div>
-        </div>
-
-        <!-- 예상 매출 -->
-        <div class="kpi-card">
-          <div class="kpi-label">전체 플랫폼 누적 예상 매출</div>
-          <div class="kpi-value">${f(projected)}</div>
-          <div class="kpi-sub">목표 대비 ${projected >= CONFIG.TARGET_MONTHLY ? '+' : ''}${f(projected - CONFIG.TARGET_MONTHLY)}</div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ② 발주 예산 여유 -->
-    <section class="sec">
-      <div class="sec-header"></div>
-      <div class="kpi-row">
-
-        <!-- 조정발주비 vs 누적지출 -->
-        <div class="kpi-card kpi-wide">
-          <div class="kpi-label">조정 발주비 vs 누적 지출액</div>
-          <div class="bar-compare">
-            <div class="bar-compare-row">
-              
-              <div class="bar-compare-track"><div class="bar-compare-fill" style="width:${adjW}%;background:var(--border2)"></div></div>
-              <span class="bar-compare-val">${f(adjBudget)}</span>
-            </div>
-            <div class="bar-compare-row">
-              <span class="bar-compare-tag" style="width:52px">누적지출</span>
-              <div class="bar-compare-track"><div class="bar-compare-fill" style="width:${spentW}%;background:${spentCol}"></div></div>
-              <span class="bar-compare-val" style="color:${spentCol}">${f(spentBudget)}</span>
-            </div>
-          </div>
-          <div class="kpi-footer">월말 예상 매출 × 18% 기준 · 현재 ${spendRatio.toFixed(1)}% 집행</div>
-        </div>
-
-        <!-- 도넛 -->
-        <div class="kpi-card kpi-donut">
-          <div class="kpi-label">현재 기준 발주비 비중</div>
-          <div class="donut-wrap">
-            <svg viewBox="0 0 84 84" width="80" height="80" style="transform:rotate(-90deg)">
-              <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="var(--bg3)" stroke-width="10"/>
-              <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="rgba(29,185,84,0.2)" stroke-width="10"
-                stroke-dasharray="${limitArc} ${circ}" stroke-dashoffset="0"/>
-              <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="${spentCol}" stroke-width="10"
-                stroke-dasharray="${spentArc} ${circ}" stroke-dashoffset="0" stroke-linecap="round"/>
-            </svg>
-            <div class="donut-center">
-              <span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${spentCol}">${spendRatio.toFixed(1)}%</span>
-            </div>
-          </div>
-          <div class="kpi-badge kpi-badge-${spendRatio <= 18 ? 'green' : 'red'}">${spendRatio <= 18 ? '안전 (18% 이하)' : '위험 (18% 초과)'}</div>
-          <div class="donut-legend">
-            <span><i style="background:rgba(29,185,84,0.3)"></i>18% 한도</span>
-            <span><i style="background:${spentCol}"></i>현재</span>
-          </div>
-        </div>
-
-        <!-- 추가 가용 -->
-        <div class="kpi-card">
-          <div class="kpi-label">추가 가용 발주비</div>
-          <div class="kpi-value ${extraBudget >= 0 ? 'pos' : 'neg'}">${extraBudget >= 0 ? f(extraBudget) : '-'+f(Math.abs(extraBudget))}</div>
-          <div class="kpi-badge kpi-badge-${extraBudget >= 0 ? 'green' : 'red'}">${extraBudget >= 0 ? '여유 있음' : '예산 초과'}</div>
-          <div class="kpi-sub" style="margin-top:8px;line-height:1.7">현재 평균 유지 시<br>${extraBudget >= 0 ? f(extraBudget)+' 추가 집행 가능' : f(Math.abs(extraBudget))+' 초과 상태'}</div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ③ 시나리오 -->
-    <section class="sec">
-      <div class="sec-header"><span class="sec-sub">목표 일평균 기준</span></div>
-      <div class="table-card">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>시나리오 일평균</th>
-                <th class="num">월말 예상 매출</th>
-                <th class="num">조정 발주비 (×18%)</th>
-                <th class="num">추가 가용 발주비</th>
-              </tr>
-            </thead>
-            <tbody>${scenarioRows}</tbody>
-          </table>
-        </div>
-        <div class="table-footer">
-          시나리오 일평균은 자사몰+네이버 합산 기준 / 월말 예상 매출은 전체 플랫폼 기준 (자사몰+네이버 = 전체의 70%) / 추가 가용 발주비 = 조정 발주비 − 누적 지출액(${f(spentBudget)})
-        </div>
-      </div>
-    </section>
-
-    <!-- ④ 조건부 발주 -->
-    <section class="sec">
-      <div class="sec-header"><span class="sec-sub">결제 유예 조건</span></div>
-      <div class="deferred-card">
-        <div class="deferred-top">
-          <span class="deferred-icon">💳</span>
-          
-        </div>
-        <div class="deferred-cells">
-          <div class="deferred-cell">
-            <div class="kpi-label">이 날짜까지 결제를 미룰 수 있다면</div>
-            <div class="kpi-value ${noDeadline ? 'neg' : ''}" style="${noDeadline ? 'font-size:14px' : ''}">${noDeadline ? '조건부 추가 발주 불가' : fmtDate(deferralDeadline)}</div>
-            <div class="kpi-sub">${noDeadline ? '마감일 미설정' : ddayLabel + ' 남음'}</div>
-          </div>
-          <div class="deferred-cell">
-            <div class="kpi-label">추가 발주 가능 한도</div>
-            <div class="kpi-value ${noLimit ? 'neg' : ''}">${noLimit ? '0원' : f(deferralLimit)}</div>
-            <div class="kpi-sub">${noLimit ? '한도 미설정 (불가)' : '과장 설정 기준'}</div>
-          </div>
-        </div>
-        <div class="deferred-note">
-          📌 <strong>조건부 발주</strong>란, 이번 달 발주 예산을 소진한 경우 <strong>${deferralDeadline ? fmtDate(deferralDeadline) : '지정된 날짜'}까지 결제를 유예</strong>하는 조건으로 추가 발주를 진행하는 것입니다.
-          한도(<strong>${deferralLimit > 0 ? f(deferralLimit) : '미설정'}</strong>)는 과장이 설정하며, 해당 범위 내에서만 추가 발주가 가능합니다.
-        </div>
-      </div>
-    </section>
-
-    <!-- ⑤ 제품 일평균 판매수량 -->
-    <section class="sec">
-      <div class="sec-header"><span class="sec-lbl">주력 제품 일평균 판매수량</span></div>
-      <div class="table-card prod-card">${prodHTML}</div>
-    </section>
-
-    <!-- ⑦ 재고현황 -->
-    <section class="sec">
-      <div class="sec-header"><span class="sec-lbl">주력 제품 재고현황</span><span class="sec-sub">품절 D-day</span></div>
-      <div class="stock-grid">${stockHTML}</div>
-    </section>
-  `;
-
-  // ── 발주 요청 사항 패널 ─────────────────────────────────
-  document.getElementById('memo-content').innerHTML = `
-    <section class="sec">
-      <div class="table-card memo-card">
-        ${[['team','팀장'],['manager','과장'],['staff','주임']].map(([role, label], idx) => {
-          const txt = memoData[role] || '';
-          return `<div class="memo-row ${idx < 2 ? 'memo-border' : ''}">
-            <div class="memo-role">${label}</div>
-            <div class="memo-body ${txt ? '' : 'muted'}">${txt
-              ? txt.split('\n').map(l => l.trim()).filter(l => l !== '').join('<br>')
-              : '—'}</div>
-          </div>`;
-        }).join('')}
-        <div class="table-footer">📄 Google Sheets &gt; 발주요청사항 시트에서 수정 · 새로고침 시 반영</div>
-      </div>
-    </section>
-  `;
-
-  // ── 쿠팡 납품 현황 패널 ────────────────────────────────
-  document.getElementById('coupang-content').innerHTML = `
-    <section class="sec">
-      <div class="table-card">
-        <div class="coup-chart">
-          <div class="coup-bars">${coupangBars}</div>
-        </div>
-        <div class="coup-legend">
-          ${[['var(--green)','70%+'],['var(--blue)','50~69%'],['var(--amber)','30~49%'],['var(--red)','~29%']].map(([c,l])=>
-            `<span class="coup-leg-item"><i style="background:${c}"></i>${l}</span>`
-          ).join('')}
-          <span class="coup-leg-item" style="margin-left:auto;color:var(--muted)">□ 최근 주차</span>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>주차</th><th>기간</th>
-                <th class="num">발주 요청</th><th class="num">입고</th>
-                <th class="num">납품율</th><th>달성</th>
-              </tr>
-            </thead>
-            <tbody>${coupangTableRows}</tbody>
-            <tfoot>
-              <tr class="tfoot-row">
-                <td class="fw" colspan="2">전체 합계</td>
-                <td class="num fw">${totalOrdered.toLocaleString()}</td>
-                <td class="num fw">${totalDelivered.toLocaleString()}</td>
-                <td class="num fw">${totalRate.toFixed(2)}%</td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-    </section>
-  `;
-}
-
-// 5분마다 자동 새로고침
-setInterval(load, 5 * 60 * 1000);
-load();
-// 기본 탭: 발주 시뮬레이션
-(function(){
-  var simBtn = document.querySelector('.nav-item[onclick*="simulation"]');
-  if(simBtn) {
-    document.querySelectorAll(".nav-item").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".panel").forEach(p => p.classList.remove("on"));
-    simBtn.classList.add("active");
-    document.getElementById("p-simulation").classList.add("on");
-  }
-})();
-
-
-// ============================================================
-// 발주 시뮬레이션 — 스프레드시트 확정 데이터 기반
-// ============================================================
-
-
-// ============================================================
-// 발주 시뮬레이션 — 스프레드시트 확정 데이터 (2025년 6~12월)
-// ============================================================
-
-// ── 기초설정 데이터 ────────────────────────────────────────
-const PRODUCTS = [
-  { id:'mk',      sku:'MK',     name:'맥세이프 킥프레임', moq:5000, prepayFixed:3619000, balPerUnit:6713, dailySales:40,  monthQty:1200, leadDays:40, stockWh:993,  stockCn:5336 },
-  { id:'ph_s',    sku:'PH-S',   name:'PH 스탠드 실버',   moq:1000, prepayFixed:3900000, balPerUnit:8143, dailySales:25,  monthQty:750,  leadDays:40, stockWh:2000, stockCn:1500 },
-  { id:'ph_b',    sku:'PH-B',   name:'PH 스탠드 블랙',   moq:1000, prepayFixed:3900000, balPerUnit:8143, dailySales:15,  monthQty:450,  leadDays:40, stockWh:0,    stockCn:1500 },
-  { id:'dw_pro_s',sku:'DWPR-S', name:'DW 프로 실버',     moq:1000, prepayFixed:3090000, balPerUnit:31639,dailySales:8,   monthQty:240,  leadDays:40, stockWh:386,  stockCn:100  },
-  { id:'dw_pro_b',sku:'DWPR-B', name:'DW 프로 블랙',     moq:1000, prepayFixed:3090000, balPerUnit:31639,dailySales:4,   monthQty:120,  leadDays:40, stockWh:129,  stockCn:580  },
-  { id:'dw_pl_s', sku:'DWPL-S', name:'DW 플러스 실버',   moq:1000, prepayFixed:2047500, balPerUnit:20941,dailySales:3,   monthQty:90,   leadDays:40, stockWh:93,   stockCn:0    },
-  { id:'dw_pl_b', sku:'DWPL-B', name:'DW 플러스 블랙',   moq:1000, prepayFixed:2047500, balPerUnit:20941,dailySales:2,   monthQty:60,   leadDays:40, stockWh:97,   stockCn:470  },
-  { id:'dw_pl_g', sku:'DWPL-G', name:'DW 플러스 그린',   moq:1000, prepayFixed:2047500, balPerUnit:20941,dailySales:0,   monthQty:0,    leadDays:40, stockWh:33,   stockCn:480  },
-];
-
-// ── 월별 발주 계획 (비용요약 기반) ────────────────────────
-const MONTHLY_COST = {
-  '6':  { mk:5983969,  ph_s:14000000, ph_b:0,       dw_pro_s:11000000, dw_pro_b:550000,   dw_pl_s:1840000, dw_pl_b:1100000, dw_pl_g:730000,  prepay:5137500,  balance:35203969, total:40341469 },
-  '7':  { mk:8055600,  ph_s:0,        ph_b:0,       dw_pro_s:7593360,  dw_pro_b:3796680,  dw_pl_s:1884690, dw_pl_b:1256460, dw_pl_g:0,       prepay:0,        balance:22586790, total:22586790 },
-  '8':  { mk:8055600,  ph_s:10007250, ph_b:3664350, dw_pro_s:7593360,  dw_pro_b:3796680,  dw_pl_s:1884690, dw_pl_b:1256460, dw_pl_g:0,       prepay:3900000,  balance:32358390, total:36258390 },
-  '9':  { mk:11674600, ph_s:6107250,  ph_b:7564350, dw_pro_s:7593360,  dw_pro_b:3796680,  dw_pl_s:1884690, dw_pl_b:1256460, dw_pl_g:0,       prepay:7519000,  balance:32358390, total:39877390 },
-  '10': { mk:8055600,  ph_s:10007250, ph_b:3664350, dw_pro_s:10683360, dw_pro_b:6253900,  dw_pl_s:1884690, dw_pl_b:1256460, dw_pl_g:0,       prepay:10080000, balance:31725610, total:41805610 },
-  '11': { mk:8055600,  ph_s:6107250,  ph_b:3664350, dw_pro_s:7593360,  dw_pro_b:3796680,  dw_pl_s:1884690, dw_pl_b:1256460, dw_pl_g:0,       prepay:0,        balance:32358390, total:32358390 },
-  '12': { mk:8055600,  ph_s:7971500,  ph_b:3664350, dw_pro_s:7593360,  dw_pro_b:3796680,  dw_pl_s:1884690, dw_pl_b:1256460, dw_pl_g:0,       prepay:3900000,  balance:30322640, total:34222640 },
-};
-
-// ── 재고 추적 데이터 ───────────────────────────────────────
-const STOCK_DATA = {
-  wh: { mk:[993,793,793,793,793,793,793,793], ph_s:[2000,950,0,0,0,0,0,0], ph_b:[0,0,0,0,0,0,0,0], dw_pro_s:[386,546,546,546,546,546,546,546], dw_pro_b:[129,29,29,29,9,9,9,9], dw_pl_s:[93,103,103,103,103,103,103,103], dw_pl_b:[97,97,97,97,97,97,97,97], dw_pl_g:[33,73,73,73,73,73,73,73] },
-  cn: { mk:[5336,4336,3136,1936,5736,4536,3336,2136], ph_s:[1500,1500,1500,1750,1000,1250,500,1000], ph_b:[1500,1500,1500,1050,1600,1150,700,250], dw_pro_s:[100,700,460,220,0,760,520,280], dw_pro_b:[580,560,440,320,200,1100,980,860], dw_pl_s:[0,900,810,720,630,540,450,360], dw_pl_b:[470,410,350,290,230,170,110,50], dw_pl_g:[480,440,440,440,440,440,440,440] },
-};
-const STOCK_MONTHS = ['5월말','6월말','7월말','8월말','9월말','10월말','11월말','12월말'];
-
-// ── 입고지시일정 ────────────────────────────────────────────
-const INBOUND_SCHEDULE = [
-  // 6월
-  { month:6, week:1, instrDate:'6.1',  arrDate:'6.4',  payDate:'6.15',  sku:'PH-S',   name:'PH 스탠드 실버', qty:2000, amount:14000000, type:'confirm', note:'6/4 도착' },
-  { month:6, week:1, instrDate:'6.1',  arrDate:'-',    payDate:'즉시',  sku:'DWPR-S', name:'DW 프로 실버',   qty:null, amount:3090000, type:'prepay', note:'6월 신규발주 선금' },
-  { month:6, week:1, instrDate:'6.1',  arrDate:'-',    payDate:'즉시',  sku:'DWPL-S', name:'DW 플러스 실버', qty:null, amount:2047500, type:'prepay', note:'6월 신규발주 선금' },
-  { month:6, week:2, instrDate:'6.1',  arrDate:'6.15', payDate:'6.15',  sku:'MK',     name:'맥세이프 킥프레임', qty:1000, amount:5983969, type:'confirm', note:'6/15 도착' },
-  { month:6, week:4, instrDate:'6.25', arrDate:'6.30', payDate:'6.30',  sku:'DWPR-S', name:'DW 프로 실버',   qty:400,  amount:11000000, type:'confirm', note:'6/30 도착' },
-  { month:6, week:4, instrDate:'6.25', arrDate:'6.30', payDate:'6.30',  sku:'DWPR-B', name:'DW 프로 블랙',   qty:20,   amount:550000,   type:'confirm', note:'6/30 도착' },
-  { month:6, week:4, instrDate:'6.25', arrDate:'6.30', payDate:'6.30',  sku:'DWPL-S', name:'DW 플러스 실버', qty:100,  amount:1840000,  type:'confirm', note:'6/30 도착' },
-  { month:6, week:4, instrDate:'6.25', arrDate:'6.30', payDate:'6.30',  sku:'DWPL-B', name:'DW 플러스 블랙', qty:60,   amount:1100000,  type:'confirm', note:'6/30 도착' },
-  { month:6, week:4, instrDate:'6.25', arrDate:'6.30', payDate:'6.30',  sku:'DWPL-G', name:'DW 플러스 그린', qty:40,   amount:730000,   type:'confirm', note:'6/30 도착' },
-  // 7월
-  { month:7, week:1, instrDate:'7.1',  arrDate:'7.6',  payDate:'7.15',  sku:'MK',     name:'맥세이프 킥프레임', qty:1200, amount:8055600, type:'plan', note:'7/6 도착' },
-  { month:7, week:1, instrDate:'7.1',  arrDate:'7.6',  payDate:'7.15',  sku:'DWPR-S', name:'DW 프로 실버',   qty:240,  amount:7593360, type:'plan', note:'7/6 도착' },
-  { month:7, week:1, instrDate:'7.1',  arrDate:'7.6',  payDate:'7.15',  sku:'DWPR-B', name:'DW 프로 블랙',   qty:120,  amount:3796680, type:'plan', note:'7/6 도착' },
-  { month:7, week:1, instrDate:'7.1',  arrDate:'7.6',  payDate:'7.15',  sku:'DWPL-S', name:'DW 플러스 실버', qty:90,   amount:1884690, type:'plan', note:'7/6 도착' },
-  { month:7, week:1, instrDate:'7.1',  arrDate:'7.6',  payDate:'7.15',  sku:'DWPL-B', name:'DW 플러스 블랙', qty:60,   amount:1256460, type:'plan', note:'7/6 도착' },
-  { month:7, week:3, instrDate:'7.22', arrDate:'7.27', payDate:'7.30',  sku:'PH-S',   name:'PH 스탠드 실버', qty:750,  amount:6107250, type:'plan', note:'7/27 도착 (창고소진 5일전)' },
-  { month:7, week:3, instrDate:'7.22', arrDate:'7.27', payDate:'7.30',  sku:'PH-B',   name:'PH 스탠드 블랙', qty:450,  amount:3664350, type:'plan', note:'7/27 도착' },
-  // 8월
-  { month:8, week:1, instrDate:'8.1',  arrDate:'-',    payDate:'즉시',  sku:'PH-S',   name:'PH 스탠드 실버', qty:null, amount:3900000, type:'prepay', note:'8월 신규발주 선금' },
-  { month:8, week:1, instrDate:'8.1',  arrDate:'8.6',  payDate:'8.15',  sku:'MK',     name:'맥세이프 킥프레임', qty:1200, amount:8055600, type:'plan', note:'8/6 도착' },
-  { month:8, week:1, instrDate:'8.1',  arrDate:'8.6',  payDate:'8.15',  sku:'PH-S',   name:'PH 스탠드 실버', qty:750,  amount:6107250, type:'plan', note:'8/6 도착' },
-  { month:8, week:1, instrDate:'8.1',  arrDate:'8.6',  payDate:'8.15',  sku:'PH-B',   name:'PH 스탠드 블랙', qty:450,  amount:3664350, type:'plan', note:'8/6 도착' },
-  { month:8, week:1, instrDate:'8.1',  arrDate:'8.6',  payDate:'8.15',  sku:'DWPR-S', name:'DW 프로 실버',   qty:240,  amount:7593360, type:'plan', note:'8/6 도착' },
-  { month:8, week:1, instrDate:'8.1',  arrDate:'8.6',  payDate:'8.15',  sku:'DWPR-B', name:'DW 프로 블랙',   qty:120,  amount:3796680, type:'plan', note:'8/6 도착' },
-  { month:8, week:1, instrDate:'8.1',  arrDate:'8.6',  payDate:'8.15',  sku:'DWPL-S', name:'DW 플러스 실버', qty:90,   amount:1884690, type:'plan', note:'8/6 도착' },
-  { month:8, week:1, instrDate:'8.1',  arrDate:'8.6',  payDate:'8.15',  sku:'DWPL-B', name:'DW 플러스 블랙', qty:60,   amount:1256460, type:'plan', note:'8/6 도착' },
-  // 9월
-  { month:9, week:1, instrDate:'9.1',  arrDate:'-',    payDate:'즉시',  sku:'MK',     name:'맥세이프 킥프레임', qty:null, amount:3619000, type:'prepay', note:'9월 신규발주 선금' },
-  { month:9, week:1, instrDate:'9.1',  arrDate:'-',    payDate:'즉시',  sku:'PH-B',   name:'PH 스탠드 블랙', qty:null, amount:3900000, type:'prepay', note:'9월 신규발주 선금' },
-  { month:9, week:1, instrDate:'9.1',  arrDate:'9.6',  payDate:'9.15',  sku:'MK',     name:'맥세이프 킥프레임', qty:1200, amount:8055600, type:'plan', note:'9/6 도착' },
-  { month:9, week:1, instrDate:'9.1',  arrDate:'9.6',  payDate:'9.15',  sku:'PH-S',   name:'PH 스탠드 실버', qty:750,  amount:6107250, type:'plan', note:'9/6 도착' },
-  { month:9, week:1, instrDate:'9.1',  arrDate:'9.6',  payDate:'9.15',  sku:'PH-B',   name:'PH 스탠드 블랙', qty:450,  amount:3664350, type:'plan', note:'9/6 도착' },
-  { month:9, week:1, instrDate:'9.1',  arrDate:'9.6',  payDate:'9.15',  sku:'DWPR-S', name:'DW 프로 실버',   qty:240,  amount:7593360, type:'plan', note:'9/6 도착' },
-  { month:9, week:1, instrDate:'9.1',  arrDate:'9.6',  payDate:'9.15',  sku:'DWPR-B', name:'DW 프로 블랙',   qty:120,  amount:3796680, type:'plan', note:'9/6 도착' },
-  { month:9, week:1, instrDate:'9.1',  arrDate:'9.6',  payDate:'9.15',  sku:'DWPL-S', name:'DW 플러스 실버', qty:90,   amount:1884690, type:'plan', note:'9/6 도착' },
-  { month:9, week:1, instrDate:'9.1',  arrDate:'9.6',  payDate:'9.15',  sku:'DWPL-B', name:'DW 플러스 블랙', qty:60,   amount:1256460, type:'plan', note:'9/6 도착' },
-  // 10월
-  { month:10, week:1, instrDate:'10.1', arrDate:'-',    payDate:'즉시',  sku:'PH-S',   name:'PH 스탠드 실버', qty:null, amount:3900000, type:'prepay', note:'10월 신규발주 선금' },
-  { month:10, week:1, instrDate:'10.1', arrDate:'-',    payDate:'즉시',  sku:'DWPR-S', name:'DW 프로 실버',   qty:null, amount:3090000, type:'prepay', note:'10월 신규발주 선금' },
-  { month:10, week:1, instrDate:'10.1', arrDate:'-',    payDate:'즉시',  sku:'DWPR-B', name:'DW 프로 블랙',   qty:null, amount:3090000, type:'prepay', note:'10월 신규발주 선금' },
-  { month:10, week:1, instrDate:'10.1', arrDate:'10.6', payDate:'10.15', sku:'MK',     name:'맥세이프 킥프레임', qty:1200, amount:8055600, type:'plan', note:'10/6 도착' },
-  { month:10, week:1, instrDate:'10.1', arrDate:'10.6', payDate:'10.15', sku:'PH-S',   name:'PH 스탠드 실버', qty:750,  amount:6107250, type:'plan', note:'10/6 도착' },
-  { month:10, week:1, instrDate:'10.1', arrDate:'10.6', payDate:'10.15', sku:'PH-B',   name:'PH 스탠드 블랙', qty:450,  amount:3664350, type:'plan', note:'10/6 도착' },
-  { month:10, week:1, instrDate:'10.1', arrDate:'10.6', payDate:'10.15', sku:'DWPR-S', name:'DW 프로 실버',   qty:240,  amount:7593360, type:'plan', note:'10/6 도착' },
-  { month:10, week:1, instrDate:'10.1', arrDate:'10.6', payDate:'10.15', sku:'DWPR-B', name:'DW 프로 블랙',   qty:100,  amount:3163900, type:'plan', note:'10/6 도착' },
-  { month:10, week:1, instrDate:'10.1', arrDate:'10.6', payDate:'10.15', sku:'DWPL-S', name:'DW 플러스 실버', qty:90,   amount:1884690, type:'plan', note:'10/6 도착' },
-  { month:10, week:1, instrDate:'10.1', arrDate:'10.6', payDate:'10.15', sku:'DWPL-B', name:'DW 플러스 블랙', qty:60,   amount:1256460, type:'plan', note:'10/6 도착' },
-  // 11월
-  { month:11, week:1, instrDate:'11.1', arrDate:'11.6', payDate:'11.15', sku:'MK',     name:'맥세이프 킥프레임', qty:1200, amount:8055600, type:'plan', note:'11/6 도착' },
-  { month:11, week:1, instrDate:'11.1', arrDate:'11.6', payDate:'11.15', sku:'PH-S',   name:'PH 스탠드 실버', qty:750,  amount:6107250, type:'plan', note:'11/6 도착' },
-  { month:11, week:1, instrDate:'11.1', arrDate:'11.6', payDate:'11.15', sku:'PH-B',   name:'PH 스탠드 블랙', qty:450,  amount:3664350, type:'plan', note:'11/6 도착' },
-  { month:11, week:1, instrDate:'11.1', arrDate:'11.6', payDate:'11.15', sku:'DWPR-S', name:'DW 프로 실버',   qty:240,  amount:7593360, type:'plan', note:'11/6 도착' },
-  { month:11, week:1, instrDate:'11.1', arrDate:'11.6', payDate:'11.15', sku:'DWPR-B', name:'DW 프로 블랙',   qty:120,  amount:3796680, type:'plan', note:'11/6 도착' },
-  { month:11, week:1, instrDate:'11.1', arrDate:'11.6', payDate:'11.15', sku:'DWPL-S', name:'DW 플러스 실버', qty:90,   amount:1884690, type:'plan', note:'11/6 도착' },
-  { month:11, week:1, instrDate:'11.1', arrDate:'11.6', payDate:'11.15', sku:'DWPL-B', name:'DW 플러스 블랙', qty:60,   amount:1256460, type:'plan', note:'11/6 도착' },
-  // 12월
-  { month:12, week:1, instrDate:'12.1', arrDate:'-',    payDate:'즉시',  sku:'PH-S',   name:'PH 스탠드 실버', qty:null, amount:3900000, type:'prepay', note:'12월 신규발주 선금' },
-  { month:12, week:1, instrDate:'12.1', arrDate:'12.6', payDate:'12.15', sku:'MK',     name:'맥세이프 킥프레임', qty:1200, amount:8055600, type:'plan', note:'12/6 도착' },
-  { month:12, week:1, instrDate:'12.1', arrDate:'12.6', payDate:'12.15', sku:'PH-S',   name:'PH 스탠드 실버', qty:500,  amount:4071500, type:'plan', note:'12/6 도착' },
-  { month:12, week:1, instrDate:'12.1', arrDate:'12.6', payDate:'12.15', sku:'PH-B',   name:'PH 스탠드 블랙', qty:450,  amount:3664350, type:'plan', note:'12/6 도착' },
-  { month:12, week:1, instrDate:'12.1', arrDate:'12.6', payDate:'12.15', sku:'DWPR-S', name:'DW 프로 실버',   qty:240,  amount:7593360, type:'plan', note:'12/6 도착' },
-  { month:12, week:1, instrDate:'12.1', arrDate:'12.6', payDate:'12.15', sku:'DWPR-B', name:'DW 프로 블랙',   qty:120,  amount:3796680, type:'plan', note:'12/6 도착' },
-  { month:12, week:1, instrDate:'12.1', arrDate:'12.6', payDate:'12.15', sku:'DWPL-S', name:'DW 플러스 실버', qty:90,   amount:1884690, type:'plan', note:'12/6 도착' },
-  { month:12, week:1, instrDate:'12.1', arrDate:'12.6', payDate:'12.15', sku:'DWPL-B', name:'DW 플러스 블랙', qty:60,   amount:1256460, type:'plan', note:'12/6 도착' },
-];
-
-// ── 포맷 유틸 ──────────────────────────────────────────────
-function fmtWon(v) {
-  if(v >= 100000000) {
-    const ok = (v/100000000).toFixed(1);
-    return ok.endsWith('.0') ? ok.slice(0,-2)+'억' : ok+'억';
-  }
-  if(v >= 10000000) {
-    const ok = (v/10000000).toFixed(1);
-    return ok.endsWith('.0') ? ok.slice(0,-2)+'천만' : ok+'천만';
-  }
-  if(v >= 1000000) {
-    const ok = (v/1000000).toFixed(1);
-    return ok.endsWith('.0') ? ok.slice(0,-2)+'백만' : ok+'백만';
-  }
-  if(v >= 10000) return `${Math.round(v/10000)}만`;
-  return v.toLocaleString()+'원';
-}
-function fmtFull(v) { return Math.round(v).toLocaleString()+'원'; }
-
-// ── 탭 상태 관리 ───────────────────────────────────────────
-let simTab = 'overview';
-
-function switchSimTab(t, el) {
-  simTab = t;
-  document.querySelectorAll('.sim-tab-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  document.querySelectorAll('.sim-tab-panel').forEach(p => p.style.display='none');
-  document.getElementById('simtab-'+t).style.display='block';
-}
-
-// ── 메인 렌더 ─────────────────────────────────────────────
-function renderSimulation(cfg, sheetTimeline) {
-  const MONTHS = [6,7,8,9,10,11,12];
-  const MONTH_LABELS = {6:'6월',7:'7월',8:'8월',9:'9월',10:'10월',11:'11월',12:'12월'};
-
-  // ── 포맷: 억/천만/백만 단위 ────────────────────────────────
-  function fmtBar(v) {
-    if (v >= 100000000) return `${(v/100000000).toFixed(1)}억`;
-    if (v >= 10000000)  return `${(v/10000000).toFixed(1)}천만`;
-    if (v >= 1000000)   return `${(v/1000000).toFixed(1)}백만`;
-    if (v >= 10000)     return `${Math.round(v/10000)}만`;
-    return v.toLocaleString()+'원';
-  }
-
-  // KPI는 TIMELINE 병합 후 EFFECTIVE_MONTHLY 계산이 끝나면 렌더
-  // (아래 overviewPanel에서 EFFECTIVE_MONTHLY 사용)
-
-  // ── ① KPI 요약 (TIMELINE 기반 — 시트 반영) ──────────────
-  const kpiHTML = `
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem">
-      <div class="sim-kpi-card">
-        <div class="sim-kpi-label">26년 총 발주비 (6~12월)</div>
-        <div class="sim-kpi-value" style="color:var(--accent)">\${fmtBar(totalAnnualEff)}</div>
-        <div class="sim-kpi-sub">7개월 합산 · 시트 연동</div>
-      </div>
-      <div class="sim-kpi-card">
-        <div class="sim-kpi-label">월평균 발주비</div>
-        <div class="sim-kpi-value" style="color:var(--accent)">\${fmtBar(avgMonthTotalEff)}</div>
-        <div class="sim-kpi-sub">6~12월 평균</div>
-      </div>
-      <div class="sim-kpi-card good">
-        <div class="sim-kpi-label">최고 지출 월</div>
-        <div class="sim-kpi-value" style="color:var(--amber)">\${fmtBar(maxMonthTotalEff)}</div>
-        <div class="sim-kpi-sub">\${MONTHS.find(m=>EFFECTIVE_MONTHLY[m]===maxMonthTotalEff)}월</div>
-      </div>
-      <div class="sim-kpi-card">
-        <div class="sim-kpi-label">최저 지출 월</div>
-        <div class="sim-kpi-value" style="color:var(--green)">\${fmtBar(minMonthTotalEff)}</div>
-        <div class="sim-kpi-sub">\${MONTHS.find(m=>EFFECTIVE_MONTHLY[m]===minMonthTotalEff)}월</div>
-      </div>
-    </div>`;
-
-  // ── ② 서브탭 네비게이션 ──────────────────────────────────
-  const tabNav = `
-    <div style="display:flex;gap:4px;margin-bottom:1.25rem;border-bottom:1px solid var(--border);padding-bottom:0">
-      <button class="sim-tab-btn active" onclick="switchSimTab('overview',this)">📊 월별 발주 현황</button>
-      <button class="sim-tab-btn" onclick="switchSimTab('calendar',this)">📅 발주 달력</button>
-    </div>`;
-
-  // ── ③ 탭 패널 1: 월별 발주 현황 ─────────────────────────
-  const maxBar2 = maxMonthTotal;
-  const BAR_MAX_H = 180;
-
-  // 추이선 SVG (line chart overlay)
-  const chartW = 700;
-  const chartH = 220;
-  const padL = 10, padR = 10, padT = 30, padB = 20;
-  const nMonths = MONTHS.length;
-  const colW = (chartW - padL - padR) / nMonths;
-
-  const barsHTML2 = MONTHS.map((m, i) => {
-    const mc = MONTHLY_COST[m];
-    const barH = Math.round(mc.total / maxBar2 * BAR_MAX_H);
-    const avgH = Math.round(avgMonthTotal / maxBar2 * BAR_MAX_H);
-    const isMax = mc.total === maxMonthTotal;
-    const isMin = mc.total === minMonthTotal;
-    const barColor = isMax ? 'var(--amber)' : isMin ? 'var(--green)' : 'var(--accent)';
-    return `
-      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;position:relative">
-        <div style="font-size:11px;font-family:var(--mono);font-weight:700;color:${barColor};white-space:nowrap">${fmtBar(mc.total)}</div>
-        <div style="display:flex;align-items:flex-end;height:${BAR_MAX_H}px;position:relative;width:100%;justify-content:center">
-          <div style="width:36px;background:${barColor};border-radius:4px 4px 0 0;height:${Math.max(barH,4)}px;position:relative;transition:height 0.5s;opacity:0.85"></div>
-          <div style="position:absolute;bottom:${avgH}px;left:0;right:0;border-top:1.5px dashed rgba(255,255,255,0.2);pointer-events:none"></div>
-        </div>
-        <div style="font-size:12px;font-weight:700;color:var(--text)">${MONTH_LABELS[m]}</div>
-        <div style="font-size:10px;color:var(--muted);font-family:var(--mono)">${(mc.total/totalAnnual*100).toFixed(0)}%</div>
-      </div>`;
-  }).join('');
-
-  // 월별 상세 테이블
-  const monthDetailRows = MONTHS.map(m => {
-    const val   = EFFECTIVE_MONTHLY[m];
-    const isMax = val === maxMonthTotalEff;
-    const isMin = val === minMonthTotalEff;
-    const diff  = val - avgMonthTotalEff;
-    const diffStr = Math.abs(diff) < 10000 ? '±0' : (diff > 0 ? '+' : '') + fmtBar(diff);
-    return `<tr>
-      <td style="font-weight:700;color:${isMax?'var(--amber)':isMin?'var(--green)':'var(--text)'}">${MONTH_LABELS[m]}</td>
-      <td class="num" style="color:var(--accent);font-weight:700">${fmtBar(val)}</td>
-      <td class="num" style="font-size:11px;color:var(--muted)">${totalAnnualEff>0?(val/totalAnnualEff*100).toFixed(1):0}%</td>
-      <td class="num" style="font-size:11px;color:${diff>0?'var(--red)':diff<0?'var(--green)':'var(--muted)'}">${diffStr}</td>
-    </tr>`;
-  }).join('');
-
-  const overviewPanel = `
-    <div id="simtab-overview" class="sim-tab-panel">
-      <section class="sec">
-        <div class="sec-header"><span class="sec-lbl">월별 발주비 흐름</span><span class="sec-sub">점선 = 월평균 (\${fmtBar(avgMonthTotalEff)}) · 시트 데이터 실시간 반영</span></div>
-        <div class="table-card" style="padding:1.5rem">
-          <div style="display:flex;gap:8px;align-items:flex-end;padding-bottom:1.25rem;border-bottom:1px solid var(--border)">
-            ${barsHTML2}
-          </div>
-          <div style="display:flex;gap:12px;margin-top:12px;font-size:11px;color:var(--muted)">
-            <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--amber)"></span>최고 지출</span>
-            <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--green)"></span>최저 지출</span>
-            <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--accent)"></span>일반</span>
-            <span style="display:flex;align-items:center;gap:4px;margin-left:auto"><span style="display:inline-block;width:18px;border-top:1.5px dashed rgba(255,255,255,0.35)"></span>월평균 기준선</span>
-          </div>
-        </div>
-      </section>
-      <section class="sec">
-        <div class="sec-header"><span class="sec-lbl">월별 상세 내역</span></div>
-        <div class="table-card">
-          <div class="table-wrap">
-            <table>
-              <thead><tr>
-                <th>월</th>
-                <th class="num">지출금액</th>
-                <th class="num">비중</th>
-                <th class="num">평균 대비</th>
-              </tr></thead>
-              <tbody>${monthDetailRows}</tbody>
-              <tfoot><tr class="tfoot-row">
-                <td class="fw">합계</td>
-                <td class="num fw" style="color:var(--accent)">\${fmtBar(totalAnnualEff)}</td>
-                <td class="num fw">100%</td>
-                <td class="num muted">—</td>
-              </tr></tfoot>
-            </table>
-          </div>
-        </div>
-      </section>
-    </div>`;
-
-  // ── ④ 탭 패널 2: 발주 달력 ──────────────────────────────
-  // 실제 타임테이블 데이터 (첨부 엑셀 기반)
-  const FALLBACK_TIMELINE = {
-    6: {
-      total: 47731218,
-      weeks: [
-        { label:'1주', days:'6/1~6/7', cost: 0 },
-        { label:'2주', days:'6/8~6/14', cost: 0 },
-        { label:'3주', days:'6/15~6/21', cost: 27233009 },
-        { label:'4주', days:'6/22~6/28', cost: 20498209 },
-        { label:'5주', days:'6/29~6/30', cost: 0 },
-      ],
-      events: [
-        { date:'6/4',  type:'기', product:'PH 스탠드 실버', qty:null, cost:14000000, note:'기존 생산물량 잔금' },
-        { date:'6/15', type:'기', product:'맥세이프 킥프레임', qty:1200, cost:5983969, note:'기존 생산물량 잔금·입고요청' },
-        { date:'6/20', type:'추', product:'맥세이프 킥프레임', qty:1200, cost:7250040, note:'중국→한국 입고' },
-        { date:'6/25', type:'요', product:'DW 프로 블랙', qty:90, cost:null, note:'입고요청 (6/30 입고)' },
-        { date:'6/26', type:'신', product:'DW 프로 실버', qty:500, cost:1545000, note:'신규 생산 발주 (8/15 완료)' },
-        { date:'6/26', type:'요', product:'DW 플러스 그린', qty:45, cost:null, note:'입고요청 (7/1 입고)' },
-        { date:'6/27', type:'신', product:'DW 플러스 실버', qty:500, cost:1023750, note:'신규 생산 발주 (8/16 완료)' },
-        { date:'6/30', type:'기', product:'DW 프로 실버', qty:null, cost:11124000, note:'기존 생산물량 잔금' },
-        { date:'6/30', type:'기', product:'DW 프로 블랙', qty:null, cost:556200, note:'기존 생산물량 잔금' },
-        { date:'6/30', type:'기', product:'DW 플러스 실버', qty:null, cost:1842750, note:'기존 생산물량 잔금' },
-        { date:'6/30', type:'기', product:'DW 플러스 블랙', qty:null, cost:1105650, note:'기존 생산물량 잔금' },
-        { date:'6/30', type:'기', product:'DW 플러스 그린', qty:null, cost:737100, note:'기존 생산물량 잔금' },
-        { date:'6/30', type:'추', product:'DW 프로 블랙', qty:90, cost:2562759, note:'중국→한국 입고' },
-      ]
-    },
-    7: {
-      total: 33762040,
-      weeks: [
-        { label:'1주', days:'7/1~7/7', cost: 2544331 },
-        { label:'2주', days:'7/8~7/14', cost: 14657400 },
-        { label:'3주', days:'7/15~7/21', cost: 11150040 },
-        { label:'4주', days:'7/22~7/28', cost: 0 },
-        { label:'5주', days:'7/29~7/31', cost: 5410269 },
-      ],
-      events: [
-        { date:'7/1',  type:'추', product:'DW 플러스 그린', qty:45, cost:848110, note:'중국→한국 입고' },
-        { date:'7/1',  type:'요', product:'DW 플러스 블랙', qty:90, cost:null, note:'입고요청 (7/6 입고)' },
-        { date:'7/5',  type:'요', product:'PH 스탠드 실버', qty:1500, cost:null, note:'입고요청 (7/10 입고)' },
-        { date:'7/5',  type:'요', product:'PH 스탠드 블랙', qty:1500, cost:null, note:'입고요청 (7/10 입고)' },
-        { date:'7/6',  type:'추', product:'DW 플러스 블랙', qty:90, cost:1696221, note:'중국→한국 입고' },
-        { date:'7/10', type:'추', product:'PH 스탠드 실버', qty:1500, cost:7328700, note:'첫 리뉴얼 입고' },
-        { date:'7/10', type:'추', product:'PH 스탠드 블랙', qty:1500, cost:7328700, note:'첫 리뉴얼 입고' },
-        { date:'7/20', type:'추', product:'맥세이프 킥프레임', qty:1200, cost:7250040, note:'중국→한국 입고' },
-        { date:'7/20', type:'신', product:'PH 스탠드 실버', qty:1000, cost:3900000, note:'신규 생산 발주' },
-        { date:'7/24', type:'요', product:'DW 프로 실버', qty:100, cost:null, note:'입고요청 (7/29 입고)' },
-        { date:'7/25', type:'요', product:'DW 프로 블랙', qty:90, cost:null, note:'입고요청 (7/30 입고)' },
-        { date:'7/29', type:'추', product:'DW 프로 실버', qty:100, cost:2847510, note:'중국→한국 입고' },
-        { date:'7/30', type:'추', product:'DW 프로 블랙', qty:90, cost:2562759, note:'중국→한국 입고' },
-      ]
-    },
-    8: {
-      total: 22230759,
-      weeks: [
-        { label:'1주', days:'8/1~8/7', cost: 0 },
-        { label:'2주', days:'8/8~8/14', cost: 0 },
-        { label:'3주', days:'8/15~8/21', cost: 15767980 },
-        { label:'4주', days:'8/22~8/28', cost: 0 },
-        { label:'5주', days:'8/29~8/31', cost: 6462759 },
-      ],
-      events: [
-        { date:'8/10', type:'요', product:'DW 프로 실버', qty:180, cost:null, note:'입고요청 (8/15 입고)' },
-        { date:'8/11', type:'요', product:'DW 플러스 실버', qty:90, cost:null, note:'입고요청 (8/16 입고)' },
-        { date:'8/14', type:'요', product:'맥세이프 킥프레임', qty:1200, cost:null, note:'입고요청 (8/19 입고)' },
-        { date:'8/15', type:'추', product:'DW 프로 실버', qty:180, cost:5125518, note:'중국→한국 입고' },
-        { date:'8/15', type:'요', product:'DW 플러스 블랙', qty:90, cost:null, note:'입고요청 (8/20 입고)' },
-        { date:'8/16', type:'추', product:'DW 플러스 실버', qty:90, cost:1696221, note:'중국→한국 입고' },
-        { date:'8/19', type:'추', product:'맥세이프 킥프레임', qty:1200, cost:7250040, note:'중국→한국 입고' },
-        { date:'8/20', type:'추', product:'DW 플러스 블랙', qty:90, cost:1696221, note:'중국→한국 입고' },
-        { date:'8/24', type:'요', product:'DW 프로 블랙', qty:90, cost:null, note:'입고요청 (8/29 입고)' },
-        { date:'8/29', type:'신', product:'PH 스탠드 블랙', qty:1000, cost:3900000, note:'신규 생산 발주 (10/18 입고)' },
-        { date:'8/29', type:'추', product:'DW 프로 블랙', qty:90, cost:2562759, note:'중국→한국 입고' },
-      ]
-    },
-    9: {
-      total: 31153840,
-      weeks: [
-        { label:'1주', days:'9/1~9/7', cost: 1545000 },
-        { label:'2주', days:'9/8~9/14', cost: 10580820 },
-        { label:'3주', days:'9/15~9/21', cost: 16465261 },
-        { label:'4주', days:'9/22~9/28', cost: 2562759 },
-        { label:'5주', days:'9/29~9/30', cost: 0 },
-      ],
-      events: [
-        { date:'9/3',  type:'요', product:'PH 스탠드 실버', qty:1000, cost:null, note:'입고요청 (9/8 입고)' },
-        { date:'9/4',  type:'신', product:'DW 프로 실버', qty:500, cost:1545000, note:'신규 생산 발주 (10/24 완료)' },
-        { date:'9/8',  type:'추', product:'PH 스탠드 실버', qty:1000, cost:4885800, note:'중국→한국 입고' },
-        { date:'9/9',  type:'요', product:'DW 프로 실버', qty:180, cost:null, note:'입고요청 (9/14 입고)' },
-        { date:'9/10', type:'요', product:'DW 플러스 실버', qty:90, cost:null, note:'입고요청 (9/15 입고)' },
-        { date:'9/13', type:'요', product:'맥세이프 킥프레임', qty:1200, cost:null, note:'입고요청 (9/18 입고)' },
-        { date:'9/14', type:'추', product:'DW 프로 실버', qty:180, cost:5125518, note:'중국→한국 입고' },
-        { date:'9/15', type:'추', product:'DW 플러스 실버', qty:90, cost:1696221, note:'중국→한국 입고' },
-        { date:'9/18', type:'추', product:'맥세이프 킥프레임', qty:1200, cost:7250040, note:'중국→한국 입고' },
-        { date:'9/18', type:'신', product:'PH 스탠드 실버', qty:1000, cost:3900000, note:'신규 생산 발주' },
-        { date:'9/18', type:'신', product:'맥세이프 킥프레임', qty:5000, cost:3619000, note:'신규 생산 발주 (선금)' },
-        { date:'9/23', type:'요', product:'DW 프로 블랙', qty:90, cost:null, note:'입고요청 (9/28 입고)' },
-        { date:'9/26', type:'요', product:'DW 플러스 그린', qty:45, cost:null, note:'입고요청 (10/1 입고)' },
-        { date:'9/28', type:'추', product:'DW 프로 블랙', qty:90, cost:2562759, note:'중국→한국 입고' },
-        { date:'9/29', type:'요', product:'DW 플러스 블랙', qty:90, cost:null, note:'입고요청 (10/4 입고)' },
-      ]
-    },
-    10: {
-      total: 28051183,
-      weeks: [
-        { label:'1주', days:'10/1~10/7', cost: 2544331 },
-        { label:'2주', days:'10/8~10/14', cost: 3986514 },
-        { label:'3주', days:'10/15~10/21', cost: 13831061 },
-        { label:'4주', days:'10/22~10/28', cost: 7689277 },
-        { label:'5주', days:'10/29~10/31', cost: 0 },
-      ],
-      events: [
-        { date:'10/1',  type:'추', product:'DW 플러스 그린', qty:45, cost:848110, note:'중국→한국 입고' },
-        { date:'10/4',  type:'추', product:'DW 플러스 블랙', qty:90, cost:1696221, note:'중국→한국 입고' },
-        { date:'10/9',  type:'요', product:'DW 프로 실버', qty:140, cost:null, note:'입고요청 (10/14 입고)' },
-        { date:'10/10', type:'요', product:'DW 플러스 실버', qty:90, cost:null, note:'입고요청 (10/15 입고)' },
-        { date:'10/13', type:'요', product:'맥세이프 킥프레임', qty:1200, cost:null, note:'입고요청 (10/18 입고)' },
-        { date:'10/13', type:'요', product:'PH 스탠드 블랙', qty:1000, cost:null, note:'입고요청 (10/18 입고)' },
-        { date:'10/14', type:'추', product:'DW 프로 실버', qty:140, cost:3986514, note:'중국→한국 입고' },
-        { date:'10/15', type:'추', product:'DW 플러스 실버', qty:90, cost:1696221, note:'중국→한국 입고' },
-        { date:'10/18', type:'추', product:'맥세이프 킥프레임', qty:1200, cost:7250040, note:'중국→한국 입고' },
-        { date:'10/18', type:'추', product:'PH 스탠드 블랙', qty:1000, cost:4885800, note:'중국→한국 입고' },
-        { date:'10/19', type:'요', product:'DW 프로 실버', qty:180, cost:null, note:'입고요청 (10/24 입고)' },
-        { date:'10/23', type:'요', product:'DW 프로 블랙', qty:90, cost:null, note:'입고요청 (10/28 입고)' },
-        { date:'10/24', type:'추', product:'DW 프로 실버', qty:180, cost:5125518, note:'중국→한국 입고' },
-        { date:'10/28', type:'추', product:'DW 프로 블랙', qty:90, cost:2562759, note:'중국→한국 입고' },
-      ]
-    },
-    11: {
-      total: 34106559,
-      weeks: [
-        { label:'1주', days:'11/1~11/7', cost: 10330800 },
-        { label:'2주', days:'11/8~11/14', cost: 3241221 },
-        { label:'3주', days:'11/15~11/21', cost: 12846261 },
-        { label:'4주', days:'11/22~11/28', cost: 7688277 },
-        { label:'5주', days:'11/29~11/30', cost: 0 },
-      ],
-      events: [
-        { date:'11/2',  type:'요', product:'PH 스탠드 실버', qty:1000, cost:null, note:'입고요청 (11/7 입고)' },
-        { date:'11/3',  type:'신', product:'PH 스탠드 블랙', qty:1000, cost:3900000, note:'신규 생산 발주 (12/23 입고)' },
-        { date:'11/7',  type:'추', product:'PH 스탠드 실버', qty:1000, cost:4885800, note:'중국→한국 입고' },
-        { date:'11/7',  type:'신', product:'DW 프로 실버', qty:500, cost:1545000, note:'신규 생산 발주 (12/27 완료)' },
-        { date:'11/9',  type:'요', product:'DW 플러스 실버', qty:90, cost:null, note:'입고요청 (11/14 입고)' },
-        { date:'11/12', type:'요', product:'맥세이프 킥프레임', qty:1200, cost:null, note:'입고요청 (11/17 입고)' },
-        { date:'11/13', type:'신', product:'DW 프로 실버', qty:500, cost:1545000, note:'신규 생산 발주 (27/1/2 완료)' },
-        { date:'11/13', type:'요', product:'DW 플러스 블랙', qty:90, cost:null, note:'입고요청 (11/18 입고)' },
-        { date:'11/14', type:'추', product:'DW 플러스 실버', qty:90, cost:1696221, note:'중국→한국 입고' },
-        { date:'11/17', type:'추', product:'맥세이프 킥프레임', qty:1200, cost:7250040, note:'중국→한국 입고' },
-        { date:'11/17', type:'신', product:'PH 스탠드 실버', qty:1000, cost:3900000, note:'신규 생산 발주' },
-        { date:'11/18', type:'추', product:'DW 플러스 블랙', qty:90, cost:1696221, note:'중국→한국 입고' },
-        { date:'11/18', type:'요', product:'DW 프로 실버', qty:180, cost:null, note:'입고요청 (11/23 입고)' },
-        { date:'11/22', type:'요', product:'DW 프로 블랙', qty:90, cost:null, note:'입고요청 (11/27 입고)' },
-        { date:'11/23', type:'추', product:'DW 프로 실버', qty:180, cost:5125518, note:'중국→한국 입고' },
-        { date:'11/27', type:'추', product:'DW 프로 블랙', qty:90, cost:2562759, note:'중국→한국 입고' },
-      ]
-    },
-    12: {
-      total: 22428834,
-      weeks: [
-        { label:'1주', days:'12/1~12/7', cost: 0 },
-        { label:'2주', days:'12/8~12/14', cost: 2720221 },
-        { label:'3주', days:'12/15~12/21', cost: 7250040 },
-        { label:'4주', days:'12/22~12/28', cost: 12458573 },
-        { label:'5주', days:'12/29~12/31', cost: 0 },
-      ],
-      events: [
-        { date:'12/9',  type:'요', product:'DW 플러스 실버', qty:90, cost:null, note:'입고요청 (12/14 입고)' },
-        { date:'12/12', type:'요', product:'맥세이프 킥프레임', qty:1200, cost:null, note:'입고요청 (12/17 입고)' },
-        { date:'12/13', type:'신', product:'DW 플러스 블랙', qty:500, cost:1023750, note:'신규 생산 발주 (27/2/1 완료)' },
-        { date:'12/14', type:'추', product:'DW 플러스 실버', qty:90, cost:1696221, note:'중국→한국 입고' },
-        { date:'12/17', type:'추', product:'맥세이프 킥프레임', qty:1200, cost:7250040, note:'중국→한국 입고' },
-        { date:'12/18', type:'요', product:'PH 스탠드 블랙', qty:1000, cost:null, note:'입고요청 (12/23 입고)' },
-        { date:'12/18', type:'요', product:'DW 프로 실버', qty:140, cost:null, note:'입고요청 (12/23 입고)' },
-        { date:'12/22', type:'요', product:'DW 프로 블랙', qty:90, cost:null, note:'입고요청 (12/27 입고)' },
-        { date:'12/23', type:'추', product:'PH 스탠드 블랙', qty:1000, cost:4885800, note:'중국→한국 입고' },
-        { date:'12/23', type:'추', product:'DW 프로 실버', qty:140, cost:3986514, note:'중국→한국 입고' },
-        { date:'12/24', type:'신', product:'DW 플러스 실버', qty:500, cost:1023750, note:'신규 생산 발주 (27/2/12 완료)' },
-        { date:'12/27', type:'추', product:'DW 프로 블랙', qty:90, cost:2562759, note:'중국→한국 입고' },
-        { date:'12/27', type:'요', product:'DW 플러스 그린', qty:45, cost:null, note:'입고요청 (1/1 입고)' },
-        { date:'12/28', type:'요', product:'DW 프로 실버', qty:180, cost:null, note:'입고요청 (1/2 입고)' },
-        { date:'12/28', type:'요', product:'DW 플러스 블랙', qty:90, cost:null, note:'입고요청 (1/2 입고)' },
-      ]
-    },
-  };
-
-  // ── 구글 시트 타임라인 병합 ─────────────────────────────
-  // sheetTimeline이 있으면 해당 월 데이터를 시트 데이터로 교체,
-  // 없는 월은 하드코딩 폴백 사용
-  const TIMELINE = {};
-  [6,7,8,9,10,11,12].forEach(m => {
-    if (sheetTimeline && sheetTimeline[m] && sheetTimeline[m].length > 0) {
-      // 시트 데이터로 월 합계 재계산
-      const events = sheetTimeline[m];
-      const monthTotal = events.reduce((s,e) => s + (e.cost||0), 0);
-      // 주차별 비용은 buildCalendar 내에서 자동 계산되므로 weeks는 더미
-      TIMELINE[m] = {
-        total: monthTotal,
-        weeks: [],
-        events: events
-      };
-    } else {
-      TIMELINE[m] = FALLBACK_TIMELINE[m];
-    }
+  const products = {};
+  currentData.forEach(r => {
+    if (!products[r.product]) products[r.product] = {신:0,추:0,기:0,total:0,count:0};
+    const p = products[r.product];
+    p[r.type] = (p[r.type]||0) + (r.amount||0);
+    p.total += (r.amount||0);
+    p.count++;
   });
 
+  const rows = Object.entries(products)
+    .sort((a,b) => b[1].total - a[1].total)
+    .map(([name, d]) => `
+      <tr>
+        <td><strong>${name}</strong></td>
+        <td class="mono" style="color:var(--신)">${d['신'] ? fmtAmount(d['신']) : '—'}</td>
+        <td class="mono" style="color:var(--추)">${d['추'] ? fmtAmount(d['추']) : '—'}</td>
+        <td class="mono">${fmtAmount(d.total)}</td>
+        <td>${d.count}건</td>
+      </tr>
+    `).join('');
 
-  // ── TIMELINE 기반으로 월별 합계 재계산 (시트 연동 반영) ──
-  const EFFECTIVE_MONTHLY = {};
-  MONTHS.forEach(m => {
-    EFFECTIVE_MONTHLY[m] = TIMELINE[m].total;
-  });
-  const totalAnnualEff   = MONTHS.reduce((s,m) => s + EFFECTIVE_MONTHLY[m], 0);
-  const avgMonthTotalEff = totalAnnualEff / 7;
-  const maxMonthTotalEff = Math.max(...MONTHS.map(m => EFFECTIVE_MONTHLY[m]));
-  const minMonthTotalEff = Math.min(...MONTHS.map(m => EFFECTIVE_MONTHLY[m]));
-
-  // ─── 달력 생성 헬퍼 ────────────────────────────────────
-  function buildCalendar(month) {
-    const data = TIMELINE[month];
-    const year = 2026;
-    // 각 날짜별 이벤트 맵
-    const evByDay = {};
-    data.events.forEach(ev => {
-      const d = parseInt(ev.date.split('/')[1]);
-      if(!evByDay[d]) evByDay[d] = [];
-      evByDay[d].push(ev);
-    });
-
-    // 주별 비용 계산 (타임테이블 기반)
-    const weekCosts = data.weeks;
-
-    // 해당 월 1일의 요일 (0=일)
-    const firstDay = new Date(year, month-1, 1).getDay();
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const dayNames = ['일','월','화','수','목','금','토'];
-
-    // 배지 설정
-    // 신=신규생산발주(빨강), 추=추가입고(파랑), 요=입고요청(노랑), 기=기존생산물량잔금(초록)
-    function badge(type) {
-      const cfg = {
-        '신': { bg:'rgba(255,59,48,0.18)',   color:'var(--red)', border:'rgba(255,59,48,0.5)' },
-        '추': { bg:'rgba(64,200,224,0.18)',  color:'var(--accent)', border:'rgba(64,200,224,0.5)' },
-        '요': { bg:'rgba(245,196,0,0.18)',  color:'var(--amber)', border:'rgba(245,196,0,0.5)' },
-        '기': { bg:'rgba(29,185,84,0.18)',   color:'var(--green)', border:'rgba(29,185,84,0.5)' },
-      };
-      const c = cfg[type] || { bg:'rgba(100,116,139,0.2)', color:'#64748b', border:'rgba(100,116,139,0.3)' };
-      return `<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:${c.bg};color:${c.color};border:1.5px solid ${c.border};font-size:11px;font-weight:800;flex-shrink:0">${type}</span>`;
-    }
-
-    // 주차별 비용 계산을 위해 날짜→주차 매핑
-    function getWeekIdx(day) {
-      const dow = new Date(year, month-1, day).getDay();
-      // 단순히 월 내 주차
-      const col = (firstDay + day - 1) % 7;
-      return Math.floor((firstDay + day - 1) / 7);
-    }
-
-    // 달력 HTML
-    let calRows = '';
-    let cells = [];
-    // 빈 셀 채우기
-    for(let i=0;i<firstDay;i++) cells.push(null);
-    for(let d=1;d<=daysInMonth;d++) cells.push(d);
-    // 7의 배수로 맞추기
-    while(cells.length % 7 !== 0) cells.push(null);
-
-    // 주차별 비용 (5주)
-    const weekRowCosts = [0,0,0,0,0];
-    data.events.forEach(ev => {
-      const d = parseInt(ev.date.split('/')[1]);
-      if(ev.cost) {
-        const wi = Math.floor((firstDay + d - 1)/7);
-        if(wi<5) weekRowCosts[wi] += ev.cost;
-      }
-    });
-
-    for(let row=0; row<cells.length/7; row++) {
-      calRows += `<tr style="height:160px">`;
-      for(let col=0; col<7; col++) {
-        const day = cells[row*7+col];
-        if(!day) {
-          calRows += `<td style="background:transparent;border:1px solid rgba(255,255,255,0.05)"></td>`;
-          continue;
-        }
-        const evs = evByDay[day] || [];
-        const isToday = (new Date().getDate()===day && new Date().getMonth()===month-1 && new Date().getFullYear()===year);
-        const hasCost = evs.some(e=>e.cost);
-        const isSun = col===0, isSat = col===6;
-        const dayColor = isToday ? 'var(--accent)' : isSun ? 'var(--red)' : isSat ? 'var(--purple)' : 'var(--text)';
-
-        let evHTML = '';
-        evs.forEach(ev => {
-          const prodShort = ev.product
-            .replace('맥세이프 킥프레임','킥프레임')
-            .replace('PH 스탠드 실버','PH-S')
-            .replace('PH 스탠드 블랙','PH-B')
-            .replace('DW 프로 실버','DW프S')
-            .replace('DW 프로 블랙','DW프B')
-            .replace('DW 플러스 실버','DW플S')
-            .replace('DW 플러스 블랙','DW플B')
-            .replace('DW 플러스 그린','DW플G');
-          const qtyStr = ev.qty ? ` ${ev.qty}개` : '';
-          const costStr = ev.cost ? ` · ${fmtBar(ev.cost)}` : '';
-          evHTML += `<div style="display:flex;align-items:flex-start;gap:5px;margin-top:6px;line-height:1.4">
-            ${badge(ev.type)}
-            <div style="font-size:13px;color:var(--muted);flex:1;min-width:0;line-height:1.5">
-              <span style="color:var(--text);font-weight:700">${prodShort}</span>${qtyStr}${costStr}
-            </div>
-          </div>`;
-        });
-
-        calRows += `<td style="vertical-align:top;padding:0;border:1px solid var(--border);overflow:hidden;background:${hasCost?'rgba(64,200,224,0.05)':'transparent'};${isToday?'box-shadow:inset 0 0 0 2px var(--accent)':''};position:relative">
-          <div style="padding:10px 12px;height:100%;box-sizing:border-box;overflow:hidden">
-            <div style="font-size:15px;font-weight:800;color:${dayColor};margin-bottom:5px;letter-spacing:-0.02em">${day}</div>
-            ${evHTML}
-          </div>
-        </td>`;
-      }
-      // 주차 합계 열
-      const wCost = weekRowCosts[row];
-      calRows += `<td style="text-align:right;vertical-align:middle;padding:8px 14px;border:1px solid var(--border);background:var(--bg3);width:100px;white-space:nowrap">
-        ${wCost>0 ? `<div style="font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:0.03em">주 합계</div><div style="font-size:14px;font-weight:800;font-family:var(--mono);color:var(--text)">${fmtBar(wCost)}</div>` : `<div style="font-size:12px;color:var(--border2)">—</div>`}
-      </td>`;
-      calRows += `</tr>`;
-    }
-
-    return `
-      <div style="overflow-x:auto">
-        <table style="width:100%;min-width:900px;border-collapse:collapse;table-layout:fixed">
-          <thead>
-            <tr>
-              ${dayNames.map((d,i)=>`<th style="padding:14px 4px;font-size:14px;font-weight:700;color:${i===0?'var(--red)':i===6?'var(--purple)':'var(--muted)'};text-align:center;border:1px solid var(--border);background:var(--bg3)">${d}</th>`).join('')}
-              <th style="width:100px;padding:14px 8px;font-size:14px;color:var(--muted);text-align:right;border:1px solid var(--border);background:var(--bg3)">주 합계</th>
-            </tr>
-          </thead>
-          <tbody>${calRows}</tbody>
-        </table>
-      </div>`;
-  }
-
-  // ── 달력 탭 패널 ────────────────────────────────────────
-  const monthBtns = MONTHS.map((m,i) => `
-    <button onclick="switchCalMonth(${m})" id="calbtn-${m}" class="cal-month-btn ${i===0?'active':''}" style="padding:6px 14px;border-radius:6px;border:1px solid var(--border2);background:${i===0?'var(--accent)':'var(--bg3)'};color:${i===0?'#0d0f12':'var(--muted)'};font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s">
-      ${MONTH_LABELS[m]}
-    </button>`).join('');
-
-  // 월별 달력 미리 생성
-  const calPanels = MONTHS.map((m,i) => `
-    <div id="cal-month-${m}" style="display:${i===0?'block':'none'}">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div>
-          <span style="font-size:22px;font-weight:700;color:var(--text)">2026년 ${MONTH_LABELS[m]}</span>
-          <span style="font-size:12px;color:var(--muted);margin-left:10px;font-family:var(--mono)">월 합계: </span>
-          <span style="font-size:18px;font-weight:700;font-family:var(--mono);color:var(--accent)">${fmtBar(TIMELINE[m].total)}</span>
-        </div>
-        <div style="display:flex;gap:12px;font-size:11px">
-          <span style="display:flex;align-items:center;gap:4px">
-            <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(255,59,48,0.18);color:var(--red);border:1px solid rgba(255,59,48,0.5);font-size:11px;font-weight:800">신</span>신규 생산 발주
-          </span>
-          <span style="display:flex;align-items:center;gap:4px">
-            <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(64,200,224,0.18);color:var(--accent);border:1px solid rgba(64,200,224,0.5);font-size:11px;font-weight:800">추</span>추가 입고 (중국→한국)
-          </span>
-          <span style="display:flex;align-items:center;gap:4px">
-            <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(245,196,0,0.18);color:var(--amber);border:1px solid rgba(245,196,0,0.5);font-size:11px;font-weight:800">요</span>입고 요청
-          </span>
-          <span style="display:flex;align-items:center;gap:4px">
-            <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(29,185,84,0.18);color:var(--green);border:1px solid rgba(29,185,84,0.5);font-size:11px;font-weight:800">기</span>기존 생산물량 잔금
-          </span>
-        </div>
-      </div>
-      ${buildCalendar(m)}
-    </div>`).join('');
-
-  const calendarPanel = `
-    <div id="simtab-calendar" class="sim-tab-panel" style="display:none">
-      <section class="sec">
-        <div style="background:rgba(64,200,224,0.06);border:1px solid rgba(64,200,224,0.2);border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:12px;color:var(--muted);line-height:1.7">
-          📋 <strong style="color:var(--text)">구글 시트 연동</strong> — <code style="background:var(--bg3);border:1px solid var(--border2);padding:1px 5px;border-radius:3px;font-size:11px;color:var(--accent)">타임라인</code> 시트에 데이터를 입력하면 자동 반영됩니다.
-          <br>시트 형식: <strong style="color:var(--text)">A열</strong> 날짜(6/4) &nbsp;|&nbsp; <strong style="color:var(--text)">B열</strong> 유형(신·추·요·기) &nbsp;|&nbsp; <strong style="color:var(--text)">C열</strong> 제품명 &nbsp;|&nbsp; <strong style="color:var(--text)">D열</strong> 수량 &nbsp;|&nbsp; <strong style="color:var(--text)">E열</strong> 금액 &nbsp;|&nbsp; <strong style="color:var(--text)">F열</strong> 비고 &nbsp;&nbsp;·&nbsp;&nbsp; 시트 GID는 CONFIG.GID_TIMELINE에 입력
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem">
-          ${monthBtns}
-        </div>
-        <div class="table-card" style="padding:1.25rem">
-          ${calPanels}
-        </div>
-      </section>
-    </div>`;
-
-  document.getElementById('sim-content').innerHTML = `
-    ${kpiHTML}
-    ${tabNav}
-    ${overviewPanel}
-    ${calendarPanel}
-  `;
+  document.getElementById('productTableBody').innerHTML = rows;
 }
 
-window.switchCalMonth = function(m) {
-  document.querySelectorAll('.cal-month-btn').forEach(btn => {
-    btn.style.background = 'var(--bg3)';
-    btn.style.color = 'var(--muted)';
-  });
-  document.querySelectorAll('[id^="cal-month-"]').forEach(el => el.style.display='none');
-  const btn = document.getElementById('calbtn-'+m);
-  if(btn){ btn.style.background='var(--accent)'; btn.style.color='#0d0f12'; }
-  const panel = document.getElementById('cal-month-'+m);
-  if(panel) panel.style.display='block';
-};
-// ============================================================
-// END SIMULATION ENGINE
-// ============================================================
-
-
-
-
-
-function setTheme(mode){
-  if(mode==='light'){
-    document.body.classList.add('light-mode');
-  } else {
-    document.body.classList.remove('light-mode');
-  }
-  localStorage.setItem('theme', mode);
-  // 모든 토글 버튼 active 상태 갱신
-  document.querySelectorAll('.theme-toggle-btn').forEach(function(btn){
-    var isLight = btn.id && btn.id.startsWith('btn-light');
-    if(mode==='light'){
-      btn.classList.toggle('active', isLight);
-    } else {
-      btn.classList.toggle('active', !isLight);
-    }
-  });
-}
-
-// 페이지 로드 시 저장된 테마 복원
-(function(){
-  var saved = localStorage.getItem('theme') || 'dark';
-  setTheme(saved);
-})();
-
+// ──────────────────────────── INIT ────────────────────────────
+loadBuiltIn();
 </script>
 </body>
 </html>
