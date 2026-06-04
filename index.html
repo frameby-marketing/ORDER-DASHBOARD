@@ -1499,7 +1499,6 @@ function switchSimTab(t, el) {
 
 // ── 메인 렌더 ─────────────────────────────────────────────
 function renderSimulation(cfg, sheetTimeline) {
-  try {
   const MONTHS = [6,7,8,9,10,11,12];
   const MONTH_LABELS = {6:'6월',7:'7월',8:'8월',9:'9월',10:'10월',11:'11월',12:'12월'};
 
@@ -2040,12 +2039,8 @@ window.switchCalMonth = function(m) {
   if(btn){ btn.style.background='var(--accent)'; btn.style.color='#0d0f12'; }
   const panel = document.getElementById('cal-month-'+m);
   if(panel) panel.style.display='block';
-  } catch(err) {
-    console.error('renderSimulation error:', err);
-    const el = document.getElementById('sim-content');
-    if (el) el.innerHTML = `<div class="err-box">⚠️ 렌더링 오류: <strong>${err.message}</strong><br><small>F12 콘솔에서 상세 확인</small></div>`;
-  }
-}// ============================================================
+};
+// ============================================================
 // END SIMULATION ENGINE
 // ============================================================
 
