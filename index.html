@@ -339,7 +339,8 @@
   <div class="app-title">📦 발주 <span>대시보드</span></div>
   <div class="gs-status">
     <div class="gs-dot" id="gsDot" style="background:#4e5a6e"></div>
-    <span id="gsStatusText">Google Sheets 미연결</span>
+    <span id="gsStatusText">연결 중…</span>
+    <button onclick="connectSheet()" style="margin-left:8px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit;" title="데이터 새로고침">🔄 새로고침</button>
   </div>
 </header>
 
@@ -351,17 +352,7 @@
 <!-- ══════════════════════════════════════════ TAB: SIMULATION ══ -->
 <div class="tab-panel active" id="tab-simulation">
 
-  <!-- Google Sheets 연동 설정 -->
-  <div class="gs-config">
-    <div class="gs-config-title">🔗 Google Sheets 연동 설정</div>
-    <div class="gs-input-row">
-      <input class="gs-input" id="sheetIdInput" placeholder="Google Sheets ID (URL의 /d/ 이후 부분)" />
-      <input class="gs-input" style="max-width:180px;" id="sheetNameInput" placeholder="시트명 (예: 타임라인)" />
-      <button class="gs-btn" onclick="connectSheet()">연동하기</button>
-      <button class="gs-btn" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);" onclick="loadBuiltIn()">샘플데이터</button>
-    </div>
-    <div class="gs-hint">※ 스프레드시트는 "링크가 있는 모든 사용자" 공개 설정이 필요합니다 · 시트명 기본값: Sheet1</div>
-  </div>
+
 
   <!-- KPIs -->
   <div class="kpi-row" id="kpiRow">
@@ -602,9 +593,8 @@ function parseRow(row) {
 
 // ──────────────────────────── GOOGLE SHEETS ────────────────────────────
 async function connectSheet() {
-  const id = document.getElementById('sheetIdInput').value.trim();
-  const sheetName = document.getElementById('sheetNameInput').value.trim() || 'Sheet1';
-  if (!id) { alert('Sheets ID를 입력해주세요.'); return; }
+  const id = '1p-ko7c4--yUwYOYE2fL8X6Z1U3O1lWoJ36AZuBanGmQ';
+  const sheetName = '타임라인';
 
   setStatus('연결 중…', '#f0b429');
   try {
@@ -863,7 +853,7 @@ function renderOverview() {
 }
 
 // ──────────────────────────── INIT ────────────────────────────
-loadBuiltIn();
+connectSheet();
 </script>
 </body>
 </html>
