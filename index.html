@@ -13,20 +13,24 @@
    ============================================================ */
 
 :root {
+  /* ── 다크모드 배경/텍스트 ── */
   --bg:     #0d0f12;
   --bg2:    #13161b;
   --bg3:    #1a1e26;
   --border: rgba(255,255,255,0.07);
   --border2:rgba(255,255,255,0.13);
-  --text:   #e2e8f0;
-  --muted:  #64748b;
-  --accent: #38bdf8;
-  --green:  #22c55e;
-  --red:    #ef4444;
-  --amber:  #f59e0b;
-  --blue:   #3b82f6;
-  --purple: #8b5cf6;
-  --pink:   #ec4899;
+  --text:   #e8edf2;
+  --muted:  #6b7a92;
+  /* ── 이미지 팔레트 색상 ── */
+  --accent: #40C8E0;   /* 하늘 — 주요 강조 */
+  --green:  #1DB954;   /* 에메랄드 초록 */
+  --red:    #FF3B30;   /* 선명 빨강 */
+  --amber:  #F5C400;   /* 황금 노랑 (13.26:1 대비) */
+  --blue:   #2979FF;   /* 선명 파랑 */
+  --purple: #AB47BC;   /* 보라 */
+  --pink:   #E91E8C;   /* 로즈 핑크 */
+  --orange: #FF8C00;   /* 주황 */
+  --indigo: #5C6BC0;   /* 남보라 (5.64:1) */
   --sidebar-w: 200px;
   --mono: 'DM Mono', monospace;
   --sans: 'Pretendard', -apple-system, sans-serif;
@@ -104,12 +108,12 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* ── BADGE ─────────────────────────────────────────────── */
 .kpi-badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; margin-bottom: 4px; }
-.kpi-badge-green  { background: rgba(34,197,94,0.12);  color: var(--green); }
-.kpi-badge-red    { background: rgba(239,68,68,0.12);  color: var(--red); }
-.kpi-badge-amber  { background: rgba(245,158,11,0.12); color: var(--amber); }
-.kpi-badge-blue   { background: rgba(59,130,246,0.12); color: var(--blue); }
-.kpi-badge-purple { background: rgba(139,92,246,0.12); color: var(--purple); }
-.kpi-badge-pink   { background: rgba(236,72,153,0.12); color: var(--pink); }
+.kpi-badge-green  { background: rgba(29,185,84,0.12);  color: var(--green); }
+.kpi-badge-red    { background: rgba(255,59,48,0.12);  color: var(--red); }
+.kpi-badge-amber  { background: rgba(245,196,0,0.12); color: var(--amber); }
+.kpi-badge-blue   { background: rgba(41,121,255,0.12); color: var(--blue); }
+.kpi-badge-purple { background: rgba(171,71,188,0.12); color: var(--purple); }
+.kpi-badge-pink   { background: rgba(233,30,140,0.12); color: var(--pink); }
 
 /* ── BAR COMPARE ───────────────────────────────────────── */
 .bar-compare { display: flex; flex-direction: column; gap: 8px; }
@@ -143,8 +147,8 @@ td.fw { font-weight: 600; }
 td.muted { color: var(--muted); }
 td.pos { color: var(--green); font-weight: 600; }
 td.neg { color: var(--red); font-weight: 600; }
-tr.row-target { background: rgba(56,189,248,0.05); }
-tr.row-current { background: rgba(245,158,11,0.07); }
+tr.row-target { background: rgba(64,200,224,0.05); }
+tr.row-current { background: rgba(245,196,0,0.07); }
 tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2); }
 .sc-note { font-size: 10px; color: var(--muted); font-weight: 400; }
 .sc-current-tag { font-size: 10px; color: var(--amber); font-weight: 700; margin-left: 6px; }
@@ -162,9 +166,9 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
 .prod-qty { width: 64px; flex-shrink: 0; font-size: 12px; font-weight: 600; text-align: right; font-family: var(--mono); }
 .prod-qty em { font-style: normal; font-weight: 400; color: var(--muted); }
 .prod-badge { flex-shrink: 0; width: 38px; text-align: center; font-size: 10px; font-weight: 700; padding: 3px 0; border-radius: 4px; }
-.badge-ok     { background: rgba(34,197,94,0.12);  color: var(--green); }
-.badge-warn   { background: rgba(245,158,11,0.12); color: var(--amber); }
-.badge-danger { background: rgba(239,68,68,0.12);  color: var(--red); }
+.badge-ok     { background: rgba(29,185,84,0.12);  color: var(--green); }
+.badge-warn   { background: rgba(245,196,0,0.12); color: var(--amber); }
+.badge-danger { background: rgba(255,59,48,0.12);  color: var(--red); }
 .badge-soldout{ background: var(--bg3); color: var(--muted); }
 
 /* ── STOCK GRID ────────────────────────────────────────── */
@@ -186,10 +190,10 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
 .stock-dday.gray  { color: var(--muted); font-size: 20px; }
 .stock-tag-wrap { margin-top: 6px; }
 .stock-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
-.stock-tag.red   { background: rgba(239,68,68,0.12);  color: var(--red); }
-.stock-tag.amber { background: rgba(245,158,11,0.12); color: var(--amber); }
-.stock-tag.blue  { background: rgba(59,130,246,0.12); color: var(--blue); }
-.stock-tag.green { background: rgba(34,197,94,0.12);  color: var(--green); }
+.stock-tag.red   { background: rgba(255,59,48,0.12);  color: var(--red); }
+.stock-tag.amber { background: rgba(245,196,0,0.12); color: var(--amber); }
+.stock-tag.blue  { background: rgba(41,121,255,0.12); color: var(--blue); }
+.stock-tag.green { background: rgba(29,185,84,0.12);  color: var(--green); }
 .stock-tag.muted, .stock-tag.gray { background: var(--bg3); color: var(--muted); }
 .stock-divider { border-top: 1px dashed var(--border2); margin: 10px 0 8px; }
 .stock-restock { font-size: 11px; color: var(--muted); line-height: 1.5; }
@@ -228,8 +232,8 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
 
 /* ── ALERT BANNER ──────────────────────────────────────── */
 .alert-banner { padding: 10px 16px; border-radius: 8px; font-size: 12px; font-weight: 500; margin-bottom: 1rem; border-left: 3px solid; line-height: 1.6; }
-.alert-danger { background: rgba(239,68,68,0.08); border-color: var(--red); color: #fca5a5; }
-.alert-warn   { background: rgba(245,158,11,0.08); border-color: var(--amber); color: #fcd34d; }
+.alert-danger { background: rgba(255,59,48,0.08); border-color: var(--red); color: #fca5a5; }
+.alert-warn   { background: rgba(245,196,0,0.08); border-color: var(--amber); color: #fcd34d; }
 
 /* ── LOADING ───────────────────────────────────────────── */
 .loading { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 80px; color: var(--muted); font-size: 13px; font-family: var(--mono); }
@@ -237,7 +241,7 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── ERROR ─────────────────────────────────────────────── */
-.err-box { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); border-radius: 8px; padding: 14px 16px; color: #fca5a5; font-size: 13px; margin-bottom: 14px; line-height: 1.7; }
+.err-box { background: rgba(255,59,48,0.08); border: 1px solid rgba(255,59,48,0.25); border-radius: 8px; padding: 14px 16px; color: #fca5a5; font-size: 13px; margin-bottom: 14px; line-height: 1.7; }
 .err-box strong { color: var(--red); }
 
 /* ── SETTINGS ──────────────────────────────────────────── */
@@ -287,20 +291,24 @@ tfoot .tfoot-row { background: var(--bg3); border-top: 1px solid var(--border2);
 }
 
 body.light-mode{
-  --bg:#ffffff;
+  /* ── 라이트모드 배경/텍스트 ── */
+  --bg:#f5f7fa;
   --bg2:#ffffff;
-  --bg3:#f0f0f0;
-  --border:rgba(0,0,0,0.09);
-  --border2:rgba(0,0,0,0.17);
-  --text:#111111;
-  --muted:#555555;
-  --accent:#0060d0;
-  --green:#008833;
-  --red:#dd0000;
-  --amber:#c06600;
-  --blue:#0044cc;
-  --purple:#6600cc;
-  --pink:#cc0066;
+  --bg3:#eaecf0;
+  --border:rgba(0,0,0,0.08);
+  --border2:rgba(0,0,0,0.15);
+  --text:#111827;
+  --muted:#4b5563;
+  /* ── 이미지 팔레트 — 라이트용 (채도 유지, 명도 약간 낮춤) ── */
+  --accent:#0095b3;   /* 하늘 → 짙게 */
+  --green:#138a3c;    /* 초록 → 짙게 */
+  --red:#d42b20;      /* 빨강 → 짙게 */
+  --amber:#b8900a;    /* 노랑 → 짙게 (가독성) */
+  --blue:#1a5fcc;     /* 파랑 → 짙게 */
+  --purple:#7b2d8b;   /* 보라 → 짙게 */
+  --pink:#b3156b;     /* 핑크 → 짙게 */
+  --orange:#cc6e00;   /* 주황 → 짙게 */
+  --indigo:#3949ab;   /* 남보라 → 짙게 */
 }
 .theme-toggle-btn.active{
   background:var(--accent);
@@ -345,8 +353,8 @@ body.light-mode{
 .sim-next-date.muted { color: var(--muted); }
 .sim-next-detail { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
 .sim-next-cost  { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.sim-tag-prepay  { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: rgba(245,158,11,0.12); color: #f59e0b; }
-.sim-tag-balance { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: rgba(56,189,248,0.12); color: #38bdf8; }
+.sim-tag-prepay  { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: rgba(245,196,0,0.12); color: var(--amber); }
+.sim-tag-balance { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: rgba(64,200,224,0.12); color: var(--accent); }
 
 /* 월별 차트 */
 .sim-legend { display: flex; gap: 14px; font-size: 11px; color: var(--muted); margin-bottom: 14px; }
@@ -364,8 +372,8 @@ body.light-mode{
 .sim-month-label { font-size: 11px; font-weight: 600; color: var(--muted); }
 .sim-month-current .sim-month-label { color: var(--accent); }
 .sim-month-bar-wrap { display: flex; gap: 2px; align-items: flex-end; height: 130px; position: relative; overflow: visible; }
-.sim-month-bar-prepay  { width: 14px; background: #f59e0b; border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.6s cubic-bezier(.4,0,.2,1); }
-.sim-month-bar-balance { width: 14px; background: #38bdf8; border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.6s cubic-bezier(.4,0,.2,1); }
+.sim-month-bar-prepay  { width: 14px; background: var(--amber); border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.6s cubic-bezier(.4,0,.2,1); }
+.sim-month-bar-balance { width: 14px; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.6s cubic-bezier(.4,0,.2,1); }
 .sim-month-total { font-size: 11px; font-weight: 700; font-family: var(--mono); color: var(--text); text-align: center; }
 .sim-month-sub { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 
@@ -375,21 +383,21 @@ body.light-mode{
 /* ── SIMULATION v2 ADDITIONS ────────────────────────────── */
 .risk-list { display:flex; flex-direction:column; gap:8px; }
 .risk-item { display:flex; align-items:flex-start; gap:12px; padding:12px 16px; border-radius:8px; border:1px solid; }
-.risk-stockout_risk { background:rgba(239,68,68,0.07); border-color:rgba(239,68,68,0.25); }
-.risk-budget_exceed { background:rgba(245,158,11,0.07); border-color:rgba(245,158,11,0.25); }
+.risk-stockout_risk { background:rgba(255,59,48,0.07); border-color:rgba(255,59,48,0.25); }
+.risk-budget_exceed { background:rgba(245,196,0,0.07); border-color:rgba(245,196,0,0.25); }
 .risk-icon { font-size:18px; flex-shrink:0; }
 .risk-title { font-size:12px; font-weight:700; color:var(--text); margin-bottom:3px; }
 .risk-msg   { font-size:12px; color:var(--muted); line-height:1.5; }
-.sim-adj-tag { display:inline-block; font-size:9px; padding:1px 5px; border-radius:3px; background:rgba(245,158,11,0.15); color:var(--amber); margin-left:5px; vertical-align:middle; }
-.sim-month-over { border-color: rgba(239,68,68,0.4) !important; }
+.sim-adj-tag { display:inline-block; font-size:9px; padding:1px 5px; border-radius:3px; background:rgba(245,196,0,0.15); color:var(--amber); margin-left:5px; vertical-align:middle; }
+.sim-month-over { border-color: rgba(255,59,48,0.4) !important; }
 .sim-month-total.over { color: var(--red); }
-.sim-over-badge { display:inline-block; font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px; background:rgba(239,68,68,0.15); color:var(--red); margin-top:3px; }
-.row-over td { background:rgba(245,158,11,0.05); }
+.sim-over-badge { display:inline-block; font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px; background:rgba(255,59,48,0.15); color:var(--red); margin-top:3px; }
+.row-over td { background:rgba(245,196,0,0.05); }
 .row-over td.neg { color:var(--red); }
 .week-month-cell { background:var(--bg3); font-size:12px; text-align:center; border-right:1px solid var(--border); }
 
 
-.row-amber td { background: rgba(245,158,11,0.04); }
+.row-amber td { background: rgba(245,196,0,0.04); }
 
 /* ── GANTT CHART ─────────────────────────────────────────── */
 .gantt-legend { display:flex; gap:14px; flex-wrap:wrap; font-size:11px; color:var(--muted); margin-bottom:14px; align-items:center; }
@@ -419,16 +427,16 @@ body.light-mode{
 .stock-timeline-meta { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
 .sku-chip { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:16px; padding:0 5px; border-radius:3px; background:rgba(255,255,255,0.06); color:var(--muted); font-size:9px; font-weight:700; font-family:var(--mono); }
 .runway-chip { display:inline-flex; align-items:center; height:16px; padding:0 6px; border-radius:3px; font-size:9px; font-weight:800; font-family:var(--mono); }
-.runway-ok { background:rgba(34,197,94,0.12); color:var(--green); }
-.runway-warn { background:rgba(245,158,11,0.13); color:var(--amber); }
-.runway-danger { background:rgba(239,68,68,0.13); color:var(--red); }
+.runway-ok { background:rgba(29,185,84,0.12); color:var(--green); }
+.runway-warn { background:rgba(245,196,0,0.13); color:var(--amber); }
+.runway-danger { background:rgba(255,59,48,0.13); color:var(--red); }
 .stock-timeline-days { white-space:nowrap; }
 .stock-day-cell {
   display:inline-block; width:9px; height:52px; position:relative;
   border-bottom:1px solid var(--border); box-sizing:border-box; vertical-align:top; cursor:default;
 }
-.stock-day-ok     { background:rgba(34,197,94,0.22); }
-.stock-day-danger { background:rgba(34,197,94,0.25); }
+.stock-day-ok     { background:rgba(29,185,84,0.22); }
+.stock-day-danger { background:rgba(29,185,84,0.25); }
 .stock-day-out    { background:repeating-linear-gradient(45deg,#450a0a,#450a0a 3px,#991b1b 3px,#991b1b 6px); }
 .stock-day-today  { /* 오늘 표시는 절대위치 오버레이로만 */ }
 .stock-day-month  { border-left:1px solid var(--border2); }
@@ -449,9 +457,9 @@ body.light-mode{
 .stock-timeline-note { padding:9px 14px; font-size:11px; color:var(--muted); background:var(--bg3); border-top:1px solid var(--border); line-height:1.6; }
 .sim-kpi-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:1.5rem; }
 .sim-kpi-card { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:1rem 1.1rem; }
-.sim-kpi-card.good { border-color:rgba(34,197,94,0.28); }
-.sim-kpi-card.warn { border-color:rgba(245,158,11,0.3); }
-.sim-kpi-card.bad { border-color:rgba(239,68,68,0.3); }
+.sim-kpi-card.good { border-color:rgba(29,185,84,0.28); }
+.sim-kpi-card.warn { border-color:rgba(245,196,0,0.3); }
+.sim-kpi-card.bad { border-color:rgba(255,59,48,0.3); }
 .sim-kpi-label { font-size:11px; color:var(--muted); margin-bottom:6px; }
 .sim-kpi-value { font-size:22px; font-weight:800; font-family:var(--mono); color:var(--text); letter-spacing:0; line-height:1.2; }
 .sim-kpi-sub { font-size:11px; color:var(--muted); margin-top:5px; line-height:1.45; }
@@ -474,11 +482,8 @@ body.light-mode{
       <span class="logo-text">Order<br>Monitor</span>
     </div>
     <nav class="nav">
-      <button class="nav-item active" onclick="tab('current', this)">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        현황
-      </button>
-      <button class="nav-item" onclick="tab('simulation', this)">
+      
+      <button class="nav-item active" onclick="tab('simulation', this)">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/><circle cx="12" cy="12" r="1"/></svg>
         발주 시뮬레이션
       </button>
@@ -513,7 +518,7 @@ body.light-mode{
   <main class="main">
 
     <!-- 현황 -->
-    <div id="p-current" class="panel on">
+    <div id="p-current" class="panel" style="display:none">
       <header class="page-header">
         <div>
           <h1 class="page-title">발주 관리 대시보드</h1>
@@ -530,7 +535,7 @@ body.light-mode{
     </div>
 
     <!-- 발주 시뮬레이션 -->
-    <div id="p-simulation" class="panel">
+    <div id="p-simulation" class="panel on">
       <header class="page-header">
         <div>
           <h1 class="page-title">발주 시뮬레이션</h1>
@@ -617,6 +622,15 @@ body.light-mode{
         <p>• <code>stock_mk</code> ~ <code>stock_dw_plus_b</code> — 현재 재고수량</p>
         <p>• <code>china_dw_pro_s</code> 등 — 중국 보유 재고 (선금완료)</p>
         <p>• <code>prepaid_ph_s_1_qty</code> / <code>prepaid_ph_s_1_date</code> 등 — 제작중 항목</p>
+        <h3>📅 타임라인 시트</h3>
+        <p>시트 이름: <code>타임라인</code> · 1행 헤더, 2행부터 데이터</p>
+        <p>• <strong>A열</strong>: 날짜 — <code>6/4</code>, <code>11/17</code> 형식 (월/일)</p>
+        <p>• <strong>B열</strong>: 유형 — <code>신</code> (신규 생산 발주) / <code>추</code> (추가 입고, 중국→한국) / <code>요</code> (입고 요청) / <code>기</code> (기존 생산물량 잔금)</p>
+        <p>• <strong>C열</strong>: 제품명 — 예: <code>맥세이프 킥프레임</code>, <code>PH 스탠드 실버</code></p>
+        <p>• <strong>D열</strong>: 수량 — 숫자만 (없으면 빈칸)</p>
+        <p>• <strong>E열</strong>: 금액 — 숫자만, 원화 (없으면 빈칸)</p>
+        <p>• <strong>F열</strong>: 비고 — 자유 입력</p>
+        <p style="margin-top:8px;color:var(--amber)">⚡ 시트 GID를 설정하면 새로고침 시 달력이 시트 데이터로 자동 업데이트됩니다. GID는 시트 URL의 <code>gid=숫자</code> 부분입니다.</p>
         <a class="btn-sheet" id="sheet-link" href="#" target="_blank">📊 Google Sheets 열기</a>
       </div>
     </div>
@@ -647,6 +661,7 @@ const CONFIG = {
   GID_COUPANG: "1570889941",  // 쿠팡납품 시트 gid
   GID_STOCK:   "1079489460",  // 재고 시트 gid
   GID_MEMO:    "1699680751",  // 발주요청사항 시트 gid
+  GID_TIMELINE: "",            // 타임라인 시트 gid (추가 후 여기에 입력)
 
   // ── 계산 기준 ───────────────────────────────────────────
   NAVER_RATIO:   0.70,   // 자사몰+네이버가 전체 매출의 70%
@@ -781,20 +796,20 @@ function fmtDate(dateStr) {
 function ddayInfo(d) {
   if (d === null) return { cls: 'gray', label: '미입력', accent: '#2a2e38' };
   if (d < 0)      return { cls: 'gray', label: '품절',   accent: '#2a2e38' };
-  if (d < 10)     return { cls: 'red',  label: '초임박', accent: '#ef4444' };
-  if (d < 20)     return { cls: 'amber',label: '임박',   accent: '#f59e0b' };
-  if (d < 30)     return { cls: 'blue', label: '주의',   accent: '#3b82f6' };
-  if (d < 40)     return { cls: 'green',label: '관심',   accent: '#22c55e' };
+  if (d < 10)     return { cls: 'red',  label: '초임박', accent: 'var(--red)' };
+  if (d < 20)     return { cls: 'amber',label: '임박',   accent: 'var(--amber)' };
+  if (d < 30)     return { cls: 'blue', label: '주의',   accent: 'var(--blue)' };
+  if (d < 40)     return { cls: 'green',label: '관심',   accent: 'var(--green)' };
   return                 { cls: 'muted',label: '안전',   accent: '#4b5563' };
 }
 
 function gradeInfo(pct) {
-  if (pct >= 130) return { cls: 'pink',   label: '우수 성과', color: '#ec4899' };
-  if (pct >= 110) return { cls: 'purple', label: '초과 성과', color: '#8b5cf6' };
-  if (pct >= 100) return { cls: 'green',  label: '목표 달성', color: '#22c55e' };
-  if (pct >= 90)  return { cls: 'blue',   label: '방어 성공', color: '#3b82f6' };
-  if (pct >= 80)  return { cls: 'amber',  label: '경고',      color: '#f59e0b' };
-  return                 { cls: 'red',    label: '위험',      color: '#ef4444' };
+  if (pct >= 130) return { cls: 'pink',   label: '우수 성과', color: 'var(--pink)' };
+  if (pct >= 110) return { cls: 'purple', label: '초과 성과', color: 'var(--purple)' };
+  if (pct >= 100) return { cls: 'green',  label: '목표 달성', color: 'var(--green)' };
+  if (pct >= 90)  return { cls: 'blue',   label: '방어 성공', color: 'var(--blue)' };
+  if (pct >= 80)  return { cls: 'amber',  label: '경고',      color: 'var(--amber)' };
+  return                 { cls: 'red',    label: '위험',      color: 'var(--red)' };
 }
 
 // ── 동기화 상태 ───────────────────────────────────────────
@@ -823,14 +838,18 @@ async function load() {
     const memoPromise = CONFIG.GID_MEMO
       ? fetchCSV(CONFIG.GID_MEMO).catch(() => "")
       : Promise.resolve("");
+    const timelinePromise = CONFIG.GID_TIMELINE
+      ? fetchCSV(CONFIG.GID_TIMELINE).catch(() => "")
+      : Promise.resolve("");
 
-    const [cfgR, prodR, salesR, coupangR, stockR, memoR] = await Promise.all([
+    const [cfgR, prodR, salesR, coupangR, stockR, memoR, timelineR] = await Promise.all([
       fetchCSV(CONFIG.GID_CONFIG),
       fetchCSV(CONFIG.GID_PROD),
       fetchCSV(CONFIG.GID_SALES),
       fetchCSV(CONFIG.GID_COUPANG),
       stockPromise,
       memoPromise,
+      timelinePromise,
     ]);
 
     // 설정 시트
@@ -881,6 +900,32 @@ async function load() {
       });
     }
 
+    // 타임라인 시트 파싱
+    // 시트 형식: 날짜(A) | 유형(B) | 제품명(C) | 수량(D) | 금액(E) | 비고(F)
+    // 유형: 신/추/요/기
+    let timelineData = null;
+    if (timelineR && timelineR.trim()) {
+      const tRows = parseCSV(timelineR).slice(1).filter(r => r[0] && r[1]);
+      if (tRows.length > 0) {
+        timelineData = {};
+        tRows.forEach(r => {
+          const dateStr = r[0].trim(); // 예: "6/4", "6/15"
+          const type    = r[1].trim(); // 신/추/요/기
+          const prod    = r[2] ? r[2].trim() : '';
+          const qty     = r[3] ? (parseInt(r[3].replace(/[^0-9]/g,'')) || null) : null;
+          const cost    = r[4] ? (parseInt(r[4].replace(/[^0-9]/g,'')) || null) : null;
+          const note    = r[5] ? r[5].trim() : '';
+          const parts   = dateStr.split('/');
+          if (parts.length !== 2) return;
+          const month = parseInt(parts[0]);
+          const day   = parseInt(parts[1]);
+          if (!month || !day) return;
+          if (!timelineData[month]) timelineData[month] = [];
+          timelineData[month].push({ date: dateStr, day, type, product: prod, qty, cost, note });
+        });
+      }
+    }
+
     const elapsedDays  = n(cfg["경과일"] ?? 24);
     const totalDays    = n(cfg["총일수"] ?? 30);
     const targetMain   = n(cfg["자사몰목표"] ?? 0) + n(cfg["네이버목표"] ?? 0);
@@ -890,7 +935,7 @@ async function load() {
     const deferralLimit    = n(cfg["유예월발주한도"] ?? 0);
 
     setSyncStatus('ok', `${nowTime()} 업데이트`);
-    renderSimulation(cfg);
+    renderSimulation(cfg, timelineData);
     render({ targetMain, currentMain, allDailyAvg, spentBudget: n(cfg["누적발주지출"] ?? 0),
       coupangData, elapsedDays, totalDays, totalSales, products, stockData,
       deferralDeadline, deferralLimit, memoData: memoMap });
@@ -903,7 +948,7 @@ async function load() {
        <small>시뮬레이션 탭은 기본값으로 동작합니다.</small></div>`;
     document.getElementById("content").innerHTML = "";
     // 시트 연결 실패해도 시뮬레이션은 기본값으로 실행
-    renderSimulation({});
+    renderSimulation({}, null);
   }
 }
 
@@ -979,7 +1024,7 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
       </div>`;
     const r   = p.actual / p.target;
     const w   = Math.min(Math.round(r * 100), 100);
-    const col = r >= 1 ? '#3b82f6' : '#f59e0b';
+    const col = r >= 1 ? 'var(--blue)' : 'var(--amber)';
     const badge = r < 0.55
       ? `<span class="prod-badge badge-danger">급감</span>`
       : r >= 1
@@ -1023,7 +1068,7 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
 
   const coupangBars = coupangData.map((d, i) => {
     const h   = Math.max(4, Math.round(d.rate * 1.1));
-    const col = d.rate >= 70 ? '#22c55e' : d.rate >= 50 ? '#3b82f6' : d.rate >= 30 ? '#f59e0b' : '#ef4444';
+    const col = d.rate >= 70 ? 'var(--green)' : d.rate >= 50 ? 'var(--blue)' : d.rate >= 30 ? 'var(--amber)' : 'var(--red)';
     const isLast = i === coupangData.length - 1;
     return `<div class="coup-bar-col">
       <div class="coup-bar-pct">${d.rate.toFixed(0)}%</div>
@@ -1033,7 +1078,7 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
   }).join('');
 
   const coupangTableRows = coupangData.map((d, i) => {
-    const col     = d.rate >= 70 ? '#22c55e' : d.rate >= 50 ? '#3b82f6' : d.rate >= 30 ? '#f59e0b' : '#ef4444';
+    const col     = d.rate >= 70 ? 'var(--green)' : d.rate >= 50 ? 'var(--blue)' : d.rate >= 30 ? 'var(--amber)' : 'var(--red)';
     const isLast  = i === coupangData.length - 1;
     const barW    = Math.min(Math.round(d.rate), 100);
     return `<tr class="${isLast ? 'row-current' : ''}">
@@ -1058,7 +1103,7 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
   const range   = Math.max(adjBudget, spentBudget) - barMin || 1;
   const adjW    = Math.round((adjBudget   - barMin) / range * 100);
   const spentW  = Math.round((spentBudget - barMin) / range * 100);
-  const spentCol = spendRatio <= 18 ? '#22c55e' : '#ef4444';
+  const spentCol = spendRatio <= 18 ? 'var(--green)' : 'var(--red)';
 
   // ── SVG 도넛 ─────────────────────────────────────────────
   const R = 34, C = 42;
@@ -1087,9 +1132,9 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
             <div class="bar-compare-row">
               <span class="bar-compare-tag">현재</span>
               <div class="bar-compare-track">
-                <div class="bar-compare-fill" style="width:${Math.min(pct,100)}%;background:${currentMain >= targetMain ? '#22c55e' : '#ef4444'};"></div>
+                <div class="bar-compare-fill" style="width:${Math.min(pct,100)}%;background:${currentMain >= targetMain ? 'var(--green)' : 'var(--red)'};"></div>
               </div>
-              <span class="bar-compare-val" style="color:${currentMain >= targetMain ? '#22c55e' : '#ef4444'}">${f(currentMain)}</span>
+              <span class="bar-compare-val" style="color:${currentMain >= targetMain ? 'var(--green)' : 'var(--red)'}">${f(currentMain)}</span>
             </div>
           </div>
           <div class="kpi-footer">${elapsedDays}일 경과 / ${totalDays}일 · 달성률 ${pct.toFixed(1)}%</div>
@@ -1142,7 +1187,7 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
           <div class="donut-wrap">
             <svg viewBox="0 0 84 84" width="80" height="80" style="transform:rotate(-90deg)">
               <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="var(--bg3)" stroke-width="10"/>
-              <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="rgba(34,197,94,0.2)" stroke-width="10"
+              <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="rgba(29,185,84,0.2)" stroke-width="10"
                 stroke-dasharray="${limitArc} ${circ}" stroke-dashoffset="0"/>
               <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="${spentCol}" stroke-width="10"
                 stroke-dasharray="${spentArc} ${circ}" stroke-dashoffset="0" stroke-linecap="round"/>
@@ -1153,7 +1198,7 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
           </div>
           <div class="kpi-badge kpi-badge-${spendRatio <= 18 ? 'green' : 'red'}">${spendRatio <= 18 ? '안전 (18% 이하)' : '위험 (18% 초과)'}</div>
           <div class="donut-legend">
-            <span><i style="background:rgba(34,197,94,0.3)"></i>18% 한도</span>
+            <span><i style="background:rgba(29,185,84,0.3)"></i>18% 한도</span>
             <span><i style="background:${spentCol}"></i>현재</span>
           </div>
         </div>
@@ -1258,7 +1303,7 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
           <div class="coup-bars">${coupangBars}</div>
         </div>
         <div class="coup-legend">
-          ${[['#22c55e','70%+'],['#3b82f6','50~69%'],['#f59e0b','30~49%'],['#ef4444','~29%']].map(([c,l])=>
+          ${[['var(--green)','70%+'],['var(--blue)','50~69%'],['var(--amber)','30~49%'],['var(--red)','~29%']].map(([c,l])=>
             `<span class="coup-leg-item"><i style="background:${c}"></i>${l}</span>`
           ).join('')}
           <span class="coup-leg-item" style="margin-left:auto;color:var(--muted)">□ 최근 주차</span>
@@ -1292,6 +1337,16 @@ function render({ targetMain, currentMain, allDailyAvg, spentBudget, elapsedDays
 // 5분마다 자동 새로고침
 setInterval(load, 5 * 60 * 1000);
 load();
+// 기본 탭: 발주 시뮬레이션
+(function(){
+  var simBtn = document.querySelector('.nav-item[onclick*="simulation"]');
+  if(simBtn) {
+    document.querySelectorAll(".nav-item").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("on"));
+    simBtn.classList.add("active");
+    document.getElementById("p-simulation").classList.add("on");
+  }
+})();
 
 
 // ============================================================
@@ -1404,10 +1459,19 @@ const INBOUND_SCHEDULE = [
 
 // ── 포맷 유틸 ──────────────────────────────────────────────
 function fmtWon(v) {
-  if(v >= 100000000) return `${(v/100000000).toFixed(1)}억`;
-  if(v >= 10000000)  return `${(v/10000000).toFixed(1)}천만`;
-  if(v >= 1000000)   return `${(v/1000000).toFixed(1)}백만`;
-  if(v >= 10000)     return `${Math.round(v/10000)}만`;
+  if(v >= 100000000) {
+    const ok = (v/100000000).toFixed(1);
+    return ok.endsWith('.0') ? ok.slice(0,-2)+'억' : ok+'억';
+  }
+  if(v >= 10000000) {
+    const ok = (v/10000000).toFixed(1);
+    return ok.endsWith('.0') ? ok.slice(0,-2)+'천만' : ok+'천만';
+  }
+  if(v >= 1000000) {
+    const ok = (v/1000000).toFixed(1);
+    return ok.endsWith('.0') ? ok.slice(0,-2)+'백만' : ok+'백만';
+  }
+  if(v >= 10000) return `${Math.round(v/10000)}만`;
   return v.toLocaleString()+'원';
 }
 function fmtFull(v) { return Math.round(v).toLocaleString()+'원'; }
@@ -1424,406 +1488,513 @@ function switchSimTab(t, el) {
 }
 
 // ── 메인 렌더 ─────────────────────────────────────────────
-function renderSimulation(cfg) {
+function renderSimulation(cfg, sheetTimeline) {
   const MONTHS = [6,7,8,9,10,11,12];
   const MONTH_LABELS = {6:'6월',7:'7월',8:'8월',9:'9월',10:'10월',11:'11월',12:'12월'};
+
+  // ── 포맷: 억/천만/백만 단위 ────────────────────────────────
+  function fmtBar(v) {
+    if (v >= 100000000) return `${(v/100000000).toFixed(1)}억`;
+    if (v >= 10000000)  return `${(v/10000000).toFixed(1)}천만`;
+    if (v >= 1000000)   return `${(v/1000000).toFixed(1)}백만`;
+    if (v >= 10000)     return `${Math.round(v/10000)}만`;
+    return v.toLocaleString()+'원';
+  }
+
   const totalAnnual = Object.values(MONTHLY_COST).reduce((s,m)=>s+m.total,0);
-  const totalPrepay = Object.values(MONTHLY_COST).reduce((s,m)=>s+m.prepay,0);
-  const totalBalance = Object.values(MONTHLY_COST).reduce((s,m)=>s+m.balance,0);
-  const maxMonthTotal = Math.max(...MONTHS.map(m=>MONTHLY_COST[m].total));
   const avgMonthTotal = MONTHS.reduce((s,m)=>s+MONTHLY_COST[m].total,0)/7;
+  const maxMonthTotal = Math.max(...MONTHS.map(m=>MONTHLY_COST[m].total));
+  const minMonthTotal = Math.min(...MONTHS.map(m=>MONTHLY_COST[m].total));
 
   // ── ① KPI 요약 ───────────────────────────────────────────
   const kpiHTML = `
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem">
       <div class="sim-kpi-card">
-        <div class="sim-kpi-label">연간 발주 총액</div>
-        <div class="sim-kpi-value" style="color:var(--accent)">${fmtWon(totalAnnual)}</div>
-        <div class="sim-kpi-sub">6~12월 합산</div>
-      </div>
-      <div class="sim-kpi-card">
-        <div class="sim-kpi-label">선금 합계</div>
-        <div class="sim-kpi-value" style="color:#f59e0b">${fmtWon(totalPrepay)}</div>
-        <div class="sim-kpi-sub">총액의 ${Math.round(totalPrepay/totalAnnual*100)}%</div>
-      </div>
-      <div class="sim-kpi-card">
-        <div class="sim-kpi-label">잔금 합계</div>
-        <div class="sim-kpi-value" style="color:#38bdf8">${fmtWon(totalBalance)}</div>
-        <div class="sim-kpi-sub">총액의 ${Math.round(totalBalance/totalAnnual*100)}%</div>
+        <div class="sim-kpi-label">26년 총 발주비 (6~12월)</div>
+        <div class="sim-kpi-value" style="color:var(--accent)">${fmtBar(totalAnnual)}</div>
+        <div class="sim-kpi-sub">7개월 합산</div>
       </div>
       <div class="sim-kpi-card">
         <div class="sim-kpi-label">월평균 발주비</div>
-        <div class="sim-kpi-value">${fmtWon(avgMonthTotal)}</div>
-        <div class="sim-kpi-sub">최대 ${fmtWon(maxMonthTotal)} (10월)</div>
+        <div class="sim-kpi-value" style="color:var(--accent)">${fmtBar(avgMonthTotal)}</div>
+        <div class="sim-kpi-sub">6~12월 평균</div>
+      </div>
+      <div class="sim-kpi-card good">
+        <div class="sim-kpi-label">최고 지출 월</div>
+        <div class="sim-kpi-value" style="color:var(--amber)">${fmtBar(maxMonthTotal)}</div>
+        <div class="sim-kpi-sub">${MONTHS.find(m=>MONTHLY_COST[m].total===maxMonthTotal)}월</div>
+      </div>
+      <div class="sim-kpi-card">
+        <div class="sim-kpi-label">최저 지출 월</div>
+        <div class="sim-kpi-value" style="color:var(--green)">${fmtBar(minMonthTotal)}</div>
+        <div class="sim-kpi-sub">${MONTHS.find(m=>MONTHLY_COST[m].total===minMonthTotal)}월</div>
       </div>
     </div>`;
 
   // ── ② 서브탭 네비게이션 ──────────────────────────────────
   const tabNav = `
     <div style="display:flex;gap:4px;margin-bottom:1.25rem;border-bottom:1px solid var(--border);padding-bottom:0">
-      <button class="sim-tab-btn active" onclick="switchSimTab('overview',this)">📊 월별 비용 개요</button>
-      <button class="sim-tab-btn" onclick="switchSimTab('inbound',this)">📦 입고 지시 일정</button>
-      <button class="sim-tab-btn" onclick="switchSimTab('stock',this)">🗂 재고 추적</button>
-      <button class="sim-tab-btn" onclick="switchSimTab('product',this)">📋 제품별 발주 계획</button>
+      <button class="sim-tab-btn active" onclick="switchSimTab('overview',this)">📊 월별 발주 현황</button>
+      <button class="sim-tab-btn" onclick="switchSimTab('calendar',this)">📅 발주 달력</button>
     </div>`;
 
-  // ── ③ 탭 패널 1: 월별 비용 개요 ─────────────────────────
-  const maxBar = maxMonthTotal;
-  const barsHTML = MONTHS.map(m => {
+  // ── ③ 탭 패널 1: 월별 발주 현황 ─────────────────────────
+  const maxBar2 = maxMonthTotal;
+  const BAR_MAX_H = 180;
+
+  // 추이선 SVG (line chart overlay)
+  const chartW = 700;
+  const chartH = 220;
+  const padL = 10, padR = 10, padT = 30, padB = 20;
+  const nMonths = MONTHS.length;
+  const colW = (chartW - padL - padR) / nMonths;
+
+  const barsHTML2 = MONTHS.map((m, i) => {
     const mc = MONTHLY_COST[m];
-    const prepayH = Math.round(mc.prepay/maxBar*140);
-    const balH    = Math.round(mc.balance/maxBar*140);
+    const barH = Math.round(mc.total / maxBar2 * BAR_MAX_H);
+    const avgH = Math.round(avgMonthTotal / maxBar2 * BAR_MAX_H);
+    const isMax = mc.total === maxMonthTotal;
+    const isMin = mc.total === minMonthTotal;
+    const barColor = isMax ? 'var(--amber)' : isMin ? 'var(--green)' : 'var(--accent)';
     return `
-      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;min-width:0">
-        <div style="font-size:11px;font-family:var(--mono);font-weight:600;color:var(--text)">${fmtWon(mc.total)}</div>
-        <div style="display:flex;gap:3px;align-items:flex-end;height:140px">
-          <div style="width:18px;background:#f59e0b;border-radius:3px 3px 0 0;height:${Math.max(prepayH,2)}px" title="선금 ${fmtFull(mc.prepay)}"></div>
-          <div style="width:18px;background:#38bdf8;border-radius:3px 3px 0 0;height:${Math.max(balH,2)}px" title="잔금 ${fmtFull(mc.balance)}"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;position:relative">
+        <div style="font-size:11px;font-family:var(--mono);font-weight:700;color:${barColor};white-space:nowrap">${fmtBar(mc.total)}</div>
+        <div style="display:flex;align-items:flex-end;height:${BAR_MAX_H}px;position:relative;width:100%;justify-content:center">
+          <div style="width:36px;background:${barColor};border-radius:4px 4px 0 0;height:${Math.max(barH,4)}px;position:relative;transition:height 0.5s;opacity:0.85"></div>
+          <div style="position:absolute;bottom:${avgH}px;left:0;right:0;border-top:1.5px dashed rgba(255,255,255,0.2);pointer-events:none"></div>
         </div>
-        <div style="font-size:12px;font-weight:700;color:var(--muted)">${MONTH_LABELS[m]}</div>
-        ${mc.prepay>0?`<div style="font-size:9px;color:#f59e0b;font-family:var(--mono)">선 ${fmtWon(mc.prepay)}</div>`:`<div style="font-size:9px;color:var(--border2)">—</div>`}
+        <div style="font-size:12px;font-weight:700;color:var(--text)">${MONTH_LABELS[m]}</div>
+        <div style="font-size:10px;color:var(--muted);font-family:var(--mono)">${(mc.total/totalAnnual*100).toFixed(0)}%</div>
       </div>`;
   }).join('');
 
-  // 차트 아래 월별 요약 행
-  const chartSummaryHTML = `
-    <div style="display:flex;gap:0;margin-top:10px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
-      <div style="width:56px;flex-shrink:0;background:var(--bg3);display:flex;flex-direction:column;justify-content:space-around;padding:6px 8px;border-right:1px solid var(--border)">
-        <div style="font-size:10px;font-weight:700;color:#f59e0b">선금</div>
-        <div style="font-size:10px;font-weight:700;color:#38bdf8">잔금</div>
-        <div style="font-size:10px;font-weight:700;color:var(--text)">총액</div>
-      </div>
-      ${MONTHS.map(m=>{
-        const mc=MONTHLY_COST[m];
-        return `<div style="flex:1;display:flex;flex-direction:column;justify-content:space-around;padding:6px 4px;text-align:center;border-right:1px solid var(--border)">
-          <div style="font-size:10px;font-family:var(--mono);color:${mc.prepay>0?'#f59e0b':'var(--border2)'}">${mc.prepay>0?fmtWon(mc.prepay):'—'}</div>
-          <div style="font-size:10px;font-family:var(--mono);color:#38bdf8">${fmtWon(mc.balance)}</div>
-          <div style="font-size:11px;font-family:var(--mono);font-weight:700;color:var(--text)">${fmtWon(mc.total)}</div>
-        </div>`;
-      }).join('')}
-      <div style="flex-shrink:0;width:80px;display:flex;flex-direction:column;justify-content:space-around;padding:6px 8px;text-align:right;background:rgba(56,189,248,0.04);border-left:1px solid var(--border2)">
-        <div style="font-size:10px;font-family:var(--mono);color:#f59e0b">${fmtWon(totalPrepay)}</div>
-        <div style="font-size:10px;font-family:var(--mono);color:#38bdf8">${fmtWon(totalBalance)}</div>
-        <div style="font-size:11px;font-family:var(--mono);font-weight:700;color:var(--accent)">${fmtWon(totalAnnual)}</div>
-      </div>
-    </div>`;
-
-  const productCostRows = PRODUCTS.filter(p=>p.id!=='dw_pl_g').map(p => {
-    const pid = p.id;
-    const monthCostMap = { mk:'mk', ph_s:'ph_s', ph_b:'ph_b', dw_pro_s:'dw_pro_s', dw_pro_b:'dw_pro_b', dw_pl_s:'dw_pl_s', dw_pl_b:'dw_pl_b' };
-    const key = monthCostMap[pid];
-    if(!key) return '';
-    const annual = MONTHS.reduce((s,m)=>s+(MONTHLY_COST[m][key]||0),0);
-    const cells = MONTHS.map(m=>{
-      const v = MONTHLY_COST[m][key]||0;
-      return `<td class="num" style="font-size:12px">${v>0?fmtWon(v):'<span style="color:var(--border2)">—</span>'}</td>`;
-    }).join('');
+  // 월별 상세 테이블
+  const monthDetailRows = MONTHS.map(m => {
+    const mc = MONTHLY_COST[m];
+    const isMax = mc.total === maxMonthTotal;
     return `<tr>
-      <td style="font-size:12px;font-weight:600;white-space:nowrap">${p.name}</td>
-      <td style="font-size:11px;color:var(--muted);font-family:var(--mono)">${p.sku}</td>
-      ${cells}
-      <td class="num fw" style="color:var(--accent)">${fmtWon(annual)}</td>
+      <td style="font-weight:700;color:${isMax?'var(--amber)':'var(--text)'}">${MONTH_LABELS[m]}</td>
+      <td class="num" style="color:var(--green)">${fmtBar(mc.total)}</td>
+      <td class="num" style="font-size:11px;color:var(--muted)">${(mc.total/totalAnnual*100).toFixed(1)}%</td>
+      <td class="num" style="font-size:11px;color:var(--muted)">${fmtBar(mc.total - avgMonthTotal) === fmtBar(0) ? '±0' : (mc.total > avgMonthTotal ? '+' : '') + fmtBar(mc.total - avgMonthTotal)}</td>
     </tr>`;
   }).join('');
-
-  const monthTotalRow = `<tr style="background:var(--bg3);border-top:2px solid var(--border2)">
-    <td colspan="2" class="fw" style="font-size:12px">월 합계</td>
-    ${MONTHS.map(m=>`<td class="num fw" style="font-size:13px;color:var(--text)">${fmtWon(MONTHLY_COST[m].total)}</td>`).join('')}
-    <td class="num fw" style="font-size:13px;color:var(--accent)">${fmtWon(totalAnnual)}</td>
-  </tr>
-  <tr style="background:var(--bg3)">
-    <td colspan="2" style="font-size:11px;color:#f59e0b">선금</td>
-    ${MONTHS.map(m=>`<td class="num" style="font-size:11px;color:#f59e0b">${MONTHLY_COST[m].prepay>0?fmtWon(MONTHLY_COST[m].prepay):'—'}</td>`).join('')}
-    <td class="num fw" style="color:#f59e0b">${fmtWon(totalPrepay)}</td>
-  </tr>
-  <tr style="background:var(--bg3)">
-    <td colspan="2" style="font-size:11px;color:#38bdf8">잔금</td>
-    ${MONTHS.map(m=>`<td class="num" style="font-size:11px;color:#38bdf8">${fmtWon(MONTHLY_COST[m].balance)}</td>`).join('')}
-    <td class="num fw" style="color:#38bdf8">${fmtWon(totalBalance)}</td>
-  </tr>`;
 
   const overviewPanel = `
     <div id="simtab-overview" class="sim-tab-panel">
       <section class="sec">
-        <div class="sec-header"><span class="sec-lbl">월별 발주비 흐름</span><span class="sec-sub">선금(황색) · 잔금(청색)</span></div>
+        <div class="sec-header"><span class="sec-lbl">월별 발주비 흐름</span><span class="sec-sub">점선 = 월평균 (${fmtBar(avgMonthTotal)})</span></div>
         <div class="table-card" style="padding:1.5rem">
-          <div style="display:flex;gap:12px;align-items:flex-end;padding-bottom:1rem;border-bottom:1px solid var(--border)">
-            ${barsHTML}
+          <div style="display:flex;gap:8px;align-items:flex-end;padding-bottom:1.25rem;border-bottom:1px solid var(--border)">
+            ${barsHTML2}
           </div>
-          ${chartSummaryHTML}
-          <div style="display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--muted)">
-            <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#f59e0b;border-radius:2px;display:inline-block"></span>선금 (신규발주 즉시 지급)</span>
-            <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#38bdf8;border-radius:2px;display:inline-block"></span>잔금 (도착일 기준 당월 15일 또는 30일)</span>
+          <div style="display:flex;gap:12px;margin-top:12px;font-size:11px;color:var(--muted)">
+            <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--amber)"></span>최고 지출</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--green)"></span>최저 지출</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--accent)"></span>일반</span>
+            <span style="display:flex;align-items:center;gap:4px;margin-left:auto"><span style="display:inline-block;width:18px;border-top:1.5px dashed rgba(255,255,255,0.35)"></span>월평균 기준선</span>
           </div>
         </div>
       </section>
       <section class="sec">
-        <div class="sec-header"><span class="sec-lbl">제품별 월간 비용 요약</span></div>
-        <div class="table-card"><div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th>제품명</th><th>SKU</th>
-              ${MONTHS.map(m=>`<th class="num">${MONTH_LABELS[m]}</th>`).join('')}
-              <th class="num">연간합계</th>
-            </tr></thead>
-            <tbody>${productCostRows}</tbody>
-            <tfoot>${monthTotalRow}</tfoot>
-          </table>
-        </div></div>
+        <div class="sec-header"><span class="sec-lbl">월별 상세 내역</span></div>
+        <div class="table-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>월</th>
+                <th class="num">지출금액</th>
+                <th class="num">비중</th>
+                <th class="num">평균 대비</th>
+              </tr></thead>
+              <tbody>${monthDetailRows}</tbody>
+              <tfoot><tr class="tfoot-row">
+                <td class="fw">합계</td>
+                <td class="num fw" style="color:var(--accent)">${fmtBar(totalAnnual)}</td>
+                <td class="num fw">100%</td>
+                <td class="num muted">—</td>
+              </tr></tfoot>
+            </table>
+          </div>
+        </div>
       </section>
     </div>`;
 
-  // ── ④ 탭 패널 2: 입고 지시 일정 ─────────────────────────
-  const typeConfig = {
-    confirm: { label:'확정',  cls:'badge-confirm',  color:'#3b82f6',  bg:'rgba(59,130,246,0.12)' },
-    plan:    { label:'계획',  cls:'badge-plan',     color:'#38bdf8',  bg:'rgba(56,189,248,0.10)' },
-    prepay:  { label:'선금',  cls:'badge-prepay',   color:'#f59e0b',  bg:'rgba(245,158,11,0.12)' },
+  // ── ④ 탭 패널 2: 발주 달력 ──────────────────────────────
+  // 실제 타임테이블 데이터 (첨부 엑셀 기반)
+  const FALLBACK_TIMELINE = {
+    6: {
+      total: 47731218,
+      weeks: [
+        { label:'1주', days:'6/1~6/7', cost: 0 },
+        { label:'2주', days:'6/8~6/14', cost: 0 },
+        { label:'3주', days:'6/15~6/21', cost: 27233009 },
+        { label:'4주', days:'6/22~6/28', cost: 20498209 },
+        { label:'5주', days:'6/29~6/30', cost: 0 },
+      ],
+      events: [
+        { date:'6/4',  type:'기', product:'PH 스탠드 실버', qty:null, cost:14000000, note:'기존 생산물량 잔금' },
+        { date:'6/15', type:'기', product:'맥세이프 킥프레임', qty:1200, cost:5983969, note:'기존 생산물량 잔금·입고요청' },
+        { date:'6/20', type:'추', product:'맥세이프 킥프레임', qty:1200, cost:7250040, note:'중국→한국 입고' },
+        { date:'6/25', type:'요', product:'DW 프로 블랙', qty:90, cost:null, note:'입고요청 (6/30 입고)' },
+        { date:'6/26', type:'신', product:'DW 프로 실버', qty:500, cost:1545000, note:'신규 생산 발주 (8/15 완료)' },
+        { date:'6/26', type:'요', product:'DW 플러스 그린', qty:45, cost:null, note:'입고요청 (7/1 입고)' },
+        { date:'6/27', type:'신', product:'DW 플러스 실버', qty:500, cost:1023750, note:'신규 생산 발주 (8/16 완료)' },
+        { date:'6/30', type:'기', product:'DW 프로 실버', qty:null, cost:11124000, note:'기존 생산물량 잔금' },
+        { date:'6/30', type:'기', product:'DW 프로 블랙', qty:null, cost:556200, note:'기존 생산물량 잔금' },
+        { date:'6/30', type:'기', product:'DW 플러스 실버', qty:null, cost:1842750, note:'기존 생산물량 잔금' },
+        { date:'6/30', type:'기', product:'DW 플러스 블랙', qty:null, cost:1105650, note:'기존 생산물량 잔금' },
+        { date:'6/30', type:'기', product:'DW 플러스 그린', qty:null, cost:737100, note:'기존 생산물량 잔금' },
+        { date:'6/30', type:'추', product:'DW 프로 블랙', qty:90, cost:2562759, note:'중국→한국 입고' },
+      ]
+    },
+    7: {
+      total: 33762040,
+      weeks: [
+        { label:'1주', days:'7/1~7/7', cost: 2544331 },
+        { label:'2주', days:'7/8~7/14', cost: 14657400 },
+        { label:'3주', days:'7/15~7/21', cost: 11150040 },
+        { label:'4주', days:'7/22~7/28', cost: 0 },
+        { label:'5주', days:'7/29~7/31', cost: 5410269 },
+      ],
+      events: [
+        { date:'7/1',  type:'추', product:'DW 플러스 그린', qty:45, cost:848110, note:'중국→한국 입고' },
+        { date:'7/1',  type:'요', product:'DW 플러스 블랙', qty:90, cost:null, note:'입고요청 (7/6 입고)' },
+        { date:'7/5',  type:'요', product:'PH 스탠드 실버', qty:1500, cost:null, note:'입고요청 (7/10 입고)' },
+        { date:'7/5',  type:'요', product:'PH 스탠드 블랙', qty:1500, cost:null, note:'입고요청 (7/10 입고)' },
+        { date:'7/6',  type:'추', product:'DW 플러스 블랙', qty:90, cost:1696221, note:'중국→한국 입고' },
+        { date:'7/10', type:'추', product:'PH 스탠드 실버', qty:1500, cost:7328700, note:'첫 리뉴얼 입고' },
+        { date:'7/10', type:'추', product:'PH 스탠드 블랙', qty:1500, cost:7328700, note:'첫 리뉴얼 입고' },
+        { date:'7/20', type:'추', product:'맥세이프 킥프레임', qty:1200, cost:7250040, note:'중국→한국 입고' },
+        { date:'7/20', type:'신', product:'PH 스탠드 실버', qty:1000, cost:3900000, note:'신규 생산 발주' },
+        { date:'7/24', type:'요', product:'DW 프로 실버', qty:100, cost:null, note:'입고요청 (7/29 입고)' },
+        { date:'7/25', type:'요', product:'DW 프로 블랙', qty:90, cost:null, note:'입고요청 (7/30 입고)' },
+        { date:'7/29', type:'추', product:'DW 프로 실버', qty:100, cost:2847510, note:'중국→한국 입고' },
+        { date:'7/30', type:'추', product:'DW 프로 블랙', qty:90, cost:2562759, note:'중국→한국 입고' },
+      ]
+    },
+    8: {
+      total: 22230759,
+      weeks: [
+        { label:'1주', days:'8/1~8/7', cost: 0 },
+        { label:'2주', days:'8/8~8/14', cost: 0 },
+        { label:'3주', days:'8/15~8/21', cost: 15767980 },
+        { label:'4주', days:'8/22~8/28', cost: 0 },
+        { label:'5주', days:'8/29~8/31', cost: 6462759 },
+      ],
+      events: [
+        { date:'8/10', type:'요', product:'DW 프로 실버', qty:180, cost:null, note:'입고요청 (8/15 입고)' },
+        { date:'8/11', type:'요', product:'DW 플러스 실버', qty:90, cost:null, note:'입고요청 (8/16 입고)' },
+        { date:'8/14', type:'요', product:'맥세이프 킥프레임', qty:1200, cost:null, note:'입고요청 (8/19 입고)' },
+        { date:'8/15', type:'추', product:'DW 프로 실버', qty:180, cost:5125518, note:'중국→한국 입고' },
+        { date:'8/15', type:'요', product:'DW 플러스 블랙', qty:90, cost:null, note:'입고요청 (8/20 입고)' },
+        { date:'8/16', type:'추', product:'DW 플러스 실버', qty:90, cost:1696221, note:'중국→한국 입고' },
+        { date:'8/19', type:'추', product:'맥세이프 킥프레임', qty:1200, cost:7250040, note:'중국→한국 입고' },
+        { date:'8/20', type:'추', product:'DW 플러스 블랙', qty:90, cost:1696221, note:'중국→한국 입고' },
+        { date:'8/24', type:'요', product:'DW 프로 블랙', qty:90, cost:null, note:'입고요청 (8/29 입고)' },
+        { date:'8/29', type:'신', product:'PH 스탠드 블랙', qty:1000, cost:3900000, note:'신규 생산 발주 (10/18 입고)' },
+        { date:'8/29', type:'추', product:'DW 프로 블랙', qty:90, cost:2562759, note:'중국→한국 입고' },
+      ]
+    },
+    9: {
+      total: 31153840,
+      weeks: [
+        { label:'1주', days:'9/1~9/7', cost: 1545000 },
+        { label:'2주', days:'9/8~9/14', cost: 10580820 },
+        { label:'3주', days:'9/15~9/21', cost: 16465261 },
+        { label:'4주', days:'9/22~9/28', cost: 2562759 },
+        { label:'5주', days:'9/29~9/30', cost: 0 },
+      ],
+      events: [
+        { date:'9/3',  type:'요', product:'PH 스탠드 실버', qty:1000, cost:null, note:'입고요청 (9/8 입고)' },
+        { date:'9/4',  type:'신', product:'DW 프로 실버', qty:500, cost:1545000, note:'신규 생산 발주 (10/24 완료)' },
+        { date:'9/8',  type:'추', product:'PH 스탠드 실버', qty:1000, cost:4885800, note:'중국→한국 입고' },
+        { date:'9/9',  type:'요', product:'DW 프로 실버', qty:180, cost:null, note:'입고요청 (9/14 입고)' },
+        { date:'9/10', type:'요', product:'DW 플러스 실버', qty:90, cost:null, note:'입고요청 (9/15 입고)' },
+        { date:'9/13', type:'요', product:'맥세이프 킥프레임', qty:1200, cost:null, note:'입고요청 (9/18 입고)' },
+        { date:'9/14', type:'추', product:'DW 프로 실버', qty:180, cost:5125518, note:'중국→한국 입고' },
+        { date:'9/15', type:'추', product:'DW 플러스 실버', qty:90, cost:1696221, note:'중국→한국 입고' },
+        { date:'9/18', type:'추', product:'맥세이프 킥프레임', qty:1200, cost:7250040, note:'중국→한국 입고' },
+        { date:'9/18', type:'신', product:'PH 스탠드 실버', qty:1000, cost:3900000, note:'신규 생산 발주' },
+        { date:'9/18', type:'신', product:'맥세이프 킥프레임', qty:5000, cost:3619000, note:'신규 생산 발주 (선금)' },
+        { date:'9/23', type:'요', product:'DW 프로 블랙', qty:90, cost:null, note:'입고요청 (9/28 입고)' },
+        { date:'9/26', type:'요', product:'DW 플러스 그린', qty:45, cost:null, note:'입고요청 (10/1 입고)' },
+        { date:'9/28', type:'추', product:'DW 프로 블랙', qty:90, cost:2562759, note:'중국→한국 입고' },
+        { date:'9/29', type:'요', product:'DW 플러스 블랙', qty:90, cost:null, note:'입고요청 (10/4 입고)' },
+      ]
+    },
+    10: {
+      total: 28051183,
+      weeks: [
+        { label:'1주', days:'10/1~10/7', cost: 2544331 },
+        { label:'2주', days:'10/8~10/14', cost: 3986514 },
+        { label:'3주', days:'10/15~10/21', cost: 13831061 },
+        { label:'4주', days:'10/22~10/28', cost: 7689277 },
+        { label:'5주', days:'10/29~10/31', cost: 0 },
+      ],
+      events: [
+        { date:'10/1',  type:'추', product:'DW 플러스 그린', qty:45, cost:848110, note:'중국→한국 입고' },
+        { date:'10/4',  type:'추', product:'DW 플러스 블랙', qty:90, cost:1696221, note:'중국→한국 입고' },
+        { date:'10/9',  type:'요', product:'DW 프로 실버', qty:140, cost:null, note:'입고요청 (10/14 입고)' },
+        { date:'10/10', type:'요', product:'DW 플러스 실버', qty:90, cost:null, note:'입고요청 (10/15 입고)' },
+        { date:'10/13', type:'요', product:'맥세이프 킥프레임', qty:1200, cost:null, note:'입고요청 (10/18 입고)' },
+        { date:'10/13', type:'요', product:'PH 스탠드 블랙', qty:1000, cost:null, note:'입고요청 (10/18 입고)' },
+        { date:'10/14', type:'추', product:'DW 프로 실버', qty:140, cost:3986514, note:'중국→한국 입고' },
+        { date:'10/15', type:'추', product:'DW 플러스 실버', qty:90, cost:1696221, note:'중국→한국 입고' },
+        { date:'10/18', type:'추', product:'맥세이프 킥프레임', qty:1200, cost:7250040, note:'중국→한국 입고' },
+        { date:'10/18', type:'추', product:'PH 스탠드 블랙', qty:1000, cost:4885800, note:'중국→한국 입고' },
+        { date:'10/19', type:'요', product:'DW 프로 실버', qty:180, cost:null, note:'입고요청 (10/24 입고)' },
+        { date:'10/23', type:'요', product:'DW 프로 블랙', qty:90, cost:null, note:'입고요청 (10/28 입고)' },
+        { date:'10/24', type:'추', product:'DW 프로 실버', qty:180, cost:5125518, note:'중국→한국 입고' },
+        { date:'10/28', type:'추', product:'DW 프로 블랙', qty:90, cost:2562759, note:'중국→한국 입고' },
+      ]
+    },
+    11: {
+      total: 34106559,
+      weeks: [
+        { label:'1주', days:'11/1~11/7', cost: 10330800 },
+        { label:'2주', days:'11/8~11/14', cost: 3241221 },
+        { label:'3주', days:'11/15~11/21', cost: 12846261 },
+        { label:'4주', days:'11/22~11/28', cost: 7688277 },
+        { label:'5주', days:'11/29~11/30', cost: 0 },
+      ],
+      events: [
+        { date:'11/2',  type:'요', product:'PH 스탠드 실버', qty:1000, cost:null, note:'입고요청 (11/7 입고)' },
+        { date:'11/3',  type:'신', product:'PH 스탠드 블랙', qty:1000, cost:3900000, note:'신규 생산 발주 (12/23 입고)' },
+        { date:'11/7',  type:'추', product:'PH 스탠드 실버', qty:1000, cost:4885800, note:'중국→한국 입고' },
+        { date:'11/7',  type:'신', product:'DW 프로 실버', qty:500, cost:1545000, note:'신규 생산 발주 (12/27 완료)' },
+        { date:'11/9',  type:'요', product:'DW 플러스 실버', qty:90, cost:null, note:'입고요청 (11/14 입고)' },
+        { date:'11/12', type:'요', product:'맥세이프 킥프레임', qty:1200, cost:null, note:'입고요청 (11/17 입고)' },
+        { date:'11/13', type:'신', product:'DW 프로 실버', qty:500, cost:1545000, note:'신규 생산 발주 (27/1/2 완료)' },
+        { date:'11/13', type:'요', product:'DW 플러스 블랙', qty:90, cost:null, note:'입고요청 (11/18 입고)' },
+        { date:'11/14', type:'추', product:'DW 플러스 실버', qty:90, cost:1696221, note:'중국→한국 입고' },
+        { date:'11/17', type:'추', product:'맥세이프 킥프레임', qty:1200, cost:7250040, note:'중국→한국 입고' },
+        { date:'11/17', type:'신', product:'PH 스탠드 실버', qty:1000, cost:3900000, note:'신규 생산 발주' },
+        { date:'11/18', type:'추', product:'DW 플러스 블랙', qty:90, cost:1696221, note:'중국→한국 입고' },
+        { date:'11/18', type:'요', product:'DW 프로 실버', qty:180, cost:null, note:'입고요청 (11/23 입고)' },
+        { date:'11/22', type:'요', product:'DW 프로 블랙', qty:90, cost:null, note:'입고요청 (11/27 입고)' },
+        { date:'11/23', type:'추', product:'DW 프로 실버', qty:180, cost:5125518, note:'중국→한국 입고' },
+        { date:'11/27', type:'추', product:'DW 프로 블랙', qty:90, cost:2562759, note:'중국→한국 입고' },
+      ]
+    },
+    12: {
+      total: 22428834,
+      weeks: [
+        { label:'1주', days:'12/1~12/7', cost: 0 },
+        { label:'2주', days:'12/8~12/14', cost: 2720221 },
+        { label:'3주', days:'12/15~12/21', cost: 7250040 },
+        { label:'4주', days:'12/22~12/28', cost: 12458573 },
+        { label:'5주', days:'12/29~12/31', cost: 0 },
+      ],
+      events: [
+        { date:'12/9',  type:'요', product:'DW 플러스 실버', qty:90, cost:null, note:'입고요청 (12/14 입고)' },
+        { date:'12/12', type:'요', product:'맥세이프 킥프레임', qty:1200, cost:null, note:'입고요청 (12/17 입고)' },
+        { date:'12/13', type:'신', product:'DW 플러스 블랙', qty:500, cost:1023750, note:'신규 생산 발주 (27/2/1 완료)' },
+        { date:'12/14', type:'추', product:'DW 플러스 실버', qty:90, cost:1696221, note:'중국→한국 입고' },
+        { date:'12/17', type:'추', product:'맥세이프 킥프레임', qty:1200, cost:7250040, note:'중국→한국 입고' },
+        { date:'12/18', type:'요', product:'PH 스탠드 블랙', qty:1000, cost:null, note:'입고요청 (12/23 입고)' },
+        { date:'12/18', type:'요', product:'DW 프로 실버', qty:140, cost:null, note:'입고요청 (12/23 입고)' },
+        { date:'12/22', type:'요', product:'DW 프로 블랙', qty:90, cost:null, note:'입고요청 (12/27 입고)' },
+        { date:'12/23', type:'추', product:'PH 스탠드 블랙', qty:1000, cost:4885800, note:'중국→한국 입고' },
+        { date:'12/23', type:'추', product:'DW 프로 실버', qty:140, cost:3986514, note:'중국→한국 입고' },
+        { date:'12/24', type:'신', product:'DW 플러스 실버', qty:500, cost:1023750, note:'신규 생산 발주 (27/2/12 완료)' },
+        { date:'12/27', type:'추', product:'DW 프로 블랙', qty:90, cost:2562759, note:'중국→한국 입고' },
+        { date:'12/27', type:'요', product:'DW 플러스 그린', qty:45, cost:null, note:'입고요청 (1/1 입고)' },
+        { date:'12/28', type:'요', product:'DW 프로 실버', qty:180, cost:null, note:'입고요청 (1/2 입고)' },
+        { date:'12/28', type:'요', product:'DW 플러스 블랙', qty:90, cost:null, note:'입고요청 (1/2 입고)' },
+      ]
+    },
   };
 
-  let inboundHTML = '';
-  MONTHS.forEach(m => {
-    const items = INBOUND_SCHEDULE.filter(i=>i.month===m);
-    if(!items.length) return;
-    // 주차별 그룹
-    const weekGroups = {};
-    items.forEach(i => {
-      const wk = i.week;
-      if(!weekGroups[wk]) weekGroups[wk] = { items:[], total:0 };
-      weekGroups[wk].items.push(i);
-      weekGroups[wk].total += i.amount;
-    });
-    const monthTotal = items.reduce((s,i)=>s+i.amount,0);
-
-    inboundHTML += `
-      <div style="margin-bottom:1.5rem">
-        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--border2)">
-          <span style="font-size:15px;font-weight:700;color:var(--text)">${MONTH_LABELS[m]}</span>
-          <span style="font-size:12px;font-family:var(--mono);color:var(--muted)">월 합계</span>
-          <span style="font-size:14px;font-weight:700;font-family:var(--mono);color:var(--accent)">${fmtFull(monthTotal)}</span>
-        </div>`;
-
-    Object.keys(weekGroups).sort().forEach(wk => {
-      const wg = weekGroups[wk];
-      const wkLabel = `${m}월 ${wk}주차`;
-      const prepayItems = wg.items.filter(i=>i.type==='prepay');
-      const otherItems  = wg.items.filter(i=>i.type!=='prepay');
-
-      inboundHTML += `
-        <div style="margin-bottom:12px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-            <span style="font-size:11px;font-weight:600;color:var(--muted);background:var(--bg3);padding:2px 8px;border-radius:4px;font-family:var(--mono)">${wkLabel}</span>
-            <span style="font-size:11px;color:var(--muted)">주합계</span>
-            <span style="font-size:12px;font-weight:700;font-family:var(--mono);color:var(--text)">${fmtFull(wg.total)}</span>
-          </div>`;
-
-      if(prepayItems.length) {
-        inboundHTML += `<div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:10px 14px;margin-bottom:6px">
-          <div style="font-size:10px;font-weight:700;color:#f59e0b;margin-bottom:8px;letter-spacing:0.05em">★ 선금 즉시 지급</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px">
-            ${prepayItems.map(i=>`
-              <div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid rgba(245,158,11,0.3);border-radius:6px;padding:6px 12px">
-                <span style="font-size:11px;font-weight:700;color:var(--text)">${i.name}</span>
-                <span style="font-size:12px;font-weight:700;font-family:var(--mono);color:#f59e0b">${fmtFull(i.amount)}</span>
-                <span style="font-size:10px;color:var(--muted)">${i.note}</span>
-              </div>`).join('')}
-          </div>
-        </div>`;
-      }
-
-      if(otherItems.length) {
-        // 도착일별 그룹화
-        const arrGroups = {};
-        otherItems.forEach(i => {
-          const k = i.arrDate;
-          if(!arrGroups[k]) arrGroups[k] = { items:[], instrDate:i.instrDate, payDate:i.payDate, type:i.type };
-          arrGroups[k].items.push(i);
-        });
-        Object.entries(arrGroups).forEach(([arr, ag]) => {
-          const tc = typeConfig[ag.type] || typeConfig.plan;
-          const groupTotal = ag.items.reduce((s,i)=>s+i.amount,0);
-          inboundHTML += `
-            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:6px">
-              <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--bg3);border-bottom:1px solid var(--border)">
-                <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:${tc.bg};color:${tc.color}">${tc.label}</span>
-                <span style="font-size:12px;font-weight:600;color:var(--muted)">입고지시</span>
-                <span style="font-size:12px;font-weight:700;font-family:var(--mono);color:var(--text)">${ag.instrDate}</span>
-                <span style="font-size:12px;color:var(--muted)">→ 도착</span>
-                <span style="font-size:13px;font-weight:700;font-family:var(--mono);color:${tc.color}">${arr}</span>
-                <span style="margin-left:auto;font-size:11px;color:var(--muted)">잔금지급</span>
-                <span style="font-size:12px;font-weight:600;font-family:var(--mono);color:#38bdf8">${ag.payDate}</span>
-                <span style="font-size:12px;font-weight:700;font-family:var(--mono);color:var(--text);margin-left:8px">${fmtFull(groupTotal)}</span>
-              </div>
-              <div style="display:flex;flex-wrap:wrap;gap:0">
-                ${ag.items.map((i,idx)=>`
-                  <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;${idx>0?'border-top:1px solid var(--border)':''}width:100%">
-                    <span style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);width:64px">${i.sku}</span>
-                    <span style="font-size:12px;font-weight:600;color:var(--text);flex:1">${i.name}</span>
-                    <span style="font-size:12px;font-family:var(--mono);color:var(--muted);width:64px;text-align:right">${i.qty!=null?i.qty.toLocaleString()+'개':'—'}</span>
-                    <span style="font-size:12px;font-weight:600;font-family:var(--mono);color:var(--text);width:96px;text-align:right">${fmtFull(i.amount)}</span>
-                  </div>`).join('')}
-              </div>
-            </div>`;
-        });
-      }
-      inboundHTML += `</div>`;
-    });
-    inboundHTML += `</div>`;
+  // ── 구글 시트 타임라인 병합 ─────────────────────────────
+  // sheetTimeline이 있으면 해당 월 데이터를 시트 데이터로 교체,
+  // 없는 월은 하드코딩 폴백 사용
+  const TIMELINE = {};
+  [6,7,8,9,10,11,12].forEach(m => {
+    if (sheetTimeline && sheetTimeline[m] && sheetTimeline[m].length > 0) {
+      // 시트 데이터로 월 합계 재계산
+      const events = sheetTimeline[m];
+      const monthTotal = events.reduce((s,e) => s + (e.cost||0), 0);
+      // 주차별 비용은 buildCalendar 내에서 자동 계산되므로 weeks는 더미
+      TIMELINE[m] = {
+        total: monthTotal,
+        weeks: [],
+        events: events
+      };
+    } else {
+      TIMELINE[m] = FALLBACK_TIMELINE[m];
+    }
   });
 
-  const inboundPanel = `
-    <div id="simtab-inbound" class="sim-tab-panel" style="display:none">
-      <section class="sec">
-        <div class="sec-header">
-          <span class="sec-lbl">입고 지시 일정</span>
-          <span class="sec-sub">2025년 6~12월 주차별 상세</span>
-          <span style="display:flex;gap:8px;margin-left:auto">
-            <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(59,130,246,0.12);color:#3b82f6">확정</span>
-            <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(56,189,248,0.10);color:#38bdf8">계획</span>
-            <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(245,158,11,0.12);color:#f59e0b">선금</span>
+
+  // ─── 달력 생성 헬퍼 ────────────────────────────────────
+  function buildCalendar(month) {
+    const data = TIMELINE[month];
+    const year = 2026;
+    // 각 날짜별 이벤트 맵
+    const evByDay = {};
+    data.events.forEach(ev => {
+      const d = parseInt(ev.date.split('/')[1]);
+      if(!evByDay[d]) evByDay[d] = [];
+      evByDay[d].push(ev);
+    });
+
+    // 주별 비용 계산 (타임테이블 기반)
+    const weekCosts = data.weeks;
+
+    // 해당 월 1일의 요일 (0=일)
+    const firstDay = new Date(year, month-1, 1).getDay();
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const dayNames = ['일','월','화','수','목','금','토'];
+
+    // 배지 설정
+    // 신=신규생산발주(빨강), 추=추가입고(파랑), 요=입고요청(노랑), 기=기존생산물량잔금(초록)
+    function badge(type) {
+      const cfg = {
+        '신': { bg:'rgba(255,59,48,0.18)',   color:'var(--red)', border:'rgba(255,59,48,0.5)' },
+        '추': { bg:'rgba(64,200,224,0.18)',  color:'var(--accent)', border:'rgba(64,200,224,0.5)' },
+        '요': { bg:'rgba(245,196,0,0.18)',  color:'var(--amber)', border:'rgba(245,196,0,0.5)' },
+        '기': { bg:'rgba(29,185,84,0.18)',   color:'var(--green)', border:'rgba(29,185,84,0.5)' },
+      };
+      const c = cfg[type] || { bg:'rgba(100,116,139,0.2)', color:'#64748b', border:'rgba(100,116,139,0.3)' };
+      return `<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:${c.bg};color:${c.color};border:1px solid ${c.border};font-size:10px;font-weight:800;flex-shrink:0">${type}</span>`;
+    }
+
+    // 주차별 비용 계산을 위해 날짜→주차 매핑
+    function getWeekIdx(day) {
+      const dow = new Date(year, month-1, day).getDay();
+      // 단순히 월 내 주차
+      const col = (firstDay + day - 1) % 7;
+      return Math.floor((firstDay + day - 1) / 7);
+    }
+
+    // 달력 HTML
+    let calRows = '';
+    let cells = [];
+    // 빈 셀 채우기
+    for(let i=0;i<firstDay;i++) cells.push(null);
+    for(let d=1;d<=daysInMonth;d++) cells.push(d);
+    // 7의 배수로 맞추기
+    while(cells.length % 7 !== 0) cells.push(null);
+
+    // 주차별 비용 (5주)
+    const weekRowCosts = [0,0,0,0,0];
+    data.events.forEach(ev => {
+      const d = parseInt(ev.date.split('/')[1]);
+      if(ev.cost) {
+        const wi = Math.floor((firstDay + d - 1)/7);
+        if(wi<5) weekRowCosts[wi] += ev.cost;
+      }
+    });
+
+    for(let row=0; row<cells.length/7; row++) {
+      calRows += `<tr>`;
+      for(let col=0; col<7; col++) {
+        const day = cells[row*7+col];
+        if(!day) {
+          calRows += `<td style="background:transparent;min-height:80px;border:1px solid var(--border);border-color:rgba(255,255,255,0.04)"></td>`;
+          continue;
+        }
+        const evs = evByDay[day] || [];
+        const isToday = (new Date().getDate()===day && new Date().getMonth()===month-1 && new Date().getFullYear()===year);
+        const hasCost = evs.some(e=>e.cost);
+        const isSun = col===0, isSat = col===6;
+        const dayColor = isToday ? 'var(--accent)' : isSun ? 'var(--red)' : isSat ? 'var(--purple)' : 'var(--text)';
+
+        let evHTML = '';
+        evs.forEach(ev => {
+          const prodShort = ev.product
+            .replace('맥세이프 킥프레임','킥프레임')
+            .replace('PH 스탠드 실버','PH-S')
+            .replace('PH 스탠드 블랙','PH-B')
+            .replace('DW 프로 실버','DW프S')
+            .replace('DW 프로 블랙','DW프B')
+            .replace('DW 플러스 실버','DW플S')
+            .replace('DW 플러스 블랙','DW플B')
+            .replace('DW 플러스 그린','DW플G');
+          const qtyStr = ev.qty ? ` ${ev.qty}개` : '';
+          const costStr = ev.cost ? ` · ${fmtBar(ev.cost)}` : '';
+          evHTML += `<div style="display:flex;align-items:flex-start;gap:3px;margin-top:3px;line-height:1.3">
+            ${badge(ev.type)}
+            <div style="font-size:9px;color:var(--muted);flex:1;min-width:0">
+              <span style="color:var(--text);font-weight:600">${prodShort}</span>${qtyStr}${costStr}
+            </div>
+          </div>`;
+        });
+
+        calRows += `<td style="vertical-align:top;padding:5px 6px;border:1px solid var(--border);min-height:80px;background:${hasCost?'rgba(64,200,224,0.03)':'transparent'};${isToday?'box-shadow:inset 0 0 0 1.5px var(--accent)':''};position:relative">
+          <div style="font-size:12px;font-weight:700;color:${dayColor};margin-bottom:2px">${day}</div>
+          ${evHTML}
+        </td>`;
+      }
+      // 주차 합계 열
+      const wCost = weekRowCosts[row];
+      calRows += `<td style="text-align:right;vertical-align:middle;padding:4px 8px;border:1px solid var(--border);background:var(--bg3);width:72px;white-space:nowrap">
+        ${wCost>0 ? `<div style="font-size:10px;color:var(--muted);margin-bottom:2px">주합계</div><div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--text)">${fmtBar(wCost)}</div>` : `<div style="font-size:10px;color:var(--border2)">—</div>`}
+      </td>`;
+      calRows += `</tr>`;
+    }
+
+    return `
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;table-layout:fixed">
+          <thead>
+            <tr>
+              ${dayNames.map((d,i)=>`<th style="padding:6px 4px;font-size:11px;font-weight:600;color:${i===0?'var(--red)':i===6?'var(--purple)':'var(--muted)'};text-align:center;border:1px solid var(--border);background:var(--bg3)">${d}</th>`).join('')}
+              <th style="width:72px;padding:6px 4px;font-size:11px;color:var(--muted);text-align:right;border:1px solid var(--border);background:var(--bg3)">주 합계</th>
+            </tr>
+          </thead>
+          <tbody>${calRows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  // ── 달력 탭 패널 ────────────────────────────────────────
+  const monthBtns = MONTHS.map((m,i) => `
+    <button onclick="switchCalMonth(${m})" id="calbtn-${m}" class="cal-month-btn ${i===0?'active':''}" style="padding:6px 14px;border-radius:6px;border:1px solid var(--border2);background:${i===0?'var(--accent)':'var(--bg3)'};color:${i===0?'#0d0f12':'var(--muted)'};font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s">
+      ${MONTH_LABELS[m]}
+    </button>`).join('');
+
+  // 월별 달력 미리 생성
+  const calPanels = MONTHS.map((m,i) => `
+    <div id="cal-month-${m}" style="display:${i===0?'block':'none'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <span style="font-size:18px;font-weight:700;color:var(--text)">2026년 ${MONTH_LABELS[m]}</span>
+          <span style="font-size:12px;color:var(--muted);margin-left:10px;font-family:var(--mono)">월 합계: </span>
+          <span style="font-size:14px;font-weight:700;font-family:var(--mono);color:var(--accent)">${fmtBar(TIMELINE[m].total)}</span>
+        </div>
+        <div style="display:flex;gap:12px;font-size:11px">
+          <span style="display:flex;align-items:center;gap:4px">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(255,59,48,0.18);color:var(--red);border:1px solid rgba(255,59,48,0.5);font-size:10px;font-weight:800">신</span>신규 생산 발주
+          </span>
+          <span style="display:flex;align-items:center;gap:4px">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(64,200,224,0.18);color:var(--accent);border:1px solid rgba(64,200,224,0.5);font-size:10px;font-weight:800">추</span>추가 입고 (중국→한국)
+          </span>
+          <span style="display:flex;align-items:center;gap:4px">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(245,196,0,0.18);color:var(--amber);border:1px solid rgba(245,196,0,0.5);font-size:10px;font-weight:800">요</span>입고 요청
+          </span>
+          <span style="display:flex;align-items:center;gap:4px">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(29,185,84,0.18);color:var(--green);border:1px solid rgba(29,185,84,0.5);font-size:10px;font-weight:800">기</span>기존 생산물량 잔금
           </span>
         </div>
-        <div class="table-card" style="padding:1.5rem">${inboundHTML}</div>
-      </section>
-    </div>`;
+      </div>
+      ${buildCalendar(m)}
+    </div>`).join('');
 
-  // ── ⑤ 탭 패널 3: 재고 추적 ──────────────────────────────
-  const stockRows = PRODUCTS.map(p => {
-    const wh = STOCK_DATA.wh[p.id] || [];
-    const cn = STOCK_DATA.cn[p.id] || [];
-    const whCells = wh.map((v,i) => {
-      const pct = Math.min(v / (p.monthQty||1) * 100, 100);
-      const clr = v === 0 ? 'var(--red)' : v < (p.monthQty||1) ? '#f59e0b' : 'var(--green)';
-      return `<td class="num" style="padding:6px 10px">
-        <div style="font-size:12px;font-weight:600;color:${clr};font-family:var(--mono)">${v.toLocaleString()}</div>
-        <div style="height:3px;background:var(--bg3);border-radius:2px;margin-top:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${clr};border-radius:2px"></div></div>
-      </td>`;
-    }).join('');
-    const cnCells = cn.map((v,i) => {
-      const clr = v === 0 ? 'var(--muted)' : v < 500 ? '#f59e0b' : '#38bdf8';
-      return `<td class="num" style="padding:6px 10px;font-size:12px;font-family:var(--mono);color:${clr}">${v>0?v.toLocaleString():'—'}</td>`;
-    }).join('');
-    return `
-      <tr style="border-bottom:2px solid var(--border)">
-        <td rowspan="2" style="font-size:12px;font-weight:700;white-space:nowrap;padding:8px 12px;background:var(--bg3);border-right:1px solid var(--border2);vertical-align:middle">${p.name}</td>
-        <td style="font-size:10px;font-weight:700;color:var(--green);padding:4px 8px;white-space:nowrap">🏠 창고</td>
-        ${whCells}
-      </tr>
-      <tr style="border-bottom:2px solid var(--border2)">
-        <td style="font-size:10px;font-weight:700;color:#38bdf8;padding:4px 8px;white-space:nowrap">🇨🇳 중국</td>
-        ${cnCells}
-      </tr>`;
-  }).join('');
-
-  const stockPanel = `
-    <div id="simtab-stock" class="sim-tab-panel" style="display:none">
+  const calendarPanel = `
+    <div id="simtab-calendar" class="sim-tab-panel" style="display:none">
       <section class="sec">
-        <div class="sec-header"><span class="sec-lbl">월별 재고 추적</span><span class="sec-sub">창고재고(국내) · 중국재고(선금완료)</span></div>
-        <div class="table-card"><div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th style="min-width:120px">제품명</th>
-              <th style="min-width:48px">구분</th>
-              ${STOCK_MONTHS.map(l=>`<th class="num" style="font-size:10px">${l}</th>`).join('')}
-            </tr></thead>
-            <tbody>${stockRows}</tbody>
-          </table>
+        <div style="background:rgba(64,200,224,0.06);border:1px solid rgba(64,200,224,0.2);border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:12px;color:var(--muted);line-height:1.7">
+          📋 <strong style="color:var(--text)">구글 시트 연동</strong> — <code style="background:var(--bg3);border:1px solid var(--border2);padding:1px 5px;border-radius:3px;font-size:11px;color:var(--accent)">타임라인</code> 시트에 데이터를 입력하면 자동 반영됩니다.
+          <br>시트 형식: <strong style="color:var(--text)">A열</strong> 날짜(6/4) &nbsp;|&nbsp; <strong style="color:var(--text)">B열</strong> 유형(신·추·요·기) &nbsp;|&nbsp; <strong style="color:var(--text)">C열</strong> 제품명 &nbsp;|&nbsp; <strong style="color:var(--text)">D열</strong> 수량 &nbsp;|&nbsp; <strong style="color:var(--text)">E열</strong> 금액 &nbsp;|&nbsp; <strong style="color:var(--text)">F열</strong> 비고 &nbsp;&nbsp;·&nbsp;&nbsp; 시트 GID는 CONFIG.GID_TIMELINE에 입력
         </div>
-        <div class="table-footer">창고재고: 국내 보유 수량 | 중국재고: 선금지급 완료 (입고지시 후 5일 도착) | 막대 기준선 = 월 필요수량</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem">
+          ${monthBtns}
         </div>
-      </section>
-      <section class="sec">
-        <div class="sec-header"><span class="sec-lbl">5월말 기준 재고 현황</span></div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-          ${PRODUCTS.map(p=>{
-            const wh0 = (STOCK_DATA.wh[p.id]||[])[0]||0;
-            const cn0 = (STOCK_DATA.cn[p.id]||[])[0]||0;
-            const total = wh0 + cn0;
-            const months = p.dailySales>0 ? (total/p.dailySales/30).toFixed(1) : '—';
-            const clr = total===0?'var(--red)':wh0===0?'#f59e0b':'var(--green)';
-            return `<div class="sim-kpi-card" style="border-top:2px solid ${clr}">
-              <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px">${p.name}</div>
-              <div style="display:flex;gap:12px;align-items:flex-end">
-                <div>
-                  <div style="font-size:10px;color:var(--muted)">창고</div>
-                  <div style="font-size:18px;font-weight:700;font-family:var(--mono);color:${wh0===0?'var(--muted)':'var(--text)'}">${wh0.toLocaleString()}</div>
-                </div>
-                <div>
-                  <div style="font-size:10px;color:var(--muted)">중국</div>
-                  <div style="font-size:18px;font-weight:700;font-family:var(--mono);color:#38bdf8">${cn0.toLocaleString()}</div>
-                </div>
-              </div>
-              <div style="font-size:11px;color:var(--muted);margin-top:6px">가용 ${(wh0+cn0).toLocaleString()}개 · ${p.dailySales>0?months+'개월치':'판매없음'}</div>
-            </div>`;
-          }).join('')}
+        <div class="table-card" style="padding:1.25rem">
+          ${calPanels}
         </div>
-      </section>
-    </div>`;
-
-  // ── ⑥ 탭 패널 4: 제품별 발주 계획 ───────────────────────
-  const productPlanRows = PRODUCTS.map(p => {
-    const pid = p.id;
-    const keyMap = { mk:'mk', ph_s:'ph_s', ph_b:'ph_b', dw_pro_s:'dw_pro_s', dw_pro_b:'dw_pro_b', dw_pl_s:'dw_pl_s', dw_pl_b:'dw_pl_b', dw_pl_g:'dw_pl_g' };
-    const key = keyMap[pid];
-    const annual = key ? MONTHS.reduce((s,m)=>s+(MONTHLY_COST[m][key]||0),0) : 0;
-    const activeMonths = key ? MONTHS.filter(m=>(MONTHLY_COST[m][key]||0)>0).length : 0;
-    const prepayMonths = INBOUND_SCHEDULE.filter(i=>i.sku===p.sku&&i.type==='prepay').map(i=>i.month);
-    const prepayTotal  = INBOUND_SCHEDULE.filter(i=>i.sku===p.sku&&i.type==='prepay').reduce((s,i)=>s+i.amount,0);
-
-    return `
-      <div style="padding:16px 18px;border-top:1px solid var(--border)">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px">
-          <div>
-            <div style="font-size:14px;font-weight:700;color:var(--text)">${p.name}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--mono)">${p.sku} · MOQ ${p.moq.toLocaleString()} · 리드타임 ${p.leadDays}일 · 일평균 ${p.dailySales}개/일</div>
-          </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:11px;color:var(--muted)">연간 합계</div>
-            <div style="font-size:18px;font-weight:700;font-family:var(--mono);color:var(--accent)">${fmtWon(annual)}</div>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-          <div style="background:var(--bg3);border-radius:6px;padding:8px 14px;flex:1;min-width:120px">
-            <div style="font-size:10px;color:var(--muted)">월 입고수량</div>
-            <div style="font-size:16px;font-weight:700;font-family:var(--mono);color:var(--text)">${p.monthQty>0?p.monthQty.toLocaleString()+'개':'—'}</div>
-          </div>
-          <div style="background:var(--bg3);border-radius:6px;padding:8px 14px;flex:1;min-width:120px">
-            <div style="font-size:10px;color:var(--muted)">개당 잔금+제반</div>
-            <div style="font-size:16px;font-weight:700;font-family:var(--mono);color:#38bdf8">${p.balPerUnit.toLocaleString()}원</div>
-          </div>
-          <div style="background:var(--bg3);border-radius:6px;padding:8px 14px;flex:1;min-width:120px">
-            <div style="font-size:10px;color:var(--muted)">선금 (발주당)</div>
-            <div style="font-size:16px;font-weight:700;font-family:var(--mono);color:#f59e0b">${fmtWon(p.prepayFixed)}</div>
-          </div>
-          <div style="background:var(--bg3);border-radius:6px;padding:8px 14px;flex:1;min-width:120px">
-            <div style="font-size:10px;color:var(--muted)">선금 발생 월</div>
-            <div style="font-size:13px;font-weight:700;font-family:var(--mono);color:#f59e0b">${prepayMonths.length>0?prepayMonths.map(m=>m+'월').join(', '):'없음'}</div>
-          </div>
-        </div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap">
-          ${MONTHS.map(m => {
-            const v = key ? (MONTHLY_COST[m][key]||0) : 0;
-            const hasPrepay = INBOUND_SCHEDULE.some(i=>i.month===m&&i.sku===p.sku&&i.type==='prepay');
-            const pct = annual>0?Math.round(v/annual*100):0;
-            if(v===0) return `<div style="flex:1;min-width:60px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:6px 8px;text-align:center">
-              <div style="font-size:11px;color:var(--muted);font-weight:600">${MONTH_LABELS[m]}</div>
-              <div style="font-size:12px;color:var(--border2);margin-top:4px">—</div>
-            </div>`;
-            return `<div style="flex:1;min-width:60px;background:var(--bg2);border:1px solid ${hasPrepay?'rgba(245,158,11,0.35)':'var(--border)'};border-radius:6px;padding:6px 8px;text-align:center">
-              <div style="font-size:11px;font-weight:600;color:var(--muted)">${MONTH_LABELS[m]}</div>
-              <div style="font-size:13px;font-weight:700;font-family:var(--mono);color:var(--text);margin-top:4px">${fmtWon(v)}</div>
-              ${hasPrepay?`<div style="font-size:9px;color:#f59e0b;margin-top:2px">★ 선금포함</div>`:``}
-              <div style="font-size:10px;color:var(--muted);margin-top:2px">${pct}%</div>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>`;
-  }).join('');
-
-  const productPanel = `
-    <div id="simtab-product" class="sim-tab-panel" style="display:none">
-      <section class="sec">
-        <div class="sec-header"><span class="sec-lbl">제품별 발주 계획 상세</span></div>
-        <div class="table-card" style="padding:0">${productPlanRows}</div>
       </section>
     </div>`;
 
@@ -1831,11 +2002,23 @@ function renderSimulation(cfg) {
     ${kpiHTML}
     ${tabNav}
     ${overviewPanel}
-    ${inboundPanel}
-    ${stockPanel}
-    ${productPanel}
+    ${calendarPanel}
   `;
 }
+
+window.switchCalMonth = function(m) {
+  document.querySelectorAll('.cal-month-btn').forEach(btn => {
+    btn.style.background = 'var(--bg3)';
+    btn.style.color = 'var(--muted)';
+  });
+  document.querySelectorAll('[id^="cal-month-"]').forEach(el => el.style.display='none');
+  const btn = document.getElementById('calbtn-'+m);
+  if(btn){ btn.style.background='var(--accent)'; btn.style.color='#0d0f12'; }
+  const panel = document.getElementById('cal-month-'+m);
+  if(panel) panel.style.display='block';
+};
+
+
 // ============================================================
 // END SIMULATION ENGINE
 // ============================================================
