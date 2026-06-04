@@ -741,7 +741,7 @@ function tab(name, el) {
 }
 
 // ── CSV 유틸 (Apps Script 프록시 — CORS 완전 해결) ──────
-const PROXY_URL = 'https://script.google.com/macros/s/AKfycbw3gHa4zaiZZRpPBHMspnPQhPclAsdhGMkazB-NrvHfo6B41MMQdzq9oByjZvO_FIDH/exec';
+const PROXY_URL = 'https://script.google.com/macros/s/AKfycbxumY19203ydMlB4KKKO_Opsr8ZKkkd8s0UYj3XkqWxH0X38dKRGahh4fSgfTocOmMtWQ/exec';
 function fetchCSV(gid) {
   const url = `${PROXY_URL}?gid=${gid}&_=${Date.now()}`;
   const timeout = new Promise((_, reject) =>
@@ -836,25 +836,19 @@ async function load() {
   setSyncStatus('loading', '동기화 중...');
 
   try {
-    const stockPromise = CONFIG.GID_STOCK
-      ? fetchCSV(CONFIG.GID_STOCK).catch(() => "")
-      : Promise.resolve("");
-    const memoPromise = CONFIG.GID_MEMO
-      ? fetchCSV(CONFIG.GID_MEMO).catch(() => "")
-      : Promise.resolve("");
-    const timelinePromise = CONFIG.GID_TIMELINE
-      ? fetchCSV(CONFIG.GID_TIMELINE).catch(() => "")
-      : Promise.resolve("");
+    // 모든 시트를 안전하게 fetch — 하나 실패해도 전체 중단 없음
+    const safe = gid => fetchCSV(gid).catch(e => { console.warn('fetch gid='+gid+' 실패:', e.message); return ""; });
 
     const [cfgR, prodR, salesR, coupangR, stockR, memoR, timelineR] = await Promise.all([
-      fetchCSV(CONFIG.GID_CONFIG),
-      fetchCSV(CONFIG.GID_PROD),
-      fetchCSV(CONFIG.GID_SALES),
-      fetchCSV(CONFIG.GID_COUPANG),
-      stockPromise,
-      memoPromise,
-      timelinePromise,
+      safe(CONFIG.GID_CONFIG),
+      safe(CONFIG.GID_PROD),
+      safe(CONFIG.GID_SALES),
+      safe(CONFIG.GID_COUPANG),
+      CONFIG.GID_STOCK    ? safe(CONFIG.GID_STOCK)    : Promise.resolve(""),
+      CONFIG.GID_MEMO     ? safe(CONFIG.GID_MEMO)     : Promise.resolve(""),
+      CONFIG.GID_TIMELINE ? safe(CONFIG.GID_TIMELINE) : Promise.resolve(""),
     ]);
+    console.log('시트 로드 완료 — cfg:', cfgR.slice(0,50), '| prod:', prodR.slice(0,30));
 
     // 설정 시트
     const cfg = {};
@@ -938,20 +932,18 @@ async function load() {
     const deferralDeadline = cfg["결제유예가능일"] || "";
     const deferralLimit    = n(cfg["유예월발주한도"] ?? 0);
 
-    setSyncStatus('ok', `${nowTime()} 업데이트`);
+    setSyncStatus(Object.keys(cfg).length > 0 ? 'ok' : 'loading', `${nowTime()} 업데이트`);
     renderSimulation(cfg, timelineData);
     render({ targetMain, currentMain, allDailyAvg, spentBudget: n(cfg["누적발주지출"] ?? 0),
       coupangData, elapsedDays, totalDays, totalSales, products, stockData,
       deferralDeadline, deferralLimit, memoData: memoMap });
 
   } catch(e) {
-    setSyncStatus('error', '연결 실패 — 시뮬레이션은 기본값으로 표시');
+    console.error('load() 전체 오류:', e);
+    setSyncStatus('error', '연결 실패 — 기본값으로 표시');
     document.getElementById("err").innerHTML =
-      `<div class="err-box">⚠️ 시트 연결 실패: <strong>${e.message}</strong><br>
-       Sheets 공유 → <strong>"링크가 있는 모든 사용자" 뷰어</strong> 설정 확인<br>
-       <small>시뮬레이션 탭은 기본값으로 동작합니다.</small></div>`;
+      `<div class="err-box">⚠️ 오류: <strong>${e.message}</strong></div>`;
     document.getElementById("content").innerHTML = "";
-    // 시트 연결 실패해도 시뮬레이션은 기본값으로 실행
     renderSimulation({}, null);
   }
 }
