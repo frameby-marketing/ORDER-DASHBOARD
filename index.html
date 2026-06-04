@@ -740,54 +740,24 @@ function tab(name, el) {
   document.getElementById(`p-${name}`).classList.add("on");
 }
 
-// ── CSV 유틸 (CORS 우회 — file:// 환경 대응) ────────────
+// ── CSV 유틸 (CORS 우회 — allorigins 프록시) ─────────────
 function fetchCSV(gid) {
-  return new Promise((resolve, reject) => {
-    const cbName = '_gc_' + gid + '_' + Date.now();
-    const timeout = setTimeout(() => {
-      delete window[cbName];
-      if (script.parentNode) script.parentNode.removeChild(script);
-      reject(new Error('timeout'));
-    }, 15000);
-
-    window[cbName] = function(data) {
-      clearTimeout(timeout);
-      delete window[cbName];
-      if (script.parentNode) script.parentNode.removeChild(script);
-      // gviz 응답을 CSV 형태로 변환
-      try {
-        const rows = data.table.rows;
-        const cols = data.table.cols;
-        const csvLines = [];
-        // 헤더
-        csvLines.push(cols.map(c => '"' + (c.label||'').replace(/"/g,'""') + '"').join(','));
-        // 데이터 행
-        rows.forEach(r => {
-          const cells = r.c || [];
-          const line = cols.map((c, i) => {
-            const cell = cells[i];
-            if (!cell || cell.v === null || cell.v === undefined) return '';
-            // f(formatted)가 있으면 우선 사용 (날짜/숫자 원본 표현 보존)
-            const v = String(cell.f !== undefined && cell.f !== null ? cell.f : cell.v).replace(/"/g, '""');
-            return '"' + v + '"';
-          });
-          csvLines.push(line.join(','));
-        });
-        resolve(csvLines.join('\n'));
-      } catch(e) {
-        reject(new Error('parse error: ' + e.message));
-      }
-    };
-
-    const script = document.createElement('script');
-    script.src = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:json&tq=select+*&gid=${gid}&cb=${cbName}&_=${Date.now()}`;
-    script.onerror = () => {
-      clearTimeout(timeout);
-      delete window[cbName];
-      reject(new Error('script load error'));
-    };
-    document.head.appendChild(script);
-  });
+  const sheetUrl = encodeURIComponent(
+    `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/export?format=csv&gid=${gid}`
+  );
+  const proxyUrl = `https://api.allorigins.win/get?url=${sheetUrl}&_=${Date.now()}`;
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('timeout')), 15000)
+  );
+  return Promise.race([
+    fetch(proxyUrl)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(j => {
+        if (!j || !j.contents) throw new Error('empty response');
+        return j.contents;
+      }),
+    timeout
+  ]);
 }
 
 function parseCSV(raw) {
@@ -1529,6 +1499,7 @@ function switchSimTab(t, el) {
 
 // ── 메인 렌더 ─────────────────────────────────────────────
 function renderSimulation(cfg, sheetTimeline) {
+  try {
   const MONTHS = [6,7,8,9,10,11,12];
   const MONTH_LABELS = {6:'6월',7:'7월',8:'8월',9:'9월',10:'10월',11:'11월',12:'12월'};
 
@@ -2069,10 +2040,12 @@ window.switchCalMonth = function(m) {
   if(btn){ btn.style.background='var(--accent)'; btn.style.color='#0d0f12'; }
   const panel = document.getElementById('cal-month-'+m);
   if(panel) panel.style.display='block';
-};
-
-
-// ============================================================
+  } catch(err) {
+    console.error('renderSimulation error:', err);
+    const el = document.getElementById('sim-content');
+    if (el) el.innerHTML = `<div class="err-box">⚠️ 렌더링 오류: <strong>${err.message}</strong><br><small>F12 콘솔에서 상세 확인</small></div>`;
+  }
+}// ============================================================
 // END SIMULATION ENGINE
 // ============================================================
 
