@@ -411,7 +411,27 @@
   </div>
 
   <!-- Month navigation -->
-  <div class="section-title">월별 발주 캘린더</div>
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+    <div class="section-title" style="margin-bottom:0;">월별 발주 캘린더</div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);">
+        <div style="width:18px;height:18px;border-radius:50%;background:var(--기);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;">기</div>
+        기존 생산물량 잔금
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);">
+        <div style="width:18px;height:18px;border-radius:50%;background:var(--요);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#000;">요</div>
+        입고 요청
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);">
+        <div style="width:18px;height:18px;border-radius:50%;background:var(--신);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;">신</div>
+        신규 생산 발주
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);">
+        <div style="width:18px;height:18px;border-radius:50%;background:var(--추);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;">추</div>
+        추가 입고
+      </div>
+    </div>
+  </div>
   <div class="month-nav" id="monthNav"></div>
   <div id="calendarArea"></div>
 
@@ -419,19 +439,21 @@
 
 <!-- ══════════════════════════════════════════ TAB: OVERVIEW ══ -->
 <div class="tab-panel" id="tab-overview">
-  <div class="section-title">제품별 발주 현황</div>
-  <table class="product-table" id="productTable">
+  <div class="section-title">월별 · 주차별 지출 합계</div>
+  <table class="product-table" id="weeklyTable">
     <thead>
       <tr>
-        <th>제품명</th>
-        <th>총 신규발주</th>
-        <th>총 추가입고</th>
-        <th>총 지출</th>
-        <th>발주 건수</th>
+        <th>월</th>
+        <th>주차</th>
+        <th>기간</th>
+        <th style="color:var(--기)">기존 잔금</th>
+        <th style="color:var(--신)">신규 발주</th>
+        <th style="color:var(--추)">추가 입고</th>
+        <th>주차 합계</th>
       </tr>
     </thead>
-    <tbody id="productTableBody">
-      <tr><td colspan="5" style="text-align:center;color:var(--text3);padding:40px;">샘플 데이터 또는 Google Sheets 연동 후 확인 가능합니다</td></tr>
+    <tbody id="weeklyTableBody">
+      <tr><td colspan="7" style="text-align:center;color:var(--text3);padding:40px;">데이터 로드 후 확인 가능합니다</td></tr>
     </tbody>
   </table>
 </div>
@@ -843,28 +865,87 @@ function renderCalendar(m) {
 function renderOverview() {
   if (!currentData.length) return;
 
-  const products = {};
-  currentData.forEach(r => {
-    if (!products[r.product]) products[r.product] = {신:0,추:0,기:0,total:0,count:0};
-    const p = products[r.product];
-    p[r.type] = (p[r.type]||0) + (r.amount||0);
-    p.total += (r.amount||0);
-    p.count++;
+  const rows = [];
+
+  MONTHS.forEach(mo => {
+    const monthData = currentData.filter(r => r.month === mo.m);
+    if (!monthData.length) return;
+
+    const firstDate = new Date(2026, mo.m - 1, 1);
+    const firstDow = firstDate.getDay();
+    const days = mo.days;
+    const totalCells = firstDow + days;
+    const numWeeks = Math.ceil(totalCells / 7);
+
+    let monthTotal = 0;
+
+    for (let week = 0; week < numWeeks; week++) {
+      const startDay = week * 7 - firstDow + 1;
+      const endDay = startDay + 6;
+
+      const clampedStart = Math.max(1, startDay);
+      const clampedEnd = Math.min(days, endDay);
+      if (clampedStart > days) continue;
+
+      const weekData = monthData.filter(r => r.day >= clampedStart && r.day <= clampedEnd);
+      const 기amt = weekData.filter(r=>r.type==='기').reduce((s,r)=>s+(r.amount||0),0);
+      const 신amt = weekData.filter(r=>r.type==='신').reduce((s,r)=>s+(r.amount||0),0);
+      const 추amt = weekData.filter(r=>r.type==='추').reduce((s,r)=>s+(r.amount||0),0);
+      const total = 기amt + 신amt + 추amt;
+      monthTotal += total;
+
+      rows.push({
+        month: mo.label,
+        week: week + 1,
+        range: `${clampedStart}일 – ${clampedEnd}일`,
+        기: 기amt,
+        신: 신amt,
+        추: 추amt,
+        total,
+        isLast: week === numWeeks - 1,
+        monthTotal: 0 // fill after
+      });
+    }
+
+    // 월 합계 행에 monthTotal 기록
+    const monthRows = rows.filter(r => r.month === mo.label);
+    monthRows.forEach(r => r.monthTotal = monthTotal);
   });
 
-  const rows = Object.entries(products)
-    .sort((a,b) => b[1].total - a[1].total)
-    .map(([name, d]) => `
-      <tr>
-        <td><strong>${name}</strong></td>
-        <td class="mono" style="color:var(--신)">${d['신'] ? fmtAmount(d['신']) : '—'}</td>
-        <td class="mono" style="color:var(--추)">${d['추'] ? fmtAmount(d['추']) : '—'}</td>
-        <td class="mono">${fmtAmount(d.total)}</td>
-        <td>${d.count}건</td>
-      </tr>
-    `).join('');
+  // 월별로 그룹핑해서 렌더
+  let html = '';
+  let lastMonth = '';
+  rows.forEach((r, i) => {
+    const isNewMonth = r.month !== lastMonth;
+    lastMonth = r.month;
 
-  document.getElementById('productTableBody').innerHTML = rows;
+    html += `
+      <tr style="${isNewMonth ? 'border-top:2px solid var(--border)' : ''}">
+        ${isNewMonth ? `<td rowspan="${rows.filter(x=>x.month===r.month).length + 1}" style="font-weight:700;font-size:13px;text-align:center;vertical-align:top;padding-top:14px;border-right:1px solid var(--border);">${r.month}</td>` : ''}
+        <td style="color:var(--text2)">${r.week}주차</td>
+        <td style="color:var(--text3);font-size:11px;">${r.range}</td>
+        <td class="mono" style="color:var(--기)">${r.기 ? fmtAmountFull(r.기) : '—'}</td>
+        <td class="mono" style="color:var(--신)">${r.신 ? fmtAmountFull(r.신) : '—'}</td>
+        <td class="mono" style="color:var(--추)">${r.추 ? fmtAmountFull(r.추) : '—'}</td>
+        <td class="mono" style="font-weight:600">${r.total ? fmtAmountFull(r.total) : '—'}</td>
+      </tr>
+    `;
+
+    // 월 합계 행
+    if (r.isLast) {
+      html += `
+        <tr style="background:var(--surface2);">
+          <td colspan="3" style="text-align:right;font-size:11px;color:var(--text3);font-weight:600;letter-spacing:0.05em;">월 합계</td>
+          <td class="mono" style="color:var(--기);font-weight:700;">${rows.filter(x=>x.month===r.month).reduce((s,x)=>s+x.기,0) ? fmtAmountFull(rows.filter(x=>x.month===r.month).reduce((s,x)=>s+x.기,0)) : '—'}</td>
+          <td class="mono" style="color:var(--신);font-weight:700;">${rows.filter(x=>x.month===r.month).reduce((s,x)=>s+x.신,0) ? fmtAmountFull(rows.filter(x=>x.month===r.month).reduce((s,x)=>s+x.신,0)) : '—'}</td>
+          <td class="mono" style="color:var(--추);font-weight:700;">${rows.filter(x=>x.month===r.month).reduce((s,x)=>s+x.추,0) ? fmtAmountFull(rows.filter(x=>x.month===r.month).reduce((s,x)=>s+x.추,0)) : '—'}</td>
+          <td class="mono" style="font-weight:700;color:var(--accent);">${fmtAmountFull(r.monthTotal)}</td>
+        </tr>
+      `;
+    }
+  });
+
+  document.getElementById('weeklyTableBody').innerHTML = html || '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:40px;">데이터 없음</td></tr>';
 }
 
 // ──────────────────────────── INIT ────────────────────────────
