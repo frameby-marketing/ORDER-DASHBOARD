@@ -740,22 +740,16 @@ function tab(name, el) {
   document.getElementById(`p-${name}`).classList.add("on");
 }
 
-// ── CSV 유틸 (CORS 우회 — allorigins 프록시) ─────────────
+// ── CSV 유틸 (Apps Script 프록시 — CORS 완전 해결) ──────
+const PROXY_URL = 'https://script.google.com/macros/s/AKfycbw3gHa4zaiZZRpPBHMspnPQhPclAsdhGMkazB-NrvHfo6B41MMQdzq9oByjZvO_FIDH/exec';
 function fetchCSV(gid) {
-  const sheetUrl = encodeURIComponent(
-    `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/export?format=csv&gid=${gid}`
-  );
-  const proxyUrl = `https://api.allorigins.win/get?url=${sheetUrl}&_=${Date.now()}`;
+  const url = `${PROXY_URL}?gid=${gid}&_=${Date.now()}`;
   const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('timeout')), 15000)
+    setTimeout(() => reject(new Error('timeout')), 20000)
   );
   return Promise.race([
-    fetch(proxyUrl)
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(j => {
-        if (!j || !j.contents) throw new Error('empty response');
-        return j.contents;
-      }),
+    fetch(url)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); }),
     timeout
   ]);
 }
