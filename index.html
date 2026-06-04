@@ -247,6 +247,18 @@
   .badge-qty { color: var(--text2); font-size: 9px; }
   .badge-cost { color: var(--text); font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; }
 
+  .badge-memo {
+    margin-top: 2px;
+    padding: 2px 4px;
+    background: rgba(255,255,255,0.04);
+    border-left: 2px solid var(--accent2);
+    border-radius: 0 3px 3px 0;
+    font-size: 8.5px;
+    color: var(--text2);
+    line-height: 1.4;
+    word-break: keep-all;
+  }
+
   /* Week cost column */
   .week-cost-cell {
     background: var(--surface2);
@@ -427,14 +439,14 @@
 <script>
 // ──────────────────────────── DATA LAYER ────────────────────────────
 const BUILTIN = [
-  {date:'6/4',type:'기',product:'PH 실버',qty:null,amount:14000000,note:'기존 생산물량 잔금'},
-  {date:'6/15',type:'기',product:'맥세이프 킥프레임',qty:null,amount:5983969,note:'기존 생산물량 잔금'},
-  {date:'6/15',type:'요',product:'맥세이프 킥프레임',qty:1200,amount:null,note:'입고 요청 · 6/20 입고 예정'},
-  {date:'6/20',type:'추',product:'맥세이프 킥프레임',qty:1200,amount:7250040,note:'추가 입고'},
-  {date:'6/25',type:'요',product:'DW 프로 블랙',qty:90,amount:null,note:'입고 요청 · 6/30 입고 예정'},
-  {date:'6/26',type:'신',product:'DW 프로 실버',qty:500,amount:1545000,note:'신규 생산 발주 · 8/15 생산완료예정'},
-  {date:'6/26',type:'요',product:'DW 플러스 그린',qty:45,amount:null,note:'입고 요청 · 7/1 입고 예정'},
-  {date:'6/27',type:'신',product:'DW 플러스 실버',qty:500,amount:1023750,note:'신규 생산 발주 · 8/16 생산완료예정'},
+  {date:'6/4',type:'기',product:'PH 실버',qty:null,amount:14000000,note:'기존 생산물량 잔금',memo:''},
+  {date:'6/15',type:'기',product:'맥세이프 킥프레임',qty:null,amount:5983969,note:'기존 생산물량 잔금',memo:''},
+  {date:'6/15',type:'요',product:'맥세이프 킥프레임',qty:1200,amount:null,note:'입고 요청 · 6/20 입고 예정',memo:''},
+  {date:'6/20',type:'추',product:'맥세이프 킥프레임',qty:1200,amount:7250040,note:'추가 입고',memo:''},
+  {date:'6/25',type:'요',product:'DW 프로 블랙',qty:90,amount:null,note:'입고 요청 · 6/30 입고 예정',memo:''},
+  {date:'6/26',type:'신',product:'DW 프로 실버',qty:500,amount:1545000,note:'신규 생산 발주 · 8/15 생산완료예정',memo:''},
+  {date:'6/26',type:'요',product:'DW 플러스 그린',qty:45,amount:null,note:'입고 요청 · 7/1 입고 예정',memo:''},
+  {date:'6/27',type:'신',product:'DW 플러스 실버',qty:500,amount:1023750,note:'신규 생산 발주 · 8/16 생산완료예정',memo:''},
   {date:'6/30',type:'기',product:'DW 프로 실버',qty:null,amount:11124000,note:'기존 생산물량 잔금'},
   {date:'6/30',type:'기',product:'DW 프로 블랙',qty:null,amount:556200,note:'기존 생산물량 잔금'},
   {date:'6/30',type:'기',product:'DW 플러스 실버',qty:null,amount:1842750,note:'기존 생산물량 잔금'},
@@ -587,7 +599,8 @@ function parseRow(row) {
     product: String(row.product).trim(),
     qty: row.qty ? parseInt(row.qty) : null,
     amount: row.amount ? parseInt(String(row.amount).replace(/[₩,]/g,'')) : null,
-    note: row.note || ''
+    note: row.note || '',
+    memo: row.memo || ''
   };
 }
 
@@ -616,7 +629,8 @@ async function connectSheet() {
         product: obj['제품명'] || obj['product'] || '',
         qty: obj['수량'] || obj['qty'] || '',
         amount: obj['금액'] || obj['amount'] || '',
-        note: obj['비고'] || obj['note'] || ''
+        note: obj['비고'] || obj['note'] || '',
+        memo: obj['협의사항'] || obj['memo'] || ''
       };
     });
     const parsed = data.map(parseRow).filter(Boolean);
@@ -798,6 +812,7 @@ function renderCalendar(m) {
             <div class="badge-product">${e.product}</div>
             ${e.qty ? `<div class="badge-qty">${e.qty.toLocaleString()}개</div>` : ''}
             ${e.amount ? `<div class="badge-cost">${fmtAmount(e.amount)}</div>` : ''}
+            ${e.memo ? `<div class="badge-memo">💬 ${e.memo}</div>` : ''}
           </div>
         </div>
       `).join('');
