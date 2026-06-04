@@ -1501,33 +1501,31 @@ function renderSimulation(cfg, sheetTimeline) {
     return v.toLocaleString()+'원';
   }
 
-  const totalAnnual = Object.values(MONTHLY_COST).reduce((s,m)=>s+m.total,0);
-  const avgMonthTotal = MONTHS.reduce((s,m)=>s+MONTHLY_COST[m].total,0)/7;
-  const maxMonthTotal = Math.max(...MONTHS.map(m=>MONTHLY_COST[m].total));
-  const minMonthTotal = Math.min(...MONTHS.map(m=>MONTHLY_COST[m].total));
+  // KPI는 TIMELINE 병합 후 EFFECTIVE_MONTHLY 계산이 끝나면 렌더
+  // (아래 overviewPanel에서 EFFECTIVE_MONTHLY 사용)
 
-  // ── ① KPI 요약 ───────────────────────────────────────────
+  // ── ① KPI 요약 (TIMELINE 기반 — 시트 반영) ──────────────
   const kpiHTML = `
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem">
       <div class="sim-kpi-card">
         <div class="sim-kpi-label">26년 총 발주비 (6~12월)</div>
-        <div class="sim-kpi-value" style="color:var(--accent)">${fmtBar(totalAnnual)}</div>
-        <div class="sim-kpi-sub">7개월 합산</div>
+        <div class="sim-kpi-value" style="color:var(--accent)">\${fmtBar(totalAnnualEff)}</div>
+        <div class="sim-kpi-sub">7개월 합산 · 시트 연동</div>
       </div>
       <div class="sim-kpi-card">
         <div class="sim-kpi-label">월평균 발주비</div>
-        <div class="sim-kpi-value" style="color:var(--accent)">${fmtBar(avgMonthTotal)}</div>
+        <div class="sim-kpi-value" style="color:var(--accent)">\${fmtBar(avgMonthTotalEff)}</div>
         <div class="sim-kpi-sub">6~12월 평균</div>
       </div>
       <div class="sim-kpi-card good">
         <div class="sim-kpi-label">최고 지출 월</div>
-        <div class="sim-kpi-value" style="color:var(--amber)">${fmtBar(maxMonthTotal)}</div>
-        <div class="sim-kpi-sub">${MONTHS.find(m=>MONTHLY_COST[m].total===maxMonthTotal)}월</div>
+        <div class="sim-kpi-value" style="color:var(--amber)">\${fmtBar(maxMonthTotalEff)}</div>
+        <div class="sim-kpi-sub">\${MONTHS.find(m=>EFFECTIVE_MONTHLY[m]===maxMonthTotalEff)}월</div>
       </div>
       <div class="sim-kpi-card">
         <div class="sim-kpi-label">최저 지출 월</div>
-        <div class="sim-kpi-value" style="color:var(--green)">${fmtBar(minMonthTotal)}</div>
-        <div class="sim-kpi-sub">${MONTHS.find(m=>MONTHLY_COST[m].total===minMonthTotal)}월</div>
+        <div class="sim-kpi-value" style="color:var(--green)">\${fmtBar(minMonthTotalEff)}</div>
+        <div class="sim-kpi-sub">\${MONTHS.find(m=>EFFECTIVE_MONTHLY[m]===minMonthTotalEff)}월</div>
       </div>
     </div>`;
 
@@ -1570,20 +1568,23 @@ function renderSimulation(cfg, sheetTimeline) {
 
   // 월별 상세 테이블
   const monthDetailRows = MONTHS.map(m => {
-    const mc = MONTHLY_COST[m];
-    const isMax = mc.total === maxMonthTotal;
+    const val   = EFFECTIVE_MONTHLY[m];
+    const isMax = val === maxMonthTotalEff;
+    const isMin = val === minMonthTotalEff;
+    const diff  = val - avgMonthTotalEff;
+    const diffStr = Math.abs(diff) < 10000 ? '±0' : (diff > 0 ? '+' : '') + fmtBar(diff);
     return `<tr>
-      <td style="font-weight:700;color:${isMax?'var(--amber)':'var(--text)'}">${MONTH_LABELS[m]}</td>
-      <td class="num" style="color:var(--green)">${fmtBar(mc.total)}</td>
-      <td class="num" style="font-size:11px;color:var(--muted)">${(mc.total/totalAnnual*100).toFixed(1)}%</td>
-      <td class="num" style="font-size:11px;color:var(--muted)">${fmtBar(mc.total - avgMonthTotal) === fmtBar(0) ? '±0' : (mc.total > avgMonthTotal ? '+' : '') + fmtBar(mc.total - avgMonthTotal)}</td>
+      <td style="font-weight:700;color:${isMax?'var(--amber)':isMin?'var(--green)':'var(--text)'}">${MONTH_LABELS[m]}</td>
+      <td class="num" style="color:var(--accent);font-weight:700">${fmtBar(val)}</td>
+      <td class="num" style="font-size:11px;color:var(--muted)">${totalAnnualEff>0?(val/totalAnnualEff*100).toFixed(1):0}%</td>
+      <td class="num" style="font-size:11px;color:${diff>0?'var(--red)':diff<0?'var(--green)':'var(--muted)'}">${diffStr}</td>
     </tr>`;
   }).join('');
 
   const overviewPanel = `
     <div id="simtab-overview" class="sim-tab-panel">
       <section class="sec">
-        <div class="sec-header"><span class="sec-lbl">월별 발주비 흐름</span><span class="sec-sub">점선 = 월평균 (${fmtBar(avgMonthTotal)})</span></div>
+        <div class="sec-header"><span class="sec-lbl">월별 발주비 흐름</span><span class="sec-sub">점선 = 월평균 (\${fmtBar(avgMonthTotalEff)}) · 시트 데이터 실시간 반영</span></div>
         <div class="table-card" style="padding:1.5rem">
           <div style="display:flex;gap:8px;align-items:flex-end;padding-bottom:1.25rem;border-bottom:1px solid var(--border)">
             ${barsHTML2}
@@ -1610,7 +1611,7 @@ function renderSimulation(cfg, sheetTimeline) {
               <tbody>${monthDetailRows}</tbody>
               <tfoot><tr class="tfoot-row">
                 <td class="fw">합계</td>
-                <td class="num fw" style="color:var(--accent)">${fmtBar(totalAnnual)}</td>
+                <td class="num fw" style="color:var(--accent)">\${fmtBar(totalAnnualEff)}</td>
                 <td class="num fw">100%</td>
                 <td class="num muted">—</td>
               </tr></tfoot>
@@ -1827,6 +1828,16 @@ function renderSimulation(cfg, sheetTimeline) {
   });
 
 
+  // ── TIMELINE 기반으로 월별 합계 재계산 (시트 연동 반영) ──
+  const EFFECTIVE_MONTHLY = {};
+  MONTHS.forEach(m => {
+    EFFECTIVE_MONTHLY[m] = TIMELINE[m].total;
+  });
+  const totalAnnualEff   = MONTHS.reduce((s,m) => s + EFFECTIVE_MONTHLY[m], 0);
+  const avgMonthTotalEff = totalAnnualEff / 7;
+  const maxMonthTotalEff = Math.max(...MONTHS.map(m => EFFECTIVE_MONTHLY[m]));
+  const minMonthTotalEff = Math.min(...MONTHS.map(m => EFFECTIVE_MONTHLY[m]));
+
   // ─── 달력 생성 헬퍼 ────────────────────────────────────
   function buildCalendar(month) {
     const data = TIMELINE[month];
@@ -1857,7 +1868,7 @@ function renderSimulation(cfg, sheetTimeline) {
         '기': { bg:'rgba(29,185,84,0.18)',   color:'var(--green)', border:'rgba(29,185,84,0.5)' },
       };
       const c = cfg[type] || { bg:'rgba(100,116,139,0.2)', color:'#64748b', border:'rgba(100,116,139,0.3)' };
-      return `<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:${c.bg};color:${c.color};border:1px solid ${c.border};font-size:10px;font-weight:800;flex-shrink:0">${type}</span>`;
+      return `<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:${c.bg};color:${c.color};border:1.5px solid ${c.border};font-size:11px;font-weight:800;flex-shrink:0">${type}</span>`;
     }
 
     // 주차별 비용 계산을 위해 날짜→주차 매핑
@@ -1888,11 +1899,11 @@ function renderSimulation(cfg, sheetTimeline) {
     });
 
     for(let row=0; row<cells.length/7; row++) {
-      calRows += `<tr>`;
+      calRows += `<tr style="height:160px">`;
       for(let col=0; col<7; col++) {
         const day = cells[row*7+col];
         if(!day) {
-          calRows += `<td style="background:transparent;min-height:80px;border:1px solid var(--border);border-color:rgba(255,255,255,0.04)"></td>`;
+          calRows += `<td style="background:transparent;border:1px solid rgba(255,255,255,0.05)"></td>`;
           continue;
         }
         const evs = evByDay[day] || [];
@@ -1914,34 +1925,36 @@ function renderSimulation(cfg, sheetTimeline) {
             .replace('DW 플러스 그린','DW플G');
           const qtyStr = ev.qty ? ` ${ev.qty}개` : '';
           const costStr = ev.cost ? ` · ${fmtBar(ev.cost)}` : '';
-          evHTML += `<div style="display:flex;align-items:flex-start;gap:3px;margin-top:3px;line-height:1.3">
+          evHTML += `<div style="display:flex;align-items:flex-start;gap:5px;margin-top:6px;line-height:1.4">
             ${badge(ev.type)}
-            <div style="font-size:9px;color:var(--muted);flex:1;min-width:0">
-              <span style="color:var(--text);font-weight:600">${prodShort}</span>${qtyStr}${costStr}
+            <div style="font-size:13px;color:var(--muted);flex:1;min-width:0;line-height:1.5">
+              <span style="color:var(--text);font-weight:700">${prodShort}</span>${qtyStr}${costStr}
             </div>
           </div>`;
         });
 
-        calRows += `<td style="vertical-align:top;padding:5px 6px;border:1px solid var(--border);min-height:80px;background:${hasCost?'rgba(64,200,224,0.03)':'transparent'};${isToday?'box-shadow:inset 0 0 0 1.5px var(--accent)':''};position:relative">
-          <div style="font-size:12px;font-weight:700;color:${dayColor};margin-bottom:2px">${day}</div>
-          ${evHTML}
+        calRows += `<td style="vertical-align:top;padding:0;border:1px solid var(--border);overflow:hidden;background:${hasCost?'rgba(64,200,224,0.05)':'transparent'};${isToday?'box-shadow:inset 0 0 0 2px var(--accent)':''};position:relative">
+          <div style="padding:10px 12px;height:100%;box-sizing:border-box;overflow:hidden">
+            <div style="font-size:15px;font-weight:800;color:${dayColor};margin-bottom:5px;letter-spacing:-0.02em">${day}</div>
+            ${evHTML}
+          </div>
         </td>`;
       }
       // 주차 합계 열
       const wCost = weekRowCosts[row];
-      calRows += `<td style="text-align:right;vertical-align:middle;padding:4px 8px;border:1px solid var(--border);background:var(--bg3);width:72px;white-space:nowrap">
-        ${wCost>0 ? `<div style="font-size:10px;color:var(--muted);margin-bottom:2px">주합계</div><div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--text)">${fmtBar(wCost)}</div>` : `<div style="font-size:10px;color:var(--border2)">—</div>`}
+      calRows += `<td style="text-align:right;vertical-align:middle;padding:8px 14px;border:1px solid var(--border);background:var(--bg3);width:100px;white-space:nowrap">
+        ${wCost>0 ? `<div style="font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:0.03em">주 합계</div><div style="font-size:14px;font-weight:800;font-family:var(--mono);color:var(--text)">${fmtBar(wCost)}</div>` : `<div style="font-size:12px;color:var(--border2)">—</div>`}
       </td>`;
       calRows += `</tr>`;
     }
 
     return `
       <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;table-layout:fixed">
+        <table style="width:100%;min-width:900px;border-collapse:collapse;table-layout:fixed">
           <thead>
             <tr>
-              ${dayNames.map((d,i)=>`<th style="padding:6px 4px;font-size:11px;font-weight:600;color:${i===0?'var(--red)':i===6?'var(--purple)':'var(--muted)'};text-align:center;border:1px solid var(--border);background:var(--bg3)">${d}</th>`).join('')}
-              <th style="width:72px;padding:6px 4px;font-size:11px;color:var(--muted);text-align:right;border:1px solid var(--border);background:var(--bg3)">주 합계</th>
+              ${dayNames.map((d,i)=>`<th style="padding:14px 4px;font-size:14px;font-weight:700;color:${i===0?'var(--red)':i===6?'var(--purple)':'var(--muted)'};text-align:center;border:1px solid var(--border);background:var(--bg3)">${d}</th>`).join('')}
+              <th style="width:100px;padding:14px 8px;font-size:14px;color:var(--muted);text-align:right;border:1px solid var(--border);background:var(--bg3)">주 합계</th>
             </tr>
           </thead>
           <tbody>${calRows}</tbody>
@@ -1960,22 +1973,22 @@ function renderSimulation(cfg, sheetTimeline) {
     <div id="cal-month-${m}" style="display:${i===0?'block':'none'}">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div>
-          <span style="font-size:18px;font-weight:700;color:var(--text)">2026년 ${MONTH_LABELS[m]}</span>
+          <span style="font-size:22px;font-weight:700;color:var(--text)">2026년 ${MONTH_LABELS[m]}</span>
           <span style="font-size:12px;color:var(--muted);margin-left:10px;font-family:var(--mono)">월 합계: </span>
-          <span style="font-size:14px;font-weight:700;font-family:var(--mono);color:var(--accent)">${fmtBar(TIMELINE[m].total)}</span>
+          <span style="font-size:18px;font-weight:700;font-family:var(--mono);color:var(--accent)">${fmtBar(TIMELINE[m].total)}</span>
         </div>
         <div style="display:flex;gap:12px;font-size:11px">
           <span style="display:flex;align-items:center;gap:4px">
-            <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(255,59,48,0.18);color:var(--red);border:1px solid rgba(255,59,48,0.5);font-size:10px;font-weight:800">신</span>신규 생산 발주
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(255,59,48,0.18);color:var(--red);border:1px solid rgba(255,59,48,0.5);font-size:11px;font-weight:800">신</span>신규 생산 발주
           </span>
           <span style="display:flex;align-items:center;gap:4px">
-            <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(64,200,224,0.18);color:var(--accent);border:1px solid rgba(64,200,224,0.5);font-size:10px;font-weight:800">추</span>추가 입고 (중국→한국)
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(64,200,224,0.18);color:var(--accent);border:1px solid rgba(64,200,224,0.5);font-size:11px;font-weight:800">추</span>추가 입고 (중국→한국)
           </span>
           <span style="display:flex;align-items:center;gap:4px">
-            <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(245,196,0,0.18);color:var(--amber);border:1px solid rgba(245,196,0,0.5);font-size:10px;font-weight:800">요</span>입고 요청
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(245,196,0,0.18);color:var(--amber);border:1px solid rgba(245,196,0,0.5);font-size:11px;font-weight:800">요</span>입고 요청
           </span>
           <span style="display:flex;align-items:center;gap:4px">
-            <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(29,185,84,0.18);color:var(--green);border:1px solid rgba(29,185,84,0.5);font-size:10px;font-weight:800">기</span>기존 생산물량 잔금
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(29,185,84,0.18);color:var(--green);border:1px solid rgba(29,185,84,0.5);font-size:11px;font-weight:800">기</span>기존 생산물량 잔금
           </span>
         </div>
       </div>
