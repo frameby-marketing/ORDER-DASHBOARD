@@ -33,6 +33,7 @@
     background: var(--bg);
     color: var(--text);
     font-family: 'Pretendard', sans-serif;
+    font-size: 16px;
     min-height: 100vh;
     overflow-x: hidden;
   }
@@ -49,11 +50,11 @@
     top: 0;
     z-index: 100;
   }
-  .app-title { font-size: 17px; font-weight: 700; letter-spacing: 0.04em; color: var(--text); }
+  .app-title { font-size: 20px; font-weight: 700; letter-spacing: 0.04em; color: var(--text); }
   .app-title span { color: var(--accent); }
   .gs-status {
     display: flex; align-items: center; gap: 8px;
-    font-size: 12px; color: var(--text2);
+    font-size: 14px; color: var(--text2);
   }
   .gs-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--기); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
@@ -67,8 +68,8 @@
     border-bottom: 1px solid var(--border);
   }
   .tab-btn {
-    padding: 14px 22px;
-    font-size: 15px;
+    padding: 16px 24px;
+    font-size: 16px;
     font-weight: 500;
     color: var(--text2);
     background: none;
@@ -87,7 +88,7 @@
 
   /* ── Section titles ── */
   .section-title {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -106,7 +107,7 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 18px 20px;
+    padding: 20px 22px;
     position: relative;
     overflow: hidden;
   }
@@ -115,9 +116,9 @@
     position: absolute; top: 0; left: 0; right: 0; height: 2px;
     background: linear-gradient(90deg, var(--accent), var(--accent2));
   }
-  .kpi-label { font-size: 13px; color: var(--text2); margin-bottom: 8px; letter-spacing: 0.05em; }
-  .kpi-value { font-size: 26px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--text); }
-  .kpi-sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
+  .kpi-label { font-size: 14px; color: var(--text2); margin-bottom: 8px; letter-spacing: 0.05em; }
+  .kpi-value { font-size: 30px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--text); }
+  .kpi-sub { font-size: 13px; color: var(--text3); margin-top: 4px; }
 
   /* ── Chart Area ── */
   .chart-card {
@@ -130,15 +131,15 @@
   .chart-header {
     display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
   }
-  .chart-title { font-size: 15px; font-weight: 600; }
+  .chart-title { font-size: 17px; font-weight: 600; }
 
-  .bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 220px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 240px; }
   .bar-group {
     flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%;
   }
   .bar-wrap { flex: 1; display: flex; align-items: flex-end; width: 100%; justify-content: center; }
   .bar {
-    width: 100%; max-width: 60px;
+    width: 100%; max-width: 64px;
     background: linear-gradient(180deg, var(--accent), var(--accent2));
     border-radius: 4px 4px 0 0;
     position: relative;
@@ -148,23 +149,23 @@
   }
   .bar:hover { opacity: .85; }
   .bar-amount {
-    position: absolute; top: -24px; left: 50%; transform: translateX(-50%);
-    font-size: 12px; font-family: 'DM Mono', monospace; white-space: nowrap; color: var(--text2);
+    position: absolute; top: -26px; left: 50%; transform: translateX(-50%);
+    font-size: 13px; font-family: 'DM Mono', monospace; white-space: nowrap; color: var(--text2);
   }
-  .bar-label { font-size: 13px; color: var(--text3); }
+  .bar-label { font-size: 14px; color: var(--text3); }
 
   /* Legend */
   .legend { display: flex; gap: 16px; flex-wrap: wrap; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text2); }
-  .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text2); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
 
   /* ── Calendar Section ── */
   .month-nav {
     display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
   }
   .month-btn {
-    padding: 7px 16px; border-radius: 6px; border: 1px solid var(--border);
-    background: var(--surface2); color: var(--text2); font-size: 12px; font-weight: 500;
+    padding: 9px 20px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text2); font-size: 14px; font-weight: 500;
     cursor: pointer; transition: all .2s; font-family: inherit;
   }
   .month-btn:hover { border-color: var(--accent); color: var(--accent); }
@@ -177,8 +178,8 @@
     padding: 16px 20px;
     display: flex; justify-content: space-between; align-items: center;
   }
-  .cal-month-title { font-size: 18px; font-weight: 700; }
-  .cal-month-total { font-size: 13px; color: var(--text2); }
+  .cal-month-title { font-size: 22px; font-weight: 700; }
+  .cal-month-total { font-size: 15px; color: var(--text2); }
   .cal-month-total strong { color: var(--text); font-family: 'DM Mono', monospace; }
 
   .calendar-grid {
@@ -192,9 +193,9 @@
   }
   .cal-head {
     background: var(--surface2);
-    padding: 10px 4px;
+    padding: 12px 4px;
     text-align: center;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--text3);
     letter-spacing: 0.06em;
@@ -208,7 +209,7 @@
     border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
     padding: 10px 8px;
-    min-height: 90px;
+    min-height: 100px;
     vertical-align: top;
     position: relative;
   }
@@ -217,20 +218,20 @@
   .cal-cell.today { background: rgba(79,142,247,0.05); }
 
   .cal-date {
-    font-size: 14px; font-weight: 600; color: var(--text2); margin-bottom: 5px;
+    font-size: 15px; font-weight: 700; color: var(--text2); margin-bottom: 6px;
   }
   .cal-cell.sun .cal-date { color: #f56565; }
   .cal-cell.sat .cal-date { color: var(--accent); }
 
   .event-badge {
     display: flex; align-items: flex-start; gap: 5px;
-    padding: 4px 6px; border-radius: 4px; margin-bottom: 4px;
-    font-size: 11px; line-height: 1.3;
+    padding: 5px 7px; border-radius: 5px; margin-bottom: 5px;
+    font-size: 12px; line-height: 1.3;
   }
   .badge-circle {
-    width: 18px; height: 18px; border-radius: 50%;
+    width: 20px; height: 20px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: 700; flex-shrink: 0;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
     margin-top: 1px;
   }
   .badge-신 { background: var(--신-bg); }
@@ -243,18 +244,19 @@
   .badge-circle-기 { background: var(--기); color: #fff; }
 
   .badge-info { display: flex; flex-direction: column; gap: 2px; }
-  .badge-product { color: var(--text); font-weight: 500; font-size: 11px; }
-  .badge-qty { color: var(--text2); font-size: 10px; }
-  .badge-cost { color: var(--text); font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; }
+  .badge-product { color: var(--text); font-weight: 600; font-size: 12px; }
+  .badge-qty { color: var(--text2); font-size: 11px; }
+  .badge-cost { color: var(--text); font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 600; }
 
   .badge-memo {
-    margin-top: 2px;
-    padding: 2px 4px;
-    background: rgba(255,255,255,0.04);
-    border-left: 2px solid var(--accent2);
+    margin-top: 3px;
+    padding: 3px 5px;
+    background: rgba(232,85,85,0.08);
+    border-left: 2px solid #e85555;
     border-radius: 0 3px 3px 0;
-    font-size: 8.5px;
-    color: var(--text2);
+    font-size: 11px;
+    font-weight: 600;
+    color: #ff7070;
     line-height: 1.4;
     word-break: keep-all;
   }
@@ -267,14 +269,14 @@
     display: flex; flex-direction: column; justify-content: center; align-items: flex-end;
     font-family: 'DM Mono', monospace;
   }
-  .week-cost-label { font-size: 11px; color: var(--text3); margin-bottom: 3px; }
-  .week-cost-value { font-size: 15px; font-weight: 600; color: var(--text); }
+  .week-cost-label { font-size: 12px; color: var(--text3); margin-bottom: 3px; }
+  .week-cost-value { font-size: 17px; font-weight: 600; color: var(--text); }
   .week-cost-head {
     background: var(--surface2);
     border-bottom: 1px solid var(--border);
     padding: 8px 10px;
     text-align: right;
-    font-size: 10px; font-weight: 600; color: var(--accent2);
+    font-size: 12px; font-weight: 600; color: var(--accent2);
     letter-spacing: 0.06em;
   }
 
@@ -330,14 +332,14 @@
     border: 1px solid var(--border);
   }
   .product-table th {
-    padding: 12px 16px; text-align: left;
-    font-size: 13px; font-weight: 600; color: var(--text3);
+    padding: 14px 18px; text-align: left;
+    font-size: 14px; font-weight: 600; color: var(--text3);
     letter-spacing: 0.06em; text-transform: uppercase;
     background: var(--surface2);
     border-bottom: 1px solid var(--border);
   }
   .product-table td {
-    padding: 13px 16px; font-size: 14px;
+    padding: 14px 18px; font-size: 15px;
     border-bottom: 1px solid var(--border);
   }
   .product-table tr:last-child td { border-bottom: none; }
