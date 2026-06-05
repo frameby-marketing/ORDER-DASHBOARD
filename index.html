@@ -837,17 +837,22 @@ function renderCalendar(m) {
       const events = byDay[dayNum] || [];
       events.forEach(e => { weekCost += (e.amount || 0); });
 
-      let evHtml = events.map(e => `
-        <div class="event-badge badge-${e.type}" title="${e.note}">
-          <div class="badge-circle badge-circle-${e.type}">${e.type}</div>
+      let evHtml = events.map(e => {
+        const isWaiting = e.memo && e.memo.includes('대기');
+        const badgeBg   = isWaiting ? 'background:rgba(120,120,130,0.15);' : '';
+        const circleBg  = isWaiting ? 'background:#666;color:#ccc;' : '';
+        const textColor = isWaiting ? 'color:#888;' : '';
+        return `
+        <div class="event-badge badge-${e.type}" style="${badgeBg}" title="${e.note}">
+          <div class="badge-circle badge-circle-${e.type}" style="${circleBg}">${e.type}</div>
           <div class="badge-info">
-            <div class="badge-product">${e.product}</div>
-            ${e.qty ? `<div class="badge-qty">${e.qty.toLocaleString()}개</div>` : ''}
-            ${e.amount ? `<div class="badge-cost">${fmtAmount(e.amount)}</div>` : ''}
+            <div class="badge-product" style="${textColor}">${e.product}</div>
+            ${e.qty ? `<div class="badge-qty" style="${textColor}">${e.qty.toLocaleString()}개</div>` : ''}
+            ${e.amount ? `<div class="badge-cost" style="${textColor}">${fmtAmount(e.amount)}</div>` : ''}
             ${e.memo ? `<div class="badge-memo">💬 ${e.memo}</div>` : ''}
           </div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
 
       const dayClass = dow === 0 ? 'sun' : dow === 6 ? 'sat' : '';
       calHtml += `
