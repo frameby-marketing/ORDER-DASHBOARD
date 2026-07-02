@@ -511,6 +511,34 @@
   <div class="month-nav" id="monthNav"></div>
   <div id="calendarArea"></div>
 
+  <!-- Supplier summary -->
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+    <div class="section-title" style="margin-bottom:0;">업체별 월별 결제 총액</div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);">
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--accent2);"></div>
+        타이루 (맥세이프 킥프레임 · DW 프로 · DW 플러스)
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);">
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--요);"></div>
+        리디안 (PH)
+      </div>
+    </div>
+  </div>
+  <table class="product-table" id="supplierTable" style="margin-bottom:28px;">
+    <thead>
+      <tr>
+        <th>월</th>
+        <th style="color:var(--accent2)">타이루 결제 총액</th>
+        <th style="color:var(--요)">리디안 결제 총액</th>
+        <th>월 합계</th>
+      </tr>
+    </thead>
+    <tbody id="supplierTableBody">
+      <tr><td colspan="4" style="text-align:center;color:var(--text3);padding:40px;">데이터 로드 후 확인 가능합니다</td></tr>
+    </tbody>
+  </table>
+
 </div>
 
 <!-- ══════════════════════════════════════════ TAB: OVERVIEW ══ -->
@@ -800,12 +828,55 @@ function loadBuiltIn() {
   renderAll();
 }
 
+// ──────────────────────────── SUPPLIER MAPPING ────────────────────────────
+// 맥세이프 킥프레임 · DW 프로 · DW 플러스 → 타이루 / PH → 리디안
+function getSupplier(product) {
+  if (product.includes('PH')) return '리디안';
+  return '타이루';
+}
+
 // ──────────────────────────── RENDER ALL ────────────────────────────
 function renderAll() {
   renderKPIs();
   renderBarChart();
   renderMonthNav();
   renderCalendar(currentMonth);
+  renderSupplierSummary();
+}
+
+// ──────────────────────────── SUPPLIER SUMMARY ────────────────────────────
+function renderSupplierSummary() {
+  if (!currentData.length) return;
+
+  const rows = MONTHS.map(mo => {
+    const monthData = currentData.filter(r => r.month === mo.m);
+    const tairu = monthData.filter(r => getSupplier(r.product) === '타이루').reduce((s,r)=>s+(r.amount||0),0);
+    const ridian = monthData.filter(r => getSupplier(r.product) === '리디안').reduce((s,r)=>s+(r.amount||0),0);
+    return { label: mo.label, tairu, ridian, total: tairu + ridian };
+  });
+
+  const totalTairu = rows.reduce((s,r)=>s+r.tairu,0);
+  const totalRidian = rows.reduce((s,r)=>s+r.ridian,0);
+
+  let html = rows.map(r => `
+    <tr>
+      <td style="font-weight:600;">${r.label}</td>
+      <td class="mono" style="color:var(--accent2);">${r.tairu ? fmtAmountFull(r.tairu) : '—'}</td>
+      <td class="mono" style="color:var(--요);">${r.ridian ? fmtAmountFull(r.ridian) : '—'}</td>
+      <td class="mono" style="font-weight:700;">${r.total ? fmtAmountFull(r.total) : '—'}</td>
+    </tr>
+  `).join('');
+
+  html += `
+    <tr style="background:var(--surface2);">
+      <td style="font-weight:700;color:var(--text3);font-size:13px;letter-spacing:0.05em;">전체 합계</td>
+      <td class="mono" style="font-weight:700;color:var(--accent2);">${fmtAmountFull(totalTairu)}</td>
+      <td class="mono" style="font-weight:700;color:var(--요);">${fmtAmountFull(totalRidian)}</td>
+      <td class="mono" style="font-weight:700;color:var(--accent);">${fmtAmountFull(totalTairu + totalRidian)}</td>
+    </tr>
+  `;
+
+  document.getElementById('supplierTableBody').innerHTML = html;
 }
 
 // ──────────────────────────── KPIs ────────────────────────────
