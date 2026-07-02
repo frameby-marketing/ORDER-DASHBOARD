@@ -26,6 +26,8 @@
     --기: #e85555;
     --기-bg: rgba(232,85,85,0.12);
 
+    --tairu: #f0883e;
+
     --shadow: none;
   }
 
@@ -48,6 +50,8 @@
     --요-bg: rgba(31,157,87,0.10);
     --기: #d64545;
     --기-bg: rgba(214,69,69,0.10);
+
+    --tairu: #6a4bd6;
 
     --shadow: 0 1px 3px rgba(20,24,40,0.08);
   }
@@ -516,7 +520,7 @@
     <div class="section-title" style="margin-bottom:0;">업체별 월별 결제 총액</div>
     <div style="display:flex; gap:12px; flex-wrap:wrap;">
       <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);">
-        <div style="width:10px;height:10px;border-radius:50%;background:var(--accent2);"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--tairu);"></div>
         타이루 (맥세이프 킥프레임 · DW 프로 · DW 플러스)
       </div>
       <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);">
@@ -529,7 +533,7 @@
     <thead>
       <tr>
         <th>월</th>
-        <th style="color:var(--accent2)">타이루 결제 총액</th>
+        <th style="color:var(--tairu)">타이루 결제 총액</th>
         <th style="color:var(--요)">리디안 결제 총액</th>
         <th>월 합계</th>
       </tr>
@@ -861,7 +865,7 @@ function renderSupplierSummary() {
   let html = rows.map(r => `
     <tr>
       <td style="font-weight:600;">${r.label}</td>
-      <td class="mono" style="color:var(--accent2);">${r.tairu ? fmtAmountFull(r.tairu) : '—'}</td>
+      <td class="mono" style="color:var(--tairu);">${r.tairu ? fmtAmountFull(r.tairu) : '—'}</td>
       <td class="mono" style="color:var(--요);">${r.ridian ? fmtAmountFull(r.ridian) : '—'}</td>
       <td class="mono" style="font-weight:700;">${r.total ? fmtAmountFull(r.total) : '—'}</td>
     </tr>
@@ -870,7 +874,7 @@ function renderSupplierSummary() {
   html += `
     <tr style="background:var(--surface2);">
       <td style="font-weight:700;color:var(--text3);font-size:13px;letter-spacing:0.05em;">전체 합계</td>
-      <td class="mono" style="font-weight:700;color:var(--accent2);">${fmtAmountFull(totalTairu)}</td>
+      <td class="mono" style="font-weight:700;color:var(--tairu);">${fmtAmountFull(totalTairu)}</td>
       <td class="mono" style="font-weight:700;color:var(--요);">${fmtAmountFull(totalRidian)}</td>
       <td class="mono" style="font-weight:700;color:var(--accent);">${fmtAmountFull(totalTairu + totalRidian)}</td>
     </tr>
