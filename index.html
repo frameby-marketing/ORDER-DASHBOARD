@@ -506,10 +506,10 @@
       <div class="section-title" style="margin-bottom:0;">주력 제품 재고 현황</div>
       <span id="stockUpdatedAt" style="font-size:11px;color:var(--text3);"></span>
     </div>
-    <div id="stockRow1" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px;">
+    <!-- 3열 고정 그리드, 4행 -->
+    <div id="stockGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
       <div style="text-align:center;color:var(--text3);font-size:12px;padding:20px;grid-column:1/-1;">재고 데이터 불러오는 중…</div>
     </div>
-    <div id="stockRow2" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;"></div>
   </div>
 
   <!-- Month navigation -->
@@ -1187,63 +1187,92 @@ async function loadStockData() {
       `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')} 기준`;
 
   } catch(e) {
-    document.getElementById('stockRow1').innerHTML =
+    document.getElementById('stockGrid').innerHTML =
       `<div style="color:#e85555;font-size:13px;padding:20px;grid-column:1/-1;">⚠️ 재고 로드 실패: ${e.message}</div>`;
-    document.getElementById('stockRow2').innerHTML = '';
     console.error('[Stock]', e);
   }
 }
 
-function getStockStatus(daysLeft, soldOutAt) {
-  if (soldOutAt === '품절') return 'out';
-  const num = parseInt(String(daysLeft).replace(/[^-\d]/g, ''));
-  if (isNaN(num)) return 'ok';
-  if (num <= 0)  return 'out';
-  if (num <= 14) return 'warn';
-  return 'ok';
+// 날짜 문자열 파싱 (예: "26년 8월 9일 일요일", "8월 7일 금")
+function parseKoreanDate(str) {
+  if (!str || str === '재입고 예정 없음' || str === '-' || str === '품절') return null;
+  // "26년 8월 9일" 또는 "27년 3월 7일"
+  let m = str.match(/(\d+)년\s*(\d+)월\s*(\d+)일/);
+  if (m) return new Date(2000 + parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]));
+  // "8월 7일" → 연도는 2026 가정
+  m = str.match(/(\d+)월\s*(\d+)일/);
+  if (m) return new Date(2026, parseInt(m[1]) - 1, parseInt(m[2]));
+  return null;
+}
+
+function getStockStatus(item) {
+  // 품절 텍스트인 경우
+  if (item.soldOutAt === '품절') return 'out';
+
+  const soldOutDate  = parseKoreanDate(item.soldOutAt);
+  const restockDate  = parseKoreanDate(item.restockAt);
+
+  // 재입고 예정 없음이면 품절 예상일 기준으로만 판단
+  if (!restockDate) {
+    if (!soldOutDate) return 'ok';
+    const today = new Date(); today.setHours(0,0,0,0);
+    return soldOutDate < today ? 'out' : 'warn';
+  }
+
+  if (!soldOutDate) return 'ok';
+
+  const diffMs   = soldOutDate - restockDate;
+  const diffDays = Math.round(diffMs / 86400000);
+
+  if (diffDays > 1)  return 'ok';   // 재입고가 품절예상일보다 빠름 → 초록
+  if (diffDays >= -1) return 'warn'; // 하루 차이 이내 → 노랑
+  return 'out';                       // 재입고가 품절예상일보다 늦음 → 빨강
+}
+
+function makeDaysLeftText(daysLeft, soldOutAt) {
+  if (soldOutAt === '품절') return { text: '품절', color: '#e85555' };
+  if (!daysLeft || daysLeft === '') return { text: '—', color: 'var(--text2)' };
+  // 숫자 추출 (음수 포함)
+  const num = parseInt(String(daysLeft).replace(/[^\-\d]/g, ''));
+  if (isNaN(num)) return { text: daysLeft, color: 'var(--text2)' };
+  // 절댓값으로 표기 (부호 제거)
+  const days = Math.abs(num);
+  const color = days <= 3 ? '#e85555' : days <= 14 ? '#f0b429' : '#2ecc71';
+  return { text: `${days}일`, color };
 }
 
 function makeStockCard(item) {
-  const status = getStockStatus(item.daysLeft, item.soldOutAt);
-  const topColor = status === 'out' ? '#e85555' : status === 'warn' ? '#f0b429' : '#2ecc71';
-  const badgeTxt = status === 'out' ? '품절' : status === 'warn' ? '임박' : '정상';
-  const badgeBg  = status === 'out' ? 'rgba(232,85,85,0.15)' : status === 'warn' ? 'rgba(240,180,41,0.15)' : 'rgba(46,204,113,0.15)';
+  const status    = getStockStatus(item);
+  const topColor  = status === 'out' ? '#e85555' : status === 'warn' ? '#f0b429' : '#2ecc71';
+  const badgeTxt  = status === 'out' ? '위험' : status === 'warn' ? '주의' : '정상';
+  const badgeBg   = status === 'out' ? 'rgba(232,85,85,0.15)' : status === 'warn' ? 'rgba(240,180,41,0.15)' : 'rgba(46,204,113,0.15)';
 
-  let dlText = '—', dlColor = 'var(--text2)';
-  if (item.soldOutAt === '품절') { dlText = '품절'; dlColor = '#e85555'; }
-  else {
-    const num = parseInt(String(item.daysLeft).replace(/[^-\d]/g,''));
-    if (!isNaN(num)) {
-      dlText  = num <= 0 ? `${Math.abs(num)}일 초과` : `D-${num}`;
-      dlColor = num <= 0 ? '#e85555' : num <= 14 ? '#f0b429' : '#2ecc71';
-    }
-  }
-
+  const dl        = makeDaysLeftText(item.daysLeft, item.soldOutAt);
   const soldOutTxt = item.soldOutAt || '—';
-  const restockTxt = item.restockAt  || '—';
-  const qtyTxt     = item.restockQty && item.restockQty !== '-' ? item.restockQty + '개' : '—';
+  const restockTxt = (item.restockAt && item.restockAt !== '-') ? item.restockAt : '재입고 예정 없음';
+  const qtyTxt    = (item.restockQty && item.restockQty !== '-') ? item.restockQty + '개' : '—';
 
-  return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;box-shadow:var(--shadow);">
+  return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;box-shadow:var(--shadow);min-width:0;">
     <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${topColor};border-radius:10px 10px 0 0;"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
-      <span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:${badgeBg};color:${topColor};flex-shrink:0;margin-left:6px;">${badgeTxt}</span>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:6px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}</div>
+      <span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:${badgeBg};color:${topColor};flex-shrink:0;">${badgeTxt}</span>
     </div>
     <div style="display:flex;flex-direction:column;gap:6px;">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;">
-        <span style="font-size:10px;color:var(--text3);">품절 예상일</span>
-        <span style="font-size:11px;font-weight:600;color:${status==='out'?'#e85555':'var(--text2)'};">${soldOutTxt}</span>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:4px;">
+        <span style="font-size:10px;color:var(--text3);white-space:nowrap;">품절 예상일</span>
+        <span style="font-size:11px;font-weight:600;color:var(--text2);text-align:right;">${soldOutTxt}</span>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:baseline;">
-        <span style="font-size:10px;color:var(--text3);">남은 기간</span>
-        <span style="font-size:11px;font-weight:700;color:${dlColor};">${dlText}</span>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:4px;">
+        <span style="font-size:10px;color:var(--text3);white-space:nowrap;">남은 기간</span>
+        <span style="font-size:11px;font-weight:700;color:${dl.color};">${dl.text}</span>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:baseline;">
-        <span style="font-size:10px;color:var(--text3);">재입고 일자</span>
-        <span style="font-size:11px;font-weight:600;color:var(--text2);">${restockTxt}</span>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:4px;">
+        <span style="font-size:10px;color:var(--text3);white-space:nowrap;">재입고 일자</span>
+        <span style="font-size:11px;font-weight:600;color:var(--text2);text-align:right;">${restockTxt}</span>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:baseline;">
-        <span style="font-size:10px;color:var(--text3);">입고 수량</span>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:4px;">
+        <span style="font-size:10px;color:var(--text3);white-space:nowrap;">입고 수량</span>
         <span style="font-size:11px;font-weight:600;color:${qtyTxt!=='—'?'#2ecc71':'var(--text2)'};">${qtyTxt}</span>
       </div>
     </div>
@@ -1257,22 +1286,31 @@ function renderStockCards(items) {
   function card(kw, label) {
     const item = findItem(kw);
     return item ? makeStockCard(item)
-      : `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;color:var(--text3);font-size:12px;">${label}<br>데이터 없음</div>`;
+      : `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;color:var(--text3);font-size:12px;min-width:0;">${label}<br>데이터 없음</div>`;
   }
 
-  document.getElementById('stockRow1').innerHTML = [
-    card('킥프레임','킥프레임'),
-    card('PH실버','PH - 실버'),
-    card('PH블랙','PH - 블랙'),
-  ].join('');
+  // 3열 고정, 순서대로 배치 (빈 셀은 투명 div)
+  const ORDER = [
+    ['킥프레임',    '킥프레임'],
+    null, null,                          // 1행 나머지 빈칸
+    ['PH실버',      'PH - 실버'],
+    ['PH블랙',      'PH - 블랙'],
+    null,                                // 2행 빈칸
+    ['DW프로실버',  'DW프로 - 실버'],
+    ['DW프로블랙',  'DW프로 - 블랙'],
+    null,                                // 3행 빈칸
+    ['DW플러스실버','DW플러스 - 실버'],
+    ['DW플러스블랙','DW플러스 - 블랙'],
+    ['DW플러스그린','DW플러스 - 그린'],
+  ];
 
-  document.getElementById('stockRow2').innerHTML = [
-    card('DW프로실버','DW프로 - 실버'),
-    card('DW프로블랙','DW프로 - 블랙'),
-    card('DW플러스실버','DW플러스 - 실버'),
-    card('DW플러스블랙','DW플러스 - 블랙'),
-    card('DW플러스그린','DW플러스 - 그린'),
-  ].join('');
+  const html = ORDER.map(o =>
+    o === null
+      ? `<div style="min-width:0;"></div>`
+      : card(o[0], o[1])
+  ).join('');
+
+  document.getElementById('stockGrid').innerHTML = html;
 }
 
 // ──────────────────────────── INIT ────────────────────────────
