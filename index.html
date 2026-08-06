@@ -495,7 +495,7 @@
     <div class="gs-status">
       <div class="gs-dot" id="gsDot" style="background:#4e5a6e"></div>
       <span id="gsStatusText">연결 중…</span>
-      <button onclick="connectSheet()" style="margin-left:8px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit;" title="데이터 새로고침">🔄 새로고침</button>
+      <button onclick="connectSheet();loadStockData();" style="margin-left:8px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit;" title="데이터 새로고침">🔄 새로고침</button>
     </div>
     <a href="https://docs.google.com/spreadsheets/d/1p-ko7c4--yUwYOYE2fL8X6Z1U3O1lWoJ36AZuBanGmQ/edit?gid=667758003#gid=667758003" target="_blank"
       style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;font-weight:500;text-decoration:none;font-family:inherit;transition:border-color .2s,color .2s;white-space:nowrap;"
@@ -1235,33 +1235,61 @@ const STOCK_ORDER_ROW2 = ['DW프로 - 실버', 'DW프로 - 블랙', 'DW플러스
 
 async function loadStockData() {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${STOCK_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(STOCK_SHEET_NAME)}&range=B169:F177`;
+    // range 파라미터 없이 시트 전체 CSV로 수신 후 JS에서 슬라이싱
+    const url = `https://docs.google.com/spreadsheets/d/${STOCK_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(STOCK_SHEET_NAME)}`;
     const res  = await fetch(url);
-    if (!res.ok) throw new Error('응답 오류 ' + res.status);
+    if (!res.ok) throw new Error(`HTTP ${res.status} — 시트 공개(뷰어) 설정을 확인해주세요`);
     const text = await res.text();
-    const rows = parseCSV(text).filter(r => r.some(c => c.trim()));
 
-    // 헤더행 제거 (첫 행이 "제품명" 등 헤더인 경우)
-    const dataRows = rows[0] && rows[0][0].includes('제품') ? rows.slice(1) : rows;
+    // 빈 줄 포함해서 파싱 (행 번호 유지를 위해 filter 안 함)
+    const allRows = parseCSV(text);
 
-    const items = dataRows.map(r => ({
-      name:      (r[0] || '').trim(),
-      soldOutAt: (r[1] || '').trim(),
-      daysLeft:  (r[2] || '').trim(),
-      restockAt: (r[3] || '').trim(),
-      restockQty:(r[4] || '').trim(),
-    })).filter(i => i.name);
+    // B169:F177 → 0-index 기준 168번째 행부터 8행 (헤더 포함 9행)
+    // CSV는 A열부터 시작하므로 각 행의 [1]~[5] 인덱스가 B~F
+    const slice = allRows.slice(168, 177); // 168 = 169번째 행(0-index)
 
-    renderStockCards(items);
+    // 첫 행이 헤더인지 확인
+    const dataRows = (slice[0] && String(slice[0][1]).includes('제품')) ? slice.slice(1) : slice;
+
+    const items = dataRows
+      .filter(r => r[1] && r[1].trim())
+      .map(r => ({
+        name:      (r[1] || '').trim(),
+        soldOutAt: (r[2] || '').trim(),
+        daysLeft:  (r[3] || '').trim(),
+        restockAt: (r[4] || '').trim(),
+        restockQty:(r[5] || '').trim(),
+      })).filter(i => i.name);
+
+    if (!items.length) {
+      // 슬라이싱이 빗나간 경우 — 제품명으로 직접 검색
+      const found = allRows.filter(r => r[1] && ['킥프레임','PH','DW'].some(k => String(r[1]).includes(k)));
+      if (found.length) {
+        const mapped = found.map(r => ({
+          name:      (r[1] || '').trim(),
+          soldOutAt: (r[2] || '').trim(),
+          daysLeft:  (r[3] || '').trim(),
+          restockAt: (r[4] || '').trim(),
+          restockQty:(r[5] || '').trim(),
+        }));
+        renderStockCards(mapped);
+      } else {
+        throw new Error('B169:F177 범위에서 데이터를 찾을 수 없습니다. 시트 행 위치를 확인해주세요.');
+      }
+    } else {
+      renderStockCards(items);
+    }
 
     const now = new Date();
     document.getElementById('stockUpdatedAt').textContent =
       `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')} 기준`;
 
   } catch(e) {
+    const msg = `재고 로드 실패: ${e.message}`;
     document.getElementById('stockRow1').innerHTML =
-      `<div class="stock-loading" style="color:#e85555;">재고 데이터 로드 실패: ${e.message}<br><small>시트 공개 설정을 확인해주세요</small></div>`;
+      `<div class="stock-loading" style="color:#e85555;grid-column:1/-1;">${msg}</div>`;
     document.getElementById('stockRow2').innerHTML = '';
+    console.error('[Stock]', e);
   }
 }
 
