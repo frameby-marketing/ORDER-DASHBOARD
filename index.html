@@ -1220,11 +1220,6 @@ function renderOverview() {
   document.getElementById('weeklyTableBody').innerHTML = html || '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:40px;">데이터 없음</td></tr>';
 }
 
-// ──────────────────────────── INIT ────────────────────────────
-applyTheme('dark');
-connectSheet();
-loadStockData();
-
 // ──────────────────────────── STOCK DATA ────────────────────────────
 const STOCK_SHEET_ID   = '1najWl30V40gEHacr6LaNYDIaEgLHGAcxdLDqneW6MxE';
 const STOCK_SHEET_NAME = '매출TOP';
@@ -1367,6 +1362,11 @@ function renderStockCards(items) {
   document.getElementById('stockRow1').innerHTML = ROW1.map(([k,d]) => cardOrEmpty(k,d)).join('');
   document.getElementById('stockRow2').innerHTML = ROW2.map(([k,d]) => cardOrEmpty(k,d)).join('');
 }
+
+// ──────────────────────────── INIT ────────────────────────────
+applyTheme('dark');
+connectSheet();
+loadStockData();
 </script>
 </body>
 </html>
