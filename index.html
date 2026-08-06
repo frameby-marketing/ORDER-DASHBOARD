@@ -1235,59 +1235,47 @@ const STOCK_ORDER_ROW2 = ['DW프로 - 실버', 'DW프로 - 블랙', 'DW플러스
 
 async function loadStockData() {
   try {
-    // range 파라미터 없이 시트 전체 CSV로 수신 후 JS에서 슬라이싱
-    const url = `https://docs.google.com/spreadsheets/d/${STOCK_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(STOCK_SHEET_NAME)}`;
-    const res  = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status} — 시트 공개(뷰어) 설정을 확인해주세요`);
+    // gid 번호로 직접 접근 (한글 시트명 인코딩 문제 회피)
+    const url = `https://docs.google.com/spreadsheets/d/${STOCK_SHEET_ID}/export?format=csv&gid=1222260278`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
-
-    // 빈 줄 포함해서 파싱 (행 번호 유지를 위해 filter 안 함)
     const allRows = parseCSV(text);
 
-    // B169:F177 → 0-index 기준 168번째 행부터 8행 (헤더 포함 9행)
-    // CSV는 A열부터 시작하므로 각 행의 [1]~[5] 인덱스가 B~F
-    const slice = allRows.slice(168, 177); // 168 = 169번째 행(0-index)
+    // 제품명 키워드로 해당 행을 전체 시트에서 탐색
+    const KEYWORDS = ['킥프레임', 'PH', 'DW프로', 'DW플러스'];
+    const found = [];
 
-    // 첫 행이 헤더인지 확인
-    const dataRows = (slice[0] && String(slice[0][1]).includes('제품')) ? slice.slice(1) : slice;
-
-    const items = dataRows
-      .filter(r => r[1] && r[1].trim())
-      .map(r => ({
-        name:      (r[1] || '').trim(),
-        soldOutAt: (r[2] || '').trim(),
-        daysLeft:  (r[3] || '').trim(),
-        restockAt: (r[4] || '').trim(),
-        restockQty:(r[5] || '').trim(),
-      })).filter(i => i.name);
-
-    if (!items.length) {
-      // 슬라이싱이 빗나간 경우 — 제품명으로 직접 검색
-      const found = allRows.filter(r => r[1] && ['킥프레임','PH','DW'].some(k => String(r[1]).includes(k)));
-      if (found.length) {
-        const mapped = found.map(r => ({
-          name:      (r[1] || '').trim(),
-          soldOutAt: (r[2] || '').trim(),
-          daysLeft:  (r[3] || '').trim(),
-          restockAt: (r[4] || '').trim(),
-          restockQty:(r[5] || '').trim(),
-        }));
-        renderStockCards(mapped);
-      } else {
-        throw new Error('B169:F177 범위에서 데이터를 찾을 수 없습니다. 시트 행 위치를 확인해주세요.');
+    for (let i = 0; i < allRows.length; i++) {
+      const row = allRows[i];
+      for (let j = 0; j < row.length; j++) {
+        const cell = String(row[j] || '').trim();
+        if (KEYWORDS.some(k => cell.startsWith(k))) {
+          found.push({ row, nameIdx: j });
+          break;
+        }
       }
-    } else {
-      renderStockCards(items);
     }
+
+    if (!found.length) throw new Error('제품 데이터를 찾지 못했습니다. 시트 공개 여부 또는 gid를 확인해주세요.');
+
+    const items = found.map(({ row, nameIdx }) => ({
+      name:      (row[nameIdx]   || '').trim(),
+      soldOutAt: (row[nameIdx+1] || '').trim(),
+      daysLeft:  (row[nameIdx+2] || '').trim(),
+      restockAt: (row[nameIdx+3] || '').trim(),
+      restockQty:(row[nameIdx+4] || '').trim(),
+    }));
+
+    renderStockCards(items);
 
     const now = new Date();
     document.getElementById('stockUpdatedAt').textContent =
       `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')} 기준`;
 
   } catch(e) {
-    const msg = `재고 로드 실패: ${e.message}`;
     document.getElementById('stockRow1').innerHTML =
-      `<div class="stock-loading" style="color:#e85555;grid-column:1/-1;">${msg}</div>`;
+      `<div class="stock-loading" style="color:#e85555;grid-column:1/-1;">⚠️ 재고 로드 실패: ${e.message}</div>`;
     document.getElementById('stockRow2').innerHTML = '';
     console.error('[Stock]', e);
   }
@@ -1352,20 +1340,32 @@ function makeStockCard(item) {
 }
 
 function renderStockCards(items) {
-  // 이름 기준으로 매핑
-  const map = {};
-  items.forEach(i => { map[i.name] = i; });
+  // 부분 일치로 매핑 (시트 이름과 카드 순서 배열이 정확히 같지 않을 수 있음)
+  function findItem(keyword) {
+    return items.find(i => i.name.replace(/\s/g,'').includes(keyword.replace(/\s/g,'')));
+  }
 
-  const row1Html = STOCK_ORDER_ROW1.map(name =>
-    map[name] ? makeStockCard(map[name]) : `<div class="stock-card"><div class="stock-name">${name}</div><div class="stock-loading">데이터 없음</div></div>`
-  ).join('');
+  function cardOrEmpty(keyword, displayName) {
+    const item = findItem(keyword);
+    if (item) return makeStockCard(item);
+    return `<div class="stock-card"><div class="stock-name">${displayName}</div><div class="stock-loading">데이터 없음</div></div>`;
+  }
 
-  const row2Html = STOCK_ORDER_ROW2.map(name =>
-    map[name] ? makeStockCard(map[name]) : `<div class="stock-card"><div class="stock-name">${name}</div><div class="stock-loading">데이터 없음</div></div>`
-  ).join('');
+  const ROW1 = [
+    ['킥프레임',   '킥프레임'],
+    ['PH-실버',    'PH - 실버'],
+    ['PH-블랙',    'PH - 블랙'],
+  ];
+  const ROW2 = [
+    ['DW프로-실버',   'DW프로 - 실버'],
+    ['DW프로-블랙',   'DW프로 - 블랙'],
+    ['DW플러스-실버', 'DW플러스 - 실버'],
+    ['DW플러스-블랙', 'DW플러스 - 블랙'],
+    ['DW플러스-그린', 'DW플러스 - 그린'],
+  ];
 
-  document.getElementById('stockRow1').innerHTML = row1Html;
-  document.getElementById('stockRow2').innerHTML = row2Html;
+  document.getElementById('stockRow1').innerHTML = ROW1.map(([k,d]) => cardOrEmpty(k,d)).join('');
+  document.getElementById('stockRow2').innerHTML = ROW2.map(([k,d]) => cardOrEmpty(k,d)).join('');
 }
 </script>
 </body>
