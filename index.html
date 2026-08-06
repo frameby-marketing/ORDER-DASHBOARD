@@ -399,6 +399,70 @@
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
+  /* ── Stock Cards ── */
+  .stock-section { margin-bottom: 28px; }
+  .stock-row {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .stock-row-3 { grid-template-columns: repeat(3, 1fr); }
+  .stock-row-5 { grid-template-columns: repeat(5, 1fr); }
+
+  .stock-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: background .25s, border-color .25s;
+  }
+  .stock-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--stock-accent, var(--accent));
+    border-radius: 10px 10px 0 0;
+  }
+  .stock-card.status-ok    { --stock-accent: #2ecc71; }
+  .stock-card.status-warn  { --stock-accent: #f0b429; }
+  .stock-card.status-out   { --stock-accent: #e85555; }
+
+  .stock-name {
+    font-size: 13px; font-weight: 700; color: var(--text);
+    margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .stock-row-meta {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .stock-meta-item {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 6px;
+  }
+  .stock-meta-label {
+    font-size: 10px; color: var(--text3); white-space: nowrap; flex-shrink: 0;
+  }
+  .stock-meta-value {
+    font-size: 11px; font-weight: 600; color: var(--text);
+    text-align: right; line-height: 1.3;
+  }
+  .stock-meta-value.danger  { color: #e85555; }
+  .stock-meta-value.warn    { color: #f0b429; }
+  .stock-meta-value.safe    { color: #2ecc71; }
+  .stock-meta-value.neutral { color: var(--text2); }
+
+  .stock-badge {
+    display: inline-block; padding: 2px 7px; border-radius: 20px;
+    font-size: 10px; font-weight: 700; margin-bottom: 8px;
+  }
+  .stock-badge.out  { background: rgba(232,85,85,0.15);  color: #e85555; }
+  .stock-badge.warn { background: rgba(240,180,41,0.15); color: #f0b429; }
+  .stock-badge.ok   { background: rgba(46,204,113,0.15); color: #2ecc71; }
+
+  .stock-loading {
+    text-align: center; color: var(--text3); font-size: 12px; padding: 20px 0;
+  }
+
   /* ── Overview tab ── */
   .product-table {
     width: 100%; border-collapse: collapse;
@@ -438,7 +502,7 @@
       onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
       onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'"
       title="Google Sheets 열기">
-      📊 스프레드시트
+      📊 스프레드시트로 바로가기
     </a>
     <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="라이트/다크 모드 전환" aria-label="테마 전환">
       <div class="theme-toggle-knob" id="themeKnob">🌙</div>
@@ -498,6 +562,22 @@
     <div class="bar-chart" id="barChart">
       <div style="color:var(--text3);font-size:12px;margin:auto;">데이터를 불러오면 차트가 표시됩니다</div>
     </div>
+  </div>
+
+  <!-- ── 주력 제품 재고 현황 ── -->
+  <div class="stock-section">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div class="section-title" style="margin-bottom:0;">주력 제품 재고 현황</div>
+      <span id="stockUpdatedAt" style="font-size:11px;color:var(--text3);"></span>
+    </div>
+
+    <!-- Row 1: 3개 -->
+    <div class="stock-row stock-row-3" id="stockRow1">
+      <div class="stock-loading">재고 데이터 불러오는 중…</div>
+    </div>
+
+    <!-- Row 2: 5개 -->
+    <div class="stock-row stock-row-5" id="stockRow2"></div>
   </div>
 
   <!-- Month navigation -->
@@ -1143,6 +1223,122 @@ function renderOverview() {
 // ──────────────────────────── INIT ────────────────────────────
 applyTheme('dark');
 connectSheet();
+loadStockData();
+
+// ──────────────────────────── STOCK DATA ────────────────────────────
+const STOCK_SHEET_ID   = '1najWl30V40gEHacr6LaNYDIaEgLHGAcxdLDqneW6MxE';
+const STOCK_SHEET_NAME = '매출TOP';
+
+// 시트에서 읽어올 제품 순서 (B169:F177 기준, 헤더 제외 8행)
+const STOCK_ORDER_ROW1 = ['킥프레임', 'PH - 실버', 'PH - 블랙'];
+const STOCK_ORDER_ROW2 = ['DW프로 - 실버', 'DW프로 - 블랙', 'DW플러스 - 실버', 'DW플러스 - 블랙', 'DW플러스 - 그린'];
+
+async function loadStockData() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${STOCK_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(STOCK_SHEET_NAME)}&range=B169:F177`;
+    const res  = await fetch(url);
+    if (!res.ok) throw new Error('응답 오류 ' + res.status);
+    const text = await res.text();
+    const rows = parseCSV(text).filter(r => r.some(c => c.trim()));
+
+    // 헤더행 제거 (첫 행이 "제품명" 등 헤더인 경우)
+    const dataRows = rows[0] && rows[0][0].includes('제품') ? rows.slice(1) : rows;
+
+    const items = dataRows.map(r => ({
+      name:      (r[0] || '').trim(),
+      soldOutAt: (r[1] || '').trim(),
+      daysLeft:  (r[2] || '').trim(),
+      restockAt: (r[3] || '').trim(),
+      restockQty:(r[4] || '').trim(),
+    })).filter(i => i.name);
+
+    renderStockCards(items);
+
+    const now = new Date();
+    document.getElementById('stockUpdatedAt').textContent =
+      `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')} 기준`;
+
+  } catch(e) {
+    document.getElementById('stockRow1').innerHTML =
+      `<div class="stock-loading" style="color:#e85555;">재고 데이터 로드 실패: ${e.message}<br><small>시트 공개 설정을 확인해주세요</small></div>`;
+    document.getElementById('stockRow2').innerHTML = '';
+  }
+}
+
+function getStockStatus(daysLeft, soldOutAt) {
+  const dl = String(daysLeft).trim();
+  if (soldOutAt === '품절' || dl === '품절') return 'out';
+  const num = parseInt(dl.replace(/[^-\d]/g, ''));
+  if (isNaN(num)) return 'ok';
+  if (num <= 0)   return 'out';
+  if (num <= 14)  return 'warn';
+  return 'ok';
+}
+
+function daysLeftLabel(daysLeft, soldOutAt) {
+  if (soldOutAt === '품절') return { text: '품절', cls: 'danger' };
+  const dl = String(daysLeft).trim();
+  if (!dl) return { text: '—', cls: 'neutral' };
+  const num = parseInt(dl.replace(/[^-\d]/g, ''));
+  if (isNaN(num)) return { text: dl, cls: 'neutral' };
+  if (num <= 0)  return { text: `${Math.abs(num)}일 초과`, cls: 'danger' };
+  if (num <= 14) return { text: `D-${num}`, cls: 'warn' };
+  return { text: `D-${num}`, cls: 'safe' };
+}
+
+function makeStockCard(item) {
+  const status = getStockStatus(item.daysLeft, item.soldOutAt);
+  const dl     = daysLeftLabel(item.daysLeft, item.soldOutAt);
+  const badgeCls = status === 'out' ? 'out' : status === 'warn' ? 'warn' : 'ok';
+  const badgeTxt = status === 'out' ? '품절' : status === 'warn' ? '임박' : '정상';
+
+  const soldOutTxt = item.soldOutAt === '품절' ? '품절' : (item.soldOutAt || '—');
+  const restockTxt = item.restockAt  || '—';
+  const qtyTxt     = item.restockQty && item.restockQty !== '-' ? item.restockQty + '개' : '—';
+
+  return `
+    <div class="stock-card status-${status}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div class="stock-name">${item.name}</div>
+        <span class="stock-badge ${badgeCls}">${badgeTxt}</span>
+      </div>
+      <div class="stock-row-meta">
+        <div class="stock-meta-item">
+          <span class="stock-meta-label">품절 예상일</span>
+          <span class="stock-meta-value ${status === 'out' ? 'danger' : 'neutral'}">${soldOutTxt}</span>
+        </div>
+        <div class="stock-meta-item">
+          <span class="stock-meta-label">남은 기간</span>
+          <span class="stock-meta-value ${dl.cls}">${dl.text}</span>
+        </div>
+        <div class="stock-meta-item">
+          <span class="stock-meta-label">재입고 일자</span>
+          <span class="stock-meta-value neutral">${restockTxt}</span>
+        </div>
+        <div class="stock-meta-item">
+          <span class="stock-meta-label">입고 수량</span>
+          <span class="stock-meta-value ${qtyTxt !== '—' ? 'safe' : 'neutral'}">${qtyTxt}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderStockCards(items) {
+  // 이름 기준으로 매핑
+  const map = {};
+  items.forEach(i => { map[i.name] = i; });
+
+  const row1Html = STOCK_ORDER_ROW1.map(name =>
+    map[name] ? makeStockCard(map[name]) : `<div class="stock-card"><div class="stock-name">${name}</div><div class="stock-loading">데이터 없음</div></div>`
+  ).join('');
+
+  const row2Html = STOCK_ORDER_ROW2.map(name =>
+    map[name] ? makeStockCard(map[name]) : `<div class="stock-card"><div class="stock-name">${name}</div><div class="stock-loading">데이터 없음</div></div>`
+  ).join('');
+
+  document.getElementById('stockRow1').innerHTML = row1Html;
+  document.getElementById('stockRow2').innerHTML = row2Html;
+}
 </script>
 </body>
 </html>
