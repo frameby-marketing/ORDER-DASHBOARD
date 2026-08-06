@@ -1153,37 +1153,31 @@ function renderOverview() {
 }
 
 // ──────────────────────────── STOCK DATA ────────────────────────────
-const STOCK_SHEET_ID = '1najWl30V40gEHacr6LaNYDIaEgLHGAcxdLDqneW6MxE';
+var STOCK_SHEET_ID = '1najWl30V40gEHacr6LaNYDIaEgLHGAcxdLDqneW6MxE';
 
 async function loadStockData() {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${STOCK_SHEET_ID}/export?format=csv&gid=1222260278`;
+    const url = `https://docs.google.com/spreadsheets/d/${STOCK_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=TOP`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
     const allRows = parseCSV(text);
 
-    const KEYWORDS = ['킥프레임', 'PH', 'DW프로', 'DW플러스'];
-    const found = [];
-    for (let i = 0; i < allRows.length; i++) {
-      const row = allRows[i];
-      for (let j = 0; j < row.length; j++) {
-        const cell = String(row[j] || '').trim();
-        if (KEYWORDS.some(k => cell.startsWith(k))) {
-          found.push({ row, nameIdx: j });
-          break;
-        }
-      }
-    }
+    // B169:F177 → 0-index 168~176번 행, B열=index 1, F열=index 5
+    const slice = allRows.slice(168, 177);
+    const dataRows = slice.filter(r => {
+      const cell = String(r[1] || '').trim();
+      return cell && cell !== '제품명';
+    });
 
-    if (!found.length) throw new Error('제품 데이터를 찾지 못했습니다');
+    if (!dataRows.length) throw new Error('B169:F177 범위에 데이터가 없습니다 (행 위치 확인 필요)');
 
-    const items = found.map(({ row, nameIdx }) => ({
-      name:      (row[nameIdx]   || '').trim(),
-      soldOutAt: (row[nameIdx+1] || '').trim(),
-      daysLeft:  (row[nameIdx+2] || '').trim(),
-      restockAt: (row[nameIdx+3] || '').trim(),
-      restockQty:(row[nameIdx+4] || '').trim(),
+    const items = dataRows.map(r => ({
+      name:      (r[1] || '').trim(),
+      soldOutAt: (r[2] || '').trim(),
+      daysLeft:  (r[3] || '').trim(),
+      restockAt: (r[4] || '').trim(),
+      restockQty:(r[5] || '').trim(),
     }));
 
     renderStockCards(items);
