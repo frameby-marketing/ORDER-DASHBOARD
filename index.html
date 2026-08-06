@@ -502,13 +502,39 @@
 
   <!-- ── 주력 제품 재고 현황 ── -->
   <div style="margin-bottom:28px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+    <!-- 헤더 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
       <div class="section-title" style="margin-bottom:0;">주력 제품 재고 현황</div>
       <span id="stockUpdatedAt" style="font-size:11px;color:var(--text3);"></span>
     </div>
-    <!-- 3열 고정 그리드, 4행 -->
-    <div id="stockGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-      <div style="text-align:center;color:var(--text3);font-size:12px;padding:20px;grid-column:1/-1;">재고 데이터 불러오는 중…</div>
+
+    <!-- 요약 바 (항상 표시) -->
+    <div id="stockSummary" style="display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;cursor:pointer;user-select:none;transition:border-color .2s;"
+      onclick="toggleStockDetail()"
+      onmouseover="this.style.borderColor='var(--accent)'"
+      onmouseout="this.style.borderColor='var(--border)'">
+      <div id="stockSummaryBadges" style="display:flex;gap:10px;flex:1;flex-wrap:wrap;">
+        <span style="color:var(--text3);font-size:13px;">로드 중…</span>
+      </div>
+      <div id="stockToggleBtn" style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);white-space:nowrap;flex-shrink:0;">
+        <span id="stockToggleLabel">상세보기</span>
+        <span id="stockToggleArrow" style="font-size:14px;transition:transform .25s;">▼</span>
+      </div>
+    </div>
+
+    <!-- 상세 카드 (접힘) -->
+    <div id="stockDetail" style="display:none;margin-top:12px;">
+      <!-- 3열: 정상 | 주의 | 위험 -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+        <!-- 열 헤더 -->
+        <div style="text-align:center;padding:6px 0;font-size:12px;font-weight:700;color:#2ecc71;letter-spacing:.05em;">● 정상</div>
+        <div style="text-align:center;padding:6px 0;font-size:12px;font-weight:700;color:#f0b429;letter-spacing:.05em;">● 주의</div>
+        <div style="text-align:center;padding:6px 0;font-size:12px;font-weight:700;color:#e85555;letter-spacing:.05em;">● 위험</div>
+        <!-- 카드들은 JS가 채움 -->
+        <div id="colOk"   style="display:flex;flex-direction:column;gap:10px;"></div>
+        <div id="colWarn" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <div id="colOut"  style="display:flex;flex-direction:column;gap:10px;"></div>
+      </div>
     </div>
   </div>
 
@@ -1163,28 +1189,45 @@ async function loadStockData() {
     const text = await res.text();
     const allRows = parseCSV(text);
 
-    // 전체 시트에서 제품명 키워드가 있는 행을 직접 탐색
-    const KEYWORDS = ['킥프레임', 'PH', 'DW프로', 'DW플러스'];
-    const items = [];
-
+    // "제품명" 헤더 행을 찾아서 그 다음 행부터 데이터로 읽기
+    let headerIdx = -1;
     for (let i = 0; i < allRows.length; i++) {
-      const row = allRows[i];
-      for (let j = 0; j < row.length; j++) {
-        const cell = String(row[j] || '').trim();
-        if (KEYWORDS.some(k => cell.startsWith(k)) && cell !== '제품명') {
-          items.push({
-            name:      cell,
-            soldOutAt: (row[j+1] || '').trim(),
-            daysLeft:  (row[j+2] || '').trim(),
-            restockAt: (row[j+3] || '').trim(),
-            restockQty:(row[j+4] || '').trim(),
-          });
-          break;
-        }
+      if (allRows[i].some(c => String(c).trim() === '제품명')) {
+        headerIdx = i;
+        break;
       }
     }
 
-    if (!items.length) throw new Error('시트에서 제품 데이터를 찾지 못했습니다');
+    if (headerIdx === -1) throw new Error('헤더(제품명)를 찾지 못했습니다');
+
+    const PRODUCT_NAMES = ['킥프레임','PH - 실버','PH - 블랙','DW프로 - 실버','DW프로 - 블랙','DW플러스 - 실버','DW플러스 - 블랙','DW플러스 - 그린'];
+
+    // 헤더 행에서 각 열 인덱스 파악
+    const header = allRows[headerIdx];
+    let nameCol = header.findIndex(c => String(c).trim() === '제품명');
+    if (nameCol === -1) nameCol = 0;
+
+    const items = [];
+    for (let i = headerIdx + 1; i < allRows.length; i++) {
+      const row = allRows[i];
+      const name = String(row[nameCol] || '').trim();
+      if (PRODUCT_NAMES.includes(name)) {
+        items.push({
+          name,
+          soldOutAt: (row[nameCol+1] || '').trim(),
+          daysLeft:  (row[nameCol+2] || '').trim(),
+          restockAt: (row[nameCol+3] || '').trim(),
+          restockQty:(row[nameCol+4] || '').trim(),
+        });
+      }
+      if (items.length >= 8) break;
+    }
+
+    if (!items.length) {
+      console.log('[Stock] 헤더idx:', headerIdx, '샘플:', allRows.slice(headerIdx, headerIdx+12));
+      throw new Error('제품 데이터 행을 찾지 못했습니다');
+    }
+    console.log('[Stock] 로드 성공:', items);
 
     renderStockCards(items);
 
@@ -1193,8 +1236,8 @@ async function loadStockData() {
       `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')} 기준`;
 
   } catch(e) {
-    document.getElementById('stockGrid').innerHTML =
-      `<div style="color:#e85555;font-size:13px;padding:20px;grid-column:1/-1;">⚠️ 재고 로드 실패: ${e.message}</div>`;
+    document.getElementById('stockSummaryBadges').innerHTML =
+      `<span style="color:#e85555;font-size:13px;">⚠️ 재고 로드 실패: ${e.message}</span>`;
     console.error('[Stock]', e);
   }
 }
@@ -1237,14 +1280,12 @@ function getStockStatus(item) {
 
 function makeDaysLeftText(daysLeft, soldOutAt) {
   if (soldOutAt === '품절') return { text: '품절', color: '#e85555' };
-  if (!daysLeft || daysLeft === '') return { text: '—', color: 'var(--text2)' };
-  // 숫자 추출 (음수 포함)
-  const num = parseInt(String(daysLeft).replace(/[^\-\d]/g, ''));
-  if (isNaN(num)) return { text: daysLeft, color: 'var(--text2)' };
-  // 절댓값으로 표기 (부호 제거)
-  const days = Math.abs(num);
-  const color = days <= 3 ? '#e85555' : days <= 14 ? '#f0b429' : '#2ecc71';
-  return { text: `${days}일`, color };
+  const dl = String(daysLeft || '').trim();
+  if (!dl) return { text: '—', color: 'var(--text2)' };
+  const num = parseInt(dl.replace(/[^\d]/g, ''));
+  if (isNaN(num)) return { text: dl, color: 'var(--text2)' };
+  const color = num <= 3 ? '#e85555' : num <= 14 ? '#f0b429' : '#2ecc71';
+  return { text: `${num}일`, color };
 }
 
 function makeStockCard(item) {
@@ -1285,38 +1326,55 @@ function makeStockCard(item) {
   </div>`;
 }
 
+// 제품 그룹 순서 정의 (같은 브랜드끼리 묶음)
+const PRODUCT_ORDER = [
+  '킥프레임',
+  'PH - 실버', 'PH - 블랙',
+  'DW프로 - 실버', 'DW프로 - 블랙',
+  'DW플러스 - 실버', 'DW플러스 - 블랙', 'DW플러스 - 그린',
+];
+
+let stockDetailOpen = false;
+
+function toggleStockDetail() {
+  stockDetailOpen = !stockDetailOpen;
+  document.getElementById('stockDetail').style.display = stockDetailOpen ? 'block' : 'none';
+  document.getElementById('stockToggleLabel').textContent = stockDetailOpen ? '접기' : '상세보기';
+  document.getElementById('stockToggleArrow').style.transform = stockDetailOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
 function renderStockCards(items) {
-  function findItem(kw) {
-    return items.find(i => i.name.replace(/[\s\-]/g,'').includes(kw.replace(/[\s\-]/g,'')));
-  }
-  function card(kw, label) {
-    const item = findItem(kw);
-    return item ? makeStockCard(item)
-      : `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;color:var(--text3);font-size:12px;min-width:0;">${label}<br>데이터 없음</div>`;
-  }
+  // 이름으로 빠른 조회
+  const map = {};
+  items.forEach(i => { map[i.name] = i; });
 
-  // 3열 고정, 순서대로 배치 (빈 셀은 투명 div)
-  const ORDER = [
-    ['킥프레임',    '킥프레임'],
-    null, null,                          // 1행 나머지 빈칸
-    ['PH실버',      'PH - 실버'],
-    ['PH블랙',      'PH - 블랙'],
-    null,                                // 2행 빈칸
-    ['DW프로실버',  'DW프로 - 실버'],
-    ['DW프로블랙',  'DW프로 - 블랙'],
-    null,                                // 3행 빈칸
-    ['DW플러스실버','DW플러스 - 실버'],
-    ['DW플러스블랙','DW플러스 - 블랙'],
-    ['DW플러스그린','DW플러스 - 그린'],
-  ];
+  // 그룹 순서 기준으로 status 분류
+  const ok = [], warn = [], out = [];
+  PRODUCT_ORDER.forEach(name => {
+    const item = map[name];
+    if (!item) return;
+    const status = getStockStatus(item);
+    if (status === 'ok')   ok.push(item);
+    else if (status === 'warn') warn.push(item);
+    else out.push(item);
+  });
 
-  const html = ORDER.map(o =>
-    o === null
-      ? `<div style="min-width:0;"></div>`
-      : card(o[0], o[1])
-  ).join('');
+  // 요약 뱃지 업데이트
+  const badges = [];
+  if (ok.length)   badges.push(`<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:rgba(46,204,113,0.12);color:#2ecc71;font-size:13px;font-weight:600;">✔ 정상 <strong>${ok.length}개</strong></span>`);
+  if (warn.length) badges.push(`<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:rgba(240,180,41,0.12);color:#f0b429;font-size:13px;font-weight:600;">⚠ 주의 <strong>${warn.length}개</strong></span>`);
+  if (out.length)  badges.push(`<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:rgba(232,85,85,0.12);color:#e85555;font-size:13px;font-weight:600;">✖ 위험 <strong>${out.length}개</strong></span>`);
+  document.getElementById('stockSummaryBadges').innerHTML = badges.join('') || '<span style="color:var(--text3);font-size:13px;">데이터 없음</span>';
 
-  document.getElementById('stockGrid').innerHTML = html;
+  // 각 열에 카드 삽입
+  document.getElementById('colOk').innerHTML   = ok.map(makeStockCard).join('');
+  document.getElementById('colWarn').innerHTML = warn.map(makeStockCard).join('');
+  document.getElementById('colOut').innerHTML  = out.map(makeStockCard).join('');
+
+  // 빈 열은 "-" 표시
+  if (!ok.length)   document.getElementById('colOk').innerHTML   = `<div style="text-align:center;color:var(--text3);font-size:12px;padding:16px;">없음</div>`;
+  if (!warn.length) document.getElementById('colWarn').innerHTML = `<div style="text-align:center;color:var(--text3);font-size:12px;padding:16px;">없음</div>`;
+  if (!out.length)  document.getElementById('colOut').innerHTML  = `<div style="text-align:center;color:var(--text3);font-size:12px;padding:16px;">없음</div>`;
 }
 
 // ──────────────────────────── INIT ────────────────────────────
