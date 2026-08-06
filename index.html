@@ -526,7 +526,6 @@
     <div id="stockDetail" style="display:none;margin-top:12px;">
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
         <div style="text-align:center;padding:6px 0;font-size:12px;font-weight:700;color:#2ecc71;letter-spacing:.05em;">● 정상</div>
-        <div style="text-align:center;padding:6px 0;font-size:12px;font-weight:700;color:#2ecc71;letter-spacing:.05em;">● 정상</div>
         <div style="text-align:center;padding:6px 0;font-size:12px;font-weight:700;color:#e85555;letter-spacing:.05em;">● 위험</div>
         <div style="text-align:center;padding:6px 0;font-size:12px;font-weight:700;color:#f97316;letter-spacing:.05em;">● 사전예약</div>
         <div style="text-align:center;padding:6px 0;font-size:12px;font-weight:700;color:#888;letter-spacing:.05em;">● 품절</div>
@@ -1181,6 +1180,53 @@ function renderOverview() {
 // ──────────────────────────── STOCK DATA ────────────────────────────
 var STOCK_SHEET_ID = '1najWl30V40gEHacr6LaNYDIaEgLHGAcxdLDqneW6MxE';
 
+// 실판매 시트 열 매핑 (0-index: A=0, E=4, M=12, Q=16, U=20, Y=24, AC=28, AG=32, AK=36)
+const SALES_COL_MAP = {
+  '킥프레임':       4,   // E열
+  'PH - 실버':     12,  // M열
+  'PH - 블랙':     16,  // Q열
+  'DW프로 - 실버': 20,  // U열
+  'DW프로 - 블랙': 24,  // Y열
+  'DW플러스 - 실버':28,  // AC열
+  'DW플러스 - 블랙':32,  // AG열
+  'DW플러스 - 그린':36,  // AK열
+};
+
+async function loadSalesData(items) {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${STOCK_SHEET_ID}/gviz/tq?tqx=out:csv&gid=2048532673`;
+    const res = await fetch(url);
+    if (!res.ok) return; // 실패해도 재고 카드는 표시
+    const text = await res.text();
+    const allRows = parseCSV(text);
+
+    // 사전예약 제품만 처리
+    items.forEach(item => {
+      if (!item.preorderStartAt) return;
+      const startDate = parseKoreanDate(item.preorderStartAt);
+      if (!startDate) return;
+
+      const colIdx = SALES_COL_MAP[item.name];
+      if (colIdx === undefined) return;
+
+      let total = 0;
+      for (const row of allRows) {
+        // A열 날짜 파싱
+        const dateStr = String(row[0] || '').trim();
+        const rowDate = parseKoreanDate(dateStr);
+        if (!rowDate) continue;
+        // 사전예약 시작일 이후 행만 합산
+        if (rowDate < startDate) continue;
+        const val = parseInt(String(row[colIdx] || '').replace(/[^0-9]/g, ''));
+        if (!isNaN(val)) total += val;
+      }
+      item.preorderSoldQty = total > 0 ? String(total) : '';
+    });
+  } catch(e) {
+    console.warn('[Sales]', e);
+  }
+}
+
 async function loadStockData() {
   try {
     const url = `https://docs.google.com/spreadsheets/d/${STOCK_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=TOP`;
@@ -1202,7 +1248,6 @@ async function loadStockData() {
 
     const PRODUCT_NAMES = ['킥프레임','PH - 실버','PH - 블랙','DW프로 - 실버','DW프로 - 블랙','DW플러스 - 실버','DW플러스 - 블랙','DW플러스 - 그린'];
 
-    // 헤더 행에서 각 열 인덱스 파악
     const header = allRows[headerIdx];
     let nameCol = header.findIndex(c => String(c).trim() === '제품명');
     if (nameCol === -1) nameCol = 0;
@@ -1218,17 +1263,18 @@ async function loadStockData() {
           daysLeft:        (row[nameCol+2] || '').trim(),
           restockAt:       (row[nameCol+3] || '').trim(),
           restockQty:      (row[nameCol+4] || '').trim(),
-          preorderStartAt: (row[nameCol+5] || '').trim(), // 추가된 사전예약 시작일 열
+          preorderStartAt: (row[nameCol+5] || '').trim(),
+          preorderSoldQty: '', // 실판매 시트에서 채워짐
         });
       }
       if (items.length >= 8) break;
     }
 
-    if (!items.length) {
-      console.log('[Stock] 헤더idx:', headerIdx, '샘플:', allRows.slice(headerIdx, headerIdx+12));
-      throw new Error('제품 데이터 행을 찾지 못했습니다');
-    }
-    console.log('[Stock] 로드 성공:', items);
+    if (!items.length) throw new Error('제품 데이터 행을 찾지 못했습니다');
+
+    // 사전예약 제품이 있으면 실판매 시트에서 판매수량 합산
+    const hasPreorder = items.some(i => i.preorderStartAt && parseKoreanDate(i.preorderStartAt));
+    if (hasPreorder) await loadSalesData(items);
 
     renderStockCards(items);
 
@@ -1261,10 +1307,11 @@ const LEAD_TIMES = {
   'DW플러스 - 실버': 50, 'DW플러스 - 블랙': 50, 'DW플러스 - 그린': 50,
 };
 
-// 상태: ok / out / preorder / soldOut (주의 제거)
+// 상태: ok / out / preorder / soldOut
 function getStockStatus(item) {
-  // 사전예약 시작일이 있으면 → 사전예약
-  if (item.preorderStartAt && item.preorderStartAt.trim()) return 'preorder';
+  // 사전예약: preorderStartAt에 날짜가 실제로 있을 때만
+  const hasPreorderDate = item.preorderStartAt && parseKoreanDate(item.preorderStartAt) !== null;
+  if (hasPreorderDate) return 'preorder';
 
   // 품절: 품절 텍스트 or 남은기간 0
   if (item.soldOutAt === '품절') return 'soldOut';
@@ -1314,31 +1361,30 @@ function getOrderDeadline(item) {
 function calcPreorder(item) {
   const startDate = parseKoreanDate(item.preorderStartAt);
   if (!startDate) return null;
-  const restockDate = parseKoreanDate(item.restockAt);
-  const today = new Date(); today.setHours(0,0,0,0);
 
-  // 사전예약 시작 ~ 오늘까지 경과일
-  const elapsedDays = Math.max(1, Math.round((today - startDate) / 86400000));
+  const restockDate  = parseKoreanDate(item.restockAt);
+  const today        = new Date(); today.setHours(0,0,0,0);
+  const elapsedDays  = Math.max(1, Math.round((today - startDate) / 86400000));
+  const inboundQty   = parseInt(String(item.restockQty  || '').replace(/[^0-9,]/g,'').replace(/,/g,'')) || 0;
 
-  // 현재까지 누적 판매수량: item.preorderSoldQty (시트에서 주입 예정)
-  // 아직 시트 연동 전이므로 — 표시, 있으면 계산
-  const soldQty = parseInt(String(item.preorderSoldQty || '').replace(/[^0-9]/g,'')) || null;
-  const inboundQty = parseInt(String(item.restockQty || '').replace(/[^0-9,]/g,'').replace(/,/g,'')) || 0;
+  // 누적 판매수량: 시트 G열에서 직접 읽음
+  const soldQty = parseInt(String(item.preorderSoldQty || '').replace(/[^0-9,]/g,'').replace(/,/g,'')) || null;
 
-  if (!soldQty) return { soldQty: null, remaining: null, projectedTotal: null, elapsedDays };
+  if (!soldQty) return { soldQty: null, remaining: null, projectedTotal: null, elapsedDays, inboundQty };
 
-  const dailyAvg = soldQty / elapsedDays;
-
-  // 입고일까지 남은 일수
-  let daysToRestock = 0;
-  if (restockDate) {
-    daysToRestock = Math.max(0, Math.round((restockDate - today) / 86400000));
-  }
-
+  const dailyAvg      = soldQty / elapsedDays;
+  const daysToRestock = restockDate ? Math.max(0, Math.round((restockDate - today) / 86400000)) : 0;
   const projectedTotal = Math.round(soldQty + dailyAvg * daysToRestock);
-  const remaining = inboundQty - projectedTotal;
 
-  return { soldQty, remaining: inboundQty - soldQty, projectedTotal, elapsedDays, dailyAvg: Math.round(dailyAvg) };
+  return {
+    soldQty,
+    remaining: inboundQty - soldQty,
+    projectedTotal,
+    projectedRemaining: inboundQty - projectedTotal,
+    elapsedDays,
+    dailyAvg: Math.round(dailyAvg),
+    inboundQty,
+  };
 }
 
 function makeStockCard(item) {
@@ -1380,19 +1426,26 @@ function makeStockCard(item) {
   // 사전예약 전용 행들
   let preorderSection = '';
   if (isPreorder) {
-    const startDateStr = item.preorderStartAt || '—';
-    const soldQ   = pre && pre.soldQty   != null ? pre.soldQty.toLocaleString()+'개'   : '집계 중';
-    const remainQ = pre && pre.remaining != null ? (pre.remaining >= 0 ? pre.remaining.toLocaleString()+'개' : `${pre.remaining.toLocaleString()}개 초과`) : '—';
-    const remainColor = pre && pre.remaining != null ? (pre.remaining >= 0 ? '#2ecc71' : '#e85555') : 'var(--text2)';
-    const projQ   = pre && pre.projectedTotal != null ? pre.projectedTotal.toLocaleString()+'개 (예상)' : '—';
-    const dailyQ  = pre && pre.dailyAvg != null ? `일평균 ${pre.dailyAvg.toLocaleString()}개` : '';
+    const startDateStr    = item.preorderStartAt || '—';
+    const soldQ           = pre?.soldQty != null ? pre.soldQty.toLocaleString()+'개' : '—';
+    const remainQ         = pre?.remaining != null
+      ? (pre.remaining >= 0 ? pre.remaining.toLocaleString()+'개' : `${Math.abs(pre.remaining).toLocaleString()}개 초과`)
+      : '—';
+    const remainColor     = pre?.remaining != null ? (pre.remaining >= 0 ? '#2ecc71' : '#e85555') : 'var(--text2)';
+    const projQ           = pre?.projectedTotal != null ? pre.projectedTotal.toLocaleString()+'개' : '—';
+    const projRemainQ     = pre?.projectedRemaining != null
+      ? (pre.projectedRemaining >= 0 ? pre.projectedRemaining.toLocaleString()+'개' : `${Math.abs(pre.projectedRemaining).toLocaleString()}개 초과`)
+      : '—';
+    const projRemainColor = pre?.projectedRemaining != null ? (pre.projectedRemaining >= 0 ? '#2ecc71' : '#e85555') : 'var(--text2)';
+    const dailyQ          = pre?.dailyAvg != null ? `일평균 ${pre.dailyAvg.toLocaleString()}개` : '';
 
     preorderSection = `
       <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">
-        ${row('사전예약 시작일', startDateStr, '#a78bfa')}
-        ${row('누적 판매수량', soldQ, '#a78bfa')}
+        ${row('사전예약 시작일', startDateStr, '#f97316')}
+        ${row('누적 판매수량', soldQ, '#f97316')}
         ${row('현재 잔여수량', remainQ, remainColor)}
         ${row('입고시 예상 누적', projQ, '#f0b429')}
+        ${row('입고시 예상 잔여', projRemainQ, projRemainColor)}
         ${dailyQ ? row('', dailyQ, 'var(--text3)') : emptyRow}
       </div>`;
   }
