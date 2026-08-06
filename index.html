@@ -1163,22 +1163,28 @@ async function loadStockData() {
     const text = await res.text();
     const allRows = parseCSV(text);
 
-    // B169:F177 → 0-index 168~176번 행, B열=index 1, F열=index 5
-    const slice = allRows.slice(168, 177);
-    const dataRows = slice.filter(r => {
-      const cell = String(r[1] || '').trim();
-      return cell && cell !== '제품명';
-    });
+    // 전체 시트에서 제품명 키워드가 있는 행을 직접 탐색
+    const KEYWORDS = ['킥프레임', 'PH', 'DW프로', 'DW플러스'];
+    const items = [];
 
-    if (!dataRows.length) throw new Error('B169:F177 범위에 데이터가 없습니다 (행 위치 확인 필요)');
+    for (let i = 0; i < allRows.length; i++) {
+      const row = allRows[i];
+      for (let j = 0; j < row.length; j++) {
+        const cell = String(row[j] || '').trim();
+        if (KEYWORDS.some(k => cell.startsWith(k)) && cell !== '제품명') {
+          items.push({
+            name:      cell,
+            soldOutAt: (row[j+1] || '').trim(),
+            daysLeft:  (row[j+2] || '').trim(),
+            restockAt: (row[j+3] || '').trim(),
+            restockQty:(row[j+4] || '').trim(),
+          });
+          break;
+        }
+      }
+    }
 
-    const items = dataRows.map(r => ({
-      name:      (r[1] || '').trim(),
-      soldOutAt: (r[2] || '').trim(),
-      daysLeft:  (r[3] || '').trim(),
-      restockAt: (r[4] || '').trim(),
-      restockQty:(r[5] || '').trim(),
-    }));
+    if (!items.length) throw new Error('시트에서 제품 데이터를 찾지 못했습니다');
 
     renderStockCards(items);
 
