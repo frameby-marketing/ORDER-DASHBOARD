@@ -1456,19 +1456,60 @@ function makeStockCard(item) {
       afterRestockColor    = '#e85555';
     }
 
-    preorderSection = `
-      <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">
-        ${row('사전예약 시작일', startDateStr, '#f97316')}
-        ${row('누적 판매수량', soldQ, '#f97316')}
-        ${row('현재 잔여수량', remainQ, remainColor)}
-        ${row('입고시 예상 누적', projQ, '#f0b429')}
-        ${row('입고시 예상 잔여', projRemainQ, projRemainColor)}
-        ${row('입고 후 예상 품절일', afterRestockSoldOutQ, afterRestockColor)}
-        ${dailyAvgQ ? row('', dailyAvgQ, 'var(--text3)') : emptyRow}
+    preorderSection = ''; // 카드 내부에는 포함하지 않음 (별도 드로어로 분리)
+  }
+
+  // 사전예약 드로어 ID (카드 고유)
+  const drawerId = `preorder-drawer-${item.name.replace(/[\s\-]/g,'_')}`;
+
+  // 사전예약 드로어 내용 (카드 외부에 렌더)
+  let preorderDrawer = '';
+  if (isPreorder) {
+    const startDateStr    = item.preorderStartAt || '—';
+    const soldQ           = pre?.soldQty != null ? pre.soldQty.toLocaleString()+'개' : '—';
+    const remainQ         = pre?.remaining != null
+      ? (pre.remaining >= 0 ? pre.remaining.toLocaleString()+'개' : `${Math.abs(pre.remaining).toLocaleString()}개 초과`)
+      : '—';
+    const remainColor     = pre?.remaining != null ? (pre.remaining >= 0 ? '#2ecc71' : '#e85555') : 'var(--text2)';
+    const projQ           = pre?.projectedTotal != null ? pre.projectedTotal.toLocaleString()+'개' : '—';
+    const projRemainQ     = pre?.projectedRemaining != null
+      ? (pre.projectedRemaining >= 0 ? pre.projectedRemaining.toLocaleString()+'개' : `${Math.abs(pre.projectedRemaining).toLocaleString()}개 초과`)
+      : '—';
+    const projRemainColor = pre?.projectedRemaining != null ? (pre.projectedRemaining >= 0 ? '#2ecc71' : '#e85555') : 'var(--text2)';
+    const dailyAvgQ       = pre?.dailyAvg != null ? `사전예약 일평균 판매수량 ${pre.dailyAvg.toLocaleString()}개` : '';
+
+    let afterRestockSoldOutQ = '—';
+    let afterRestockColor    = 'var(--text2)';
+    if (pre?.projectedRemaining != null && pre.projectedRemaining > 0 && pre.dailyAvg > 0) {
+      const restockDate = parseKoreanDate(item.restockAt);
+      if (restockDate) {
+        const daysUntilSoldOut = Math.round(pre.projectedRemaining / pre.dailyAvg);
+        const soldOutAfter = new Date(restockDate);
+        soldOutAfter.setDate(soldOutAfter.getDate() + daysUntilSoldOut);
+        afterRestockSoldOutQ = `${soldOutAfter.getMonth()+1}월 ${soldOutAfter.getDate()}일 (약 ${daysUntilSoldOut}일)`;
+        afterRestockColor = daysUntilSoldOut <= 14 ? '#e85555' : daysUntilSoldOut <= 30 ? '#f0b429' : '#2ecc71';
+      }
+    } else if (pre?.projectedRemaining != null && pre.projectedRemaining <= 0) {
+      afterRestockSoldOutQ = '입고 즉시 소진';
+      afterRestockColor    = '#e85555';
+    }
+
+    preorderDrawer = `
+      <div id="${drawerId}" style="display:none;margin-top:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;grid-column:4;">
+        <div style="font-size:11px;font-weight:700;color:#f97316;margin-bottom:8px;letter-spacing:.05em;">★ 사전예약 상세</div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          ${row('사전예약 시작일', startDateStr, '#f97316')}
+          ${row('누적 판매수량', soldQ, '#f97316')}
+          ${row('현재 잔여수량', remainQ, remainColor)}
+          ${row('입고시 예상 누적', projQ, '#f0b429')}
+          ${row('입고시 예상 잔여', projRemainQ, projRemainColor)}
+          ${row('입고 후 예상 품절일', afterRestockSoldOutQ, afterRestockColor)}
+          ${dailyAvgQ ? row('', dailyAvgQ, 'var(--text3)') : ''}
+        </div>
       </div>`;
   }
 
-  return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;box-shadow:var(--shadow);min-width:0;${dimStyle}display:flex;flex-direction:column;" class="stock-card-item">
+  const cardHtml = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;box-shadow:var(--shadow);min-width:0;${dimStyle}display:flex;flex-direction:column;" class="stock-card-item">
     <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${topColor};border-radius:10px 10px 0 0;"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;gap:6px;">
       <div style="font-size:15px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}</div>
@@ -1480,9 +1521,17 @@ function makeStockCard(item) {
       ${row('재입고 일자', restockTxt, restockColor)}
       ${row('입고 수량', qtyTxt, inboundQty ? '#2ecc71' : 'var(--text2)')}
       ${orderDeadline ? row('발주 시점', orderDeadline, '#f0b429') : emptyRow}
-      ${preorderSection}
     </div>
+    ${isPreorder ? `
+    <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px;">
+      <button onclick="togglePreorderDrawer('${drawerId}', this)"
+        style="width:100%;padding:5px 0;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:6px;color:#f97316;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:5px;">
+        <span>사전예약 자세히 보기</span><span style="font-size:12px;transition:transform .25s;">▼</span>
+      </button>
+    </div>` : ''}
   </div>`;
+
+  return { cardHtml, preorderDrawer, drawerId };
 }
 
 const PRODUCT_ORDER = [
@@ -1501,6 +1550,17 @@ function toggleStockDetail() {
   document.getElementById('stockToggleArrow').style.transform = stockDetailOpen ? 'rotate(180deg)' : 'rotate(0deg)';
 }
 
+function togglePreorderDrawer(drawerId, btn) {
+  const drawer = document.getElementById(drawerId);
+  if (!drawer) return;
+  const isOpen = drawer.style.display !== 'none';
+  drawer.style.display = isOpen ? 'none' : 'block';
+  const arrow = btn.querySelector('span:last-child');
+  const label = btn.querySelector('span:first-child');
+  if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+  if (label) label.textContent = isOpen ? '사전예약 자세히 보기' : '접기';
+}
+
 function renderStockCards(items) {
   const map = {};
   items.forEach(i => { map[i.name] = i; });
@@ -1510,10 +1570,10 @@ function renderStockCards(items) {
     const item = map[name];
     if (!item) return;
     const status = getStockStatus(item);
-    if (status === 'ok')          ok.push(item);
-    else if (status === 'out')    out.push(item);
+    if (status === 'ok')            ok.push(item);
+    else if (status === 'out')      out.push(item);
     else if (status === 'preorder') preorder.push(item);
-    else                          soldOut.push(item);
+    else                            soldOut.push(item);
   });
 
   // 요약 뱃지
@@ -1525,12 +1585,44 @@ function renderStockCards(items) {
   document.getElementById('stockSummaryBadges').innerHTML = badges.join('') || '<span style="color:var(--text3);font-size:13px;">데이터 없음</span>';
 
   const empty = `<div style="text-align:center;color:var(--text3);font-size:12px;padding:16px;">없음</div>`;
-  document.getElementById('colOk').innerHTML       = ok.length       ? ok.map(makeStockCard).join('')       : empty;
-  document.getElementById('colOut').innerHTML      = out.length      ? out.map(makeStockCard).join('')      : empty;
-  document.getElementById('colPreorder').innerHTML = preorder.length ? preorder.map(makeStockCard).join('') : empty;
-  document.getElementById('colSoldOut').innerHTML  = soldOut.length  ? soldOut.map(makeStockCard).join('')  : empty;
 
-  // 카드 높이 통일
+  function renderCol(itemList, colId) {
+    const col = document.getElementById(colId);
+    if (!itemList.length) { col.innerHTML = empty; return; }
+
+    // 기존 드로어 정리
+    const existingDrawers = col.parentNode.querySelectorAll('.preorder-drawer');
+    existingDrawers.forEach(d => d.remove());
+
+    let cardsHtml = '';
+    const drawerItems = [];
+    itemList.forEach(item => {
+      const result = makeStockCard(item);
+      if (typeof result === 'string') {
+        cardsHtml += result;
+      } else {
+        cardsHtml += result.cardHtml;
+        if (result.preorderDrawer) drawerItems.push(result.preorderDrawer);
+      }
+    });
+    col.innerHTML = cardsHtml;
+
+    // 드로어를 열(col) 다음 형제로 삽입 (grid 밖에 full-width로)
+    drawerItems.forEach(html => {
+      const wrap = document.createElement('div');
+      wrap.className = 'preorder-drawer';
+      wrap.style.cssText = 'grid-column:1/-1;';
+      wrap.innerHTML = html;
+      col.parentNode.insertBefore(wrap, col.nextSibling);
+    });
+  }
+
+  renderCol(ok,       'colOk');
+  renderCol(out,      'colOut');
+  renderCol(preorder, 'colPreorder');
+  renderCol(soldOut,  'colSoldOut');
+
+  // 카드 높이 통일 (버튼 포함, 드로어 제외)
   setTimeout(() => {
     const cards = document.querySelectorAll('.stock-card-item');
     let maxH = 0;
