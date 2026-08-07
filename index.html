@@ -1495,7 +1495,7 @@ function makeStockCard(item) {
     }
 
     preorderDrawer = `
-      <div id="${drawerId}" style="display:none;margin-top:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;grid-column:4;">
+      <div id="${drawerId}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
         <div style="font-size:11px;font-weight:700;color:#f97316;margin-bottom:8px;letter-spacing:.05em;">★ 사전예약 상세</div>
         <div style="display:flex;flex-direction:column;gap:5px;">
           ${row('사전예약 시작일', startDateStr, '#f97316')}
@@ -1509,29 +1509,34 @@ function makeStockCard(item) {
       </div>`;
   }
 
-  const cardHtml = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;box-shadow:var(--shadow);min-width:0;${dimStyle}display:flex;flex-direction:column;" class="stock-card-item">
+  // 버튼 영역 높이 맞추기 위해 비사전예약도 동일 높이 placeholder 추가
+  const btnArea = isPreorder
+    ? `<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px;">
+        <button onclick="togglePreorderDrawer('${drawerId}', this)"
+          style="width:100%;padding:5px 0;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:6px;color:#f97316;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;">
+          <span>사전예약 자세히 보기</span><span id="${drawerId}-arrow" style="font-size:12px;transition:transform .25s;">▼</span>
+        </button>
+        ${preorderDrawer}
+      </div>`
+    : `<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px;height:34px;"></div>`;
+
+  const cardHtml = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;box-shadow:var(--shadow);min-width:0;${dimStyle}display:flex;flex-direction:column;" class="stock-card-item">
     <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${topColor};border-radius:10px 10px 0 0;"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;gap:6px;">
       <div style="font-size:15px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}</div>
       <span style="padding:2px 7px;border-radius:20px;font-size:11px;font-weight:700;background:${badgeBg};color:${topColor};flex-shrink:0;">${badgeTxt}</span>
     </div>
-    <div style="display:flex;flex-direction:column;gap:5px;flex:1;">
+    <div style="display:flex;flex-direction:column;gap:5px;">
       ${row('품절 예상일', soldOutTxt)}
       ${row('남은 기간', isSoldOut ? '—' : dl.text, dl.color)}
       ${row('재입고 일자', restockTxt, restockColor)}
       ${row('입고 수량', qtyTxt, inboundQty ? '#2ecc71' : 'var(--text2)')}
       ${orderDeadline ? row('발주 시점', orderDeadline, '#f0b429') : emptyRow}
     </div>
-    ${isPreorder ? `
-    <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px;">
-      <button onclick="togglePreorderDrawer('${drawerId}', this)"
-        style="width:100%;padding:5px 0;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:6px;color:#f97316;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:5px;">
-        <span>사전예약 자세히 보기</span><span style="font-size:12px;transition:transform .25s;">▼</span>
-      </button>
-    </div>` : ''}
+    ${btnArea}
   </div>`;
 
-  return { cardHtml, preorderDrawer, drawerId };
+  return cardHtml;
 }
 
 const PRODUCT_ORDER = [
@@ -1555,7 +1560,7 @@ function togglePreorderDrawer(drawerId, btn) {
   if (!drawer) return;
   const isOpen = drawer.style.display !== 'none';
   drawer.style.display = isOpen ? 'none' : 'block';
-  const arrow = btn.querySelector('span:last-child');
+  const arrow = document.getElementById(drawerId + '-arrow');
   const label = btn.querySelector('span:first-child');
   if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
   if (label) label.textContent = isOpen ? '사전예약 자세히 보기' : '접기';
@@ -1585,50 +1590,18 @@ function renderStockCards(items) {
   document.getElementById('stockSummaryBadges').innerHTML = badges.join('') || '<span style="color:var(--text3);font-size:13px;">데이터 없음</span>';
 
   const empty = `<div style="text-align:center;color:var(--text3);font-size:12px;padding:16px;">없음</div>`;
+  document.getElementById('colOk').innerHTML       = ok.length       ? ok.map(makeStockCard).join('')       : empty;
+  document.getElementById('colOut').innerHTML      = out.length      ? out.map(makeStockCard).join('')      : empty;
+  document.getElementById('colPreorder').innerHTML = preorder.length ? preorder.map(makeStockCard).join('') : empty;
+  document.getElementById('colSoldOut').innerHTML  = soldOut.length  ? soldOut.map(makeStockCard).join('')  : empty;
 
-  function renderCol(itemList, colId) {
-    const col = document.getElementById(colId);
-    if (!itemList.length) { col.innerHTML = empty; return; }
-
-    // 기존 드로어 정리
-    const existingDrawers = col.parentNode.querySelectorAll('.preorder-drawer');
-    existingDrawers.forEach(d => d.remove());
-
-    let cardsHtml = '';
-    const drawerItems = [];
-    itemList.forEach(item => {
-      const result = makeStockCard(item);
-      if (typeof result === 'string') {
-        cardsHtml += result;
-      } else {
-        cardsHtml += result.cardHtml;
-        if (result.preorderDrawer) drawerItems.push(result.preorderDrawer);
-      }
-    });
-    col.innerHTML = cardsHtml;
-
-    // 드로어를 열(col) 다음 형제로 삽입 (grid 밖에 full-width로)
-    drawerItems.forEach(html => {
-      const wrap = document.createElement('div');
-      wrap.className = 'preorder-drawer';
-      wrap.style.cssText = 'grid-column:1/-1;';
-      wrap.innerHTML = html;
-      col.parentNode.insertBefore(wrap, col.nextSibling);
-    });
-  }
-
-  renderCol(ok,       'colOk');
-  renderCol(out,      'colOut');
-  renderCol(preorder, 'colPreorder');
-  renderCol(soldOut,  'colSoldOut');
-
-  // 카드 높이 통일 (버튼 포함, 드로어 제외)
+  // 카드 높이 통일 (버튼 포함, 드로어 닫힌 상태 기준)
   setTimeout(() => {
     const cards = document.querySelectorAll('.stock-card-item');
     let maxH = 0;
     cards.forEach(c => { maxH = Math.max(maxH, c.offsetHeight); });
     cards.forEach(c => { c.style.minHeight = maxH + 'px'; });
-  }, 80);
+  }, 100);
 }
 
 // ──────────────────────────── INIT ────────────────────────────
