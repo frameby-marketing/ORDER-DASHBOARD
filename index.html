@@ -1437,7 +1437,24 @@ function makeStockCard(item) {
       ? (pre.projectedRemaining >= 0 ? pre.projectedRemaining.toLocaleString()+'개' : `${Math.abs(pre.projectedRemaining).toLocaleString()}개 초과`)
       : '—';
     const projRemainColor = pre?.projectedRemaining != null ? (pre.projectedRemaining >= 0 ? '#2ecc71' : '#e85555') : 'var(--text2)';
-    const dailyQ          = pre?.dailyAvg != null ? `일평균 ${pre.dailyAvg.toLocaleString()}개` : '';
+    const dailyAvgQ       = pre?.dailyAvg != null ? `사전예약 일평균 판매수량 ${pre.dailyAvg.toLocaleString()}개` : '';
+
+    // 입고 후 예상 품절일 계산
+    let afterRestockSoldOutQ = '—';
+    let afterRestockColor    = 'var(--text2)';
+    if (pre?.projectedRemaining != null && pre.projectedRemaining > 0 && pre.dailyAvg > 0) {
+      const restockDate = parseKoreanDate(item.restockAt);
+      if (restockDate) {
+        const daysUntilSoldOut = Math.round(pre.projectedRemaining / pre.dailyAvg);
+        const soldOutAfter = new Date(restockDate);
+        soldOutAfter.setDate(soldOutAfter.getDate() + daysUntilSoldOut);
+        afterRestockSoldOutQ = `${soldOutAfter.getMonth()+1}월 ${soldOutAfter.getDate()}일 (약 ${daysUntilSoldOut}일)`;
+        afterRestockColor = daysUntilSoldOut <= 14 ? '#e85555' : daysUntilSoldOut <= 30 ? '#f0b429' : '#2ecc71';
+      }
+    } else if (pre?.projectedRemaining != null && pre.projectedRemaining <= 0) {
+      afterRestockSoldOutQ = '입고 즉시 소진';
+      afterRestockColor    = '#e85555';
+    }
 
     preorderSection = `
       <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">
@@ -1446,7 +1463,8 @@ function makeStockCard(item) {
         ${row('현재 잔여수량', remainQ, remainColor)}
         ${row('입고시 예상 누적', projQ, '#f0b429')}
         ${row('입고시 예상 잔여', projRemainQ, projRemainColor)}
-        ${dailyQ ? row('', dailyQ, 'var(--text3)') : emptyRow}
+        ${row('입고 후 예상 품절일', afterRestockSoldOutQ, afterRestockColor)}
+        ${dailyAvgQ ? row('', dailyAvgQ, 'var(--text3)') : emptyRow}
       </div>`;
   }
 
