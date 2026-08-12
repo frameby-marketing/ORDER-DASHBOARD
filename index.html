@@ -1632,10 +1632,10 @@ function renderStockCards(items) {
 
   // 요약 뱃지
   const badges = [];
-  if (ok.length)       badges.push(`<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:rgba(46,204,113,0.12);color:#2ecc71;font-size:13px;font-weight:600;">✔ 정상 <strong>${ok.length}개</strong></span>`);
-  if (out.length)      badges.push(`<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:rgba(232,85,85,0.12);color:#e85555;font-size:13px;font-weight:600;">✖ 위험 <strong>${out.length}개</strong></span>`);
-  if (preorder.length) badges.push(`<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:rgba(249,115,22,0.12);color:#f97316;font-size:13px;font-weight:600;">★ 사전예약 <strong>${preorder.length}개</strong></span>`);
-  if (soldOut.length)  badges.push(`<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:rgba(120,120,120,0.12);color:#888;font-size:13px;font-weight:600;">◼ 품절 <strong>${soldOut.length}개</strong></span>`);
+  if (ok.length)       badges.push(`<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:rgba(46,204,113,0.12);color:#2ecc71;font-size:16px;font-weight:600;">✔ 정상 <strong>${ok.length}개</strong></span>`);
+  if (out.length)      badges.push(`<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:rgba(232,85,85,0.12);color:#e85555;font-size:16px;font-weight:600;">✖ 위험 <strong>${out.length}개</strong></span>`);
+  if (preorder.length) badges.push(`<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:rgba(249,115,22,0.12);color:#f97316;font-size:16px;font-weight:600;">★ 사전예약 <strong>${preorder.length}개</strong></span>`);
+  if (soldOut.length)  badges.push(`<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:rgba(120,120,120,0.12);color:#888;font-size:16px;font-weight:600;">◼ 품절 <strong>${soldOut.length}개</strong></span>`);
   document.getElementById('stockSummaryBadges').innerHTML = badges.join('') || '<span style="color:var(--text3);font-size:13px;">데이터 없음</span>';
 
   const empty = `<div style="text-align:center;color:var(--text3);font-size:12px;padding:16px;">없음</div>`;
