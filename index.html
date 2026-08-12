@@ -1347,6 +1347,11 @@ const LEAD_TIMES = {
   'DW플러스 - 실버': 50, 'DW플러스 - 블랙': 50, 'DW플러스 - 그린': 50,
 };
 
+// 재입고 일자 칸의 단종/리뉴얼 예정 문구 여부
+function isDiscontinuedOrRenewal(item) {
+  return /단종\s*\/\s*리뉴얼\s*예정/.test(String(item.restockAt || '').trim());
+}
+
 // 상태: ok / out / preorder / soldOut
 function getStockStatus(item) {
   // 사전예약: preorderStartAt에 날짜가 실제로 있을 때만
@@ -1357,6 +1362,9 @@ function getStockStatus(item) {
   if (item.soldOutAt === '품절') return 'soldOut';
   const dl = parseInt(String(item.daysLeft || '').replace(/[^\d]/g, ''));
   if (!isNaN(dl) && dl === 0) return 'soldOut';
+
+  // 현재 품절이 아니고 재입고 일자에 '단종/리뉴얼 예정'이 있으면 정상
+  if (isDiscontinuedOrRenewal(item)) return 'ok';
 
   const leadTime    = LEAD_TIMES[item.name] || 50;
   const daysLeftNum = isNaN(dl) ? 9999 : dl;
@@ -1388,6 +1396,7 @@ function makeDaysLeftText(item) {
 
 function getOrderDeadline(item) {
   if (getStockStatus(item) !== 'ok') return null;
+  if (isDiscontinuedOrRenewal(item)) return null;
   if (parseKoreanDate(item.restockAt)) return null;
   const dl = parseInt(String(item.daysLeft || '').replace(/[^\d]/g, ''));
   if (isNaN(dl)) return null;
