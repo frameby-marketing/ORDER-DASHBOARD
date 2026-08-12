@@ -288,7 +288,12 @@
   }
   .cal-cell:last-child { border-right: none; }
   .cal-cell.empty { background: var(--bg); }
-  .cal-cell.today { background: rgba(79,142,247,0.05); }
+  .cal-cell.today {
+    background: rgba(79,142,247,0.18);
+    box-shadow: inset 0 0 0 2px var(--accent);
+    z-index: 1;
+  }
+  .cal-cell.today .cal-date { color: var(--accent); }
 
   .cal-date {
     font-size: 15px; font-weight: 700; color: var(--text2); margin-bottom: 6px;
@@ -736,7 +741,7 @@ const BUILTIN = [
 ];
 
 let currentData = [];
-let currentMonth = 6;
+let currentMonth;
 
 const MONTHS = [
   {m:6,label:'6월',year:2026,days:30},
@@ -747,6 +752,27 @@ const MONTHS = [
   {m:11,label:'11월',year:2026,days:30},
   {m:12,label:'12월',year:2026,days:31},
 ];
+
+// 현재 날짜가 표시 범위(2026년 6~12월)에 있으면 해당 월을 기본 선택합니다.
+// 범위 밖이라면 가장 가까운 첫 달 또는 마지막 달을 표시합니다.
+const today = new Date();
+const todayYear = today.getFullYear();
+const todayMonth = today.getMonth() + 1;
+const todayDay = today.getDate();
+const firstCalendarMonth = MONTHS[0];
+const lastCalendarMonth = MONTHS[MONTHS.length - 1];
+const currentMonthInfo = MONTHS.find(mo => mo.year === todayYear && mo.m === todayMonth);
+
+if (currentMonthInfo) {
+  currentMonth = currentMonthInfo.m;
+} else if (
+  todayYear < firstCalendarMonth.year ||
+  (todayYear === firstCalendarMonth.year && todayMonth < firstCalendarMonth.m)
+) {
+  currentMonth = firstCalendarMonth.m;
+} else {
+  currentMonth = lastCalendarMonth.m;
+}
 
 // ──────────────────────────── FORMAT ────────────────────────────
 function fmtAmount(v) {
@@ -1009,8 +1035,8 @@ function renderCalendar(m) {
     byDay[r.day].push(r);
   });
 
-  // First day of month (2026)
-  const firstDate = new Date(2026, m-1, 1);
+  // First day of month
+  const firstDate = new Date(moInfo.year, m-1, 1);
   const firstDow = firstDate.getDay(); // 0=Sun
 
   const days = moInfo.days;
@@ -1069,8 +1095,9 @@ function renderCalendar(m) {
       }).join('');
 
       const dayClass = dow === 0 ? 'sun' : dow === 6 ? 'sat' : '';
+      const isToday = moInfo.year === todayYear && m === todayMonth && dayNum === todayDay;
       calHtml += `
-        <div class="cal-cell ${dayClass}">
+        <div class="cal-cell ${dayClass}${isToday ? ' today' : ''}">
           <div class="cal-date">${dayNum}</div>
           ${evHtml}
         </div>
