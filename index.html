@@ -297,9 +297,22 @@
 
   .cal-date {
     font-size: 15px; font-weight: 700; color: var(--text2); margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
   }
   .cal-cell.sun .cal-date { color: #f56565; }
   .cal-cell.sat .cal-date { color: var(--accent); }
+  .today-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
 
   .event-badge {
     display: flex; align-items: flex-start; gap: 5px;
@@ -1098,7 +1111,7 @@ function renderCalendar(m) {
       const isToday = moInfo.year === todayYear && m === todayMonth && dayNum === todayDay;
       calHtml += `
         <div class="cal-cell ${dayClass}${isToday ? ' today' : ''}">
-          <div class="cal-date">${dayNum}</div>
+          <div class="cal-date">${dayNum}${isToday ? '<span class="today-badge">오늘</span>' : ''}</div>
           ${evHtml}
         </div>
       `;
@@ -1638,4 +1651,3 @@ loadStockData();
 </script>
 </body>
 </html>
-
